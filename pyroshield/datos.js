@@ -1,6 +1,10 @@
 // ════════════════════ RUTAS DE IMÁGENES ════════════════════
 var IMGS = {
   "logo":"img/logo.jpg",
+  "VENT10PQS":"img/VENT10PQS.jpg",
+  "VENT20PQS":"img/VENT20PQS.jpg",
+  "VENT5CO2":"img/VENT5CO2.jpg",
+  "VENT10CO2":"img/VENT10CO2.jpg",
   "CABCO2510":"img/CABCO2510.jpg",
   "MANG10CO2":"img/MANG10CO2.jpg",
   "MANG30M":"img/MANG30M.jpg",
@@ -31,9 +35,8 @@ var UMBRAL_MARGEN_ALTO = 0.30;
 var PCT_ALTO = 0.10;
 var PCT_NORMAL = 0.08;
 var PUNTOS_X_DOLAR = 100;
-var AZUR_TOKEN = "";
-var AZUR_API = "https://api.azur.com.ec/v1/";
-var H_FILTRO = "todos";
+var AZUR_TOKEN = "API_1851_2064_5fcfa1b47f430";
+var AZUR_API = "https://azur.com.ec/plataforma/api/v2/";
 
 // ════════════════════ PROMOCIONES ════════════════════
 var PROMOS = [
@@ -67,6 +70,9 @@ var PROMOS = [
 ];
 
 // ════════════════════ DATOS DISTRIBUIDORES ════════════════════
+// Nota: el campo "ruc" admite RUC (13 díg) o CÉDULA (10 díg) — ambos válidos para facturar.
+//   El campo "tipoDoc" indica cuál es ("ruc" o "cedula"); si falta, se detecta por longitud.
+// ⚠️ POR CONFIRMAR: email "efreinreyesv539@gmail.com" → ¿posible typo de "efrain"?
 var DISTRIBUIDORES = [
   {ruc:"ADMIN",pass:"pyro2024",razon:"Administrador PyroShield",esAdmin:true},
   {ruc:"0906872742001",pass:"jorge123",razon:"AVILES BRIONES JORGE ENRIQUE",empresa:"Sumiseg",tel:"0993704934",correo:"docs.sumiseg@outlook.com",
@@ -116,8 +122,8 @@ var DISTRIBUIDORES = [
   {ruc:"2490407858001",pass:"dist123",razon:"SEGUINVIA S.A.S.",empresa:"Seguinvia",tel:"",correo:"",entrega:{habilitada:false,montoMin:30},establecimientos:[]},
   {ruc:"703361014001",pass:"dist123",razon:"BUELE JARA ANGEL GIOVANNY",tel:"0993891462",correo:"",entrega:{habilitada:false,montoMin:30},establecimientos:[]},
   {ruc:"909599599001",pass:"dist123",razon:"DELGADO INSUASTI WASHINGTON BERNARDO",tel:"",correo:"marberd29@gmail.com",entrega:{habilitada:false,montoMin:30},establecimientos:[]},
-  {ruc:"927628149001",pass:"dist123",razon:"MENDOZA MUOZ MARY ARIANA",empresa:"Segurimen",tel:"0992415104",correo:"segurimen@hotmail.com",entrega:{habilitada:false,montoMin:30},establecimientos:[]},
+  {ruc:"927628149001",pass:"dist123",razon:"MENDOZA MUÑOZ MARY ARIANA",empresa:"Segurimen",tel:"0992415104",correo:"segurimen@hotmail.com",entrega:{habilitada:false,montoMin:30},establecimientos:[]},
   {ruc:"905294708001",pass:"dist123",razon:"JURADO FIERRO CESAR VICTOR JULIO",tel:"",correo:"ventasyrecargasjurado@hotmail.com",entrega:{habilitada:false,montoMin:30},establecimientos:[]},
-  {ruc:"953672144001",pass:"dist123",razon:"PLUAS VITERI ALLISSON THAIZ",tel:"",correo:"alisonpluas@gmail.com",entrega:{habilitada:false,montoMin:30},establecimientos:[]}
+  {ruc:"953672144001",pass:"dist123",razon:"PLÚAS VITERI ALLISSON THAIZ",tel:"",correo:"alisonpluas@gmail.com",entrega:{habilitada:false,montoMin:30},establecimientos:[]}
 ];
 

@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<base href="/PORTAL_DISTRIBUIDORES/pyroshield/">
 <title>PyroShield — Portal Distribuidores</title>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&family=Barlow:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css">
@@ -195,8 +196,16 @@
     <input class="form-input" id="nd-razon" placeholder="Nombre o empresa">
     <label class="form-label">Nombre comercial / empresa</label>
     <input class="form-input" id="nd-empresa" placeholder="Ej: Sumiseg">
-    <label class="form-label">RUC *</label>
-    <input class="form-input" id="nd-ruc" placeholder="0000000000001">
+    <label class="form-label">Tipo de documento *</label>
+    <select class="form-select" id="nd-tipodoc">
+      <option value="ruc">RUC (13 dígitos)</option>
+      <option value="cedula">Cédula (10 dígitos)</option>
+    </select>
+    <label class="form-label">Número de RUC / Cédula *</label>
+    <div style="display:flex;gap:8px;margin-bottom:12px">
+      <input class="form-input" id="nd-ruc" placeholder="0000000000001" inputmode="numeric" style="margin:0;flex:1">
+      <button class="btn btn-s btn-sm" type="button" onclick="buscarSRI()" style="white-space:nowrap;margin:0">🔍 Buscar SRI</button>
+    </div>
     <label class="form-label">Teléfono</label>
     <input class="form-input" id="nd-tel" placeholder="09XXXXXXXX">
     <label class="form-label">Correo</label>

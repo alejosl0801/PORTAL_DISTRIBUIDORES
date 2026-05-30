@@ -89,7 +89,13 @@ function precioConVolumen(p, cant){
     }
   }
   var descTotal=descBase+dvPct;
-  return {precio:parseFloat((pv*(1-descTotal/100)).toFixed(2)),descPct:descTotal,descVol:dvPct,descBase:descBase};
+  var precioCalc=parseFloat((pv*(1-descTotal/100)).toFixed(2));
+  // Fix #4: el precio nunca puede bajar del costo (margen mínimo de seguridad)
+  if(p.costo!=null && precioCalc<p.costo){
+    precioCalc=parseFloat(p.costo.toFixed(2));
+    descTotal=(pv-precioCalc)/pv*100;
+  }
+  return {precio:precioCalc,descPct:descTotal,descVol:dvPct,descBase:descBase};
 }
 
 // Siguiente nivel de descuento
@@ -101,8 +107,8 @@ function siguienteNivel(p, cant){
   return null;
 }
 
-function fmtPts(n){return n.toLocaleString();}
-function fmt$(n){return"$"+n.toFixed(2);}
+function fmtPts(n){return (n||0).toString().replace(/\B(?=(\d{3})+(?!\d))/g,".");}
+function fmt$(n){return"$"+(n||0).toFixed(2);}
 
 // ════════════════════ LOGIN ════════════════════
 function hacerLogin(){
@@ -209,6 +215,7 @@ function renderInicio(){
 
 // ════════════════════ PROMOS ════════════════════
 function renderPromosHome(){
+  limpiarContadores();
   var cont=document.getElementById("promos-home");
   cont.innerHTML="<div class='sec-titulo'>Promociones</div>"+PROMOS.map(function(pr){
     var activa=pr.estado==="activa";
@@ -236,6 +243,7 @@ function renderPromosHome(){
   }).join("");
 }
 
+var _contadores=[];
 function iniciarContador(fechaVence,elId){
   function actualizar(){
     var el=document.getElementById(elId);if(!el)return;
@@ -249,7 +257,11 @@ function iniciarContador(fechaVence,elId){
     el.textContent="Vence en "+d+"d "+h+"h "+m+"m";
   }
   actualizar();
-  setInterval(actualizar,60000);
+  _contadores.push(setInterval(actualizar,60000));
+}
+function limpiarContadores(){
+  _contadores.forEach(function(id){clearInterval(id);});
+  _contadores=[];
 }
 
 // ════════════════════ CATÁLOGO ════════════════════
@@ -261,7 +273,9 @@ function setFiltro(f,btn){
 }
 
 function renderCatalogo(){
-  var q=(document.getElementById("cat-search").value||"").toLowerCase();
+  var searchEl=document.getElementById("cat-search");
+  if(!searchEl)return;
+  var q=(searchEl.value||"").toLowerCase();
   var html="";
   Object.keys(CATS).forEach(function(ck){
     var cat=CATS[ck];
@@ -287,7 +301,7 @@ function renderProdCard(p){
   var stockBadge=p.ago?'<span class="badge b-rojo">Agotado</span>':(p.stock<20?'<span class="badge b-amar">⚠️ Pocas ('+p.stock+')</span>':'<span class="badge b-verde">Stock: '+p.stock+'</span>');
   var pts=calcPuntos(pc,p.costo);
   var volBadge=p.descVol?'<span class="badge b-azul" style="font-size:9px">Desc. volumen disponible</span>':'';
-  var imgHtml=p.img&&IMGS[p.img]?'<img src="'+IMGS[p.img]+'" alt="'+p.nm+'">':"<div class='ph'>🧯</div>";
+  var imgHtml=p.img&&IMGS[p.img]?'<img src="'+IMGS[p.img]+'" alt="'+p.nm+'" loading="lazy">':"<div class='ph'>🧯</div>";
   var cartItem=CARRITO.find(function(i){return i.id===p.id;});
   var btnHtml=p.ago?'<button class="badd" disabled style="opacity:.4">Agotado</button>':
     (cartItem?'<button class="badd inc" onclick="agregarAlCarrito(\''+p.id+'\')">✓ ('+cartItem.cant+')</button>':
@@ -311,6 +325,12 @@ function agregarAlCarrito(id){
   var p=PRODUCTOS.find(function(x){return x.id===id;});
   if(!p||p.ago)return;
   var item=CARRITO.find(function(i){return i.id===id;});
+  var cantActual=item?item.cant:0;
+  // Fix #21: no exceder el stock disponible
+  if(p.stock!=null && cantActual>=p.stock){
+    toast("⚠️ Solo hay "+p.stock+" unidades disponibles");
+    return;
+  }
   if(item){item.cant++;}else{CARRITO.push({id:id,cant:1});}
   guardarCarrito();
   actualizarBadge();
@@ -403,8 +423,8 @@ function renderCarrito(){
     '<div style="margin-top:14px">'+
       '<label class="form-label">Forma de pago</label>'+
       '<select class="form-select" id="cart-pago">'+
-        '<option>Efectivo</option><option>Transferencia</option>'+
-        '<option>Crédito 30 días</option><option>Crédito 60 días</option><option>Crédito 90 días</option><option>Cheque</option>'+
+        '<option value="Efectivo">Efectivo</option><option value="Transferencia">Transferencia</option>'+
+        '<option value="Crédito 30 días">Crédito 30 días</option><option value="Crédito 60 días">Crédito 60 días</option><option value="Crédito 90 días">Crédito 90 días</option><option value="Cheque">Cheque</option>'+
       '</select>'+
       '<label class="form-label">Modo de entrega</label>'+
       '<select class="form-select" id="cart-modo" onchange="renderModoEntrega()">'+
@@ -442,6 +462,13 @@ function renderModoEntrega(){
 function cambiarCant(id,d){
   var it=CARRITO.find(function(i){return i.id===id;});
   if(!it)return;
+  if(d>0){
+    var p=PRODUCTOS.find(function(x){return x.id===id;});
+    if(p&&p.stock!=null&&it.cant>=p.stock){
+      toast("⚠️ Solo hay "+p.stock+" unidades disponibles");
+      return;
+    }
+  }
   it.cant+=d;
   if(it.cant<=0)CARRITO=CARRITO.filter(function(i){return i.id!==id;});
   guardarCarrito(); renderCarrito(); actualizarBadge();
@@ -517,11 +544,11 @@ function confirmarPedido(){
   var entregaInfo={};
   if(modo==="entrega"){
     var estSel=document.getElementById("cart-est");
-    var idx=estSel?parseInt(estSel.value):0;
+    var idx=estSel?parseInt(estSel.value,10):0;
     var est=USER.establecimientos&&USER.establecimientos[idx]?USER.establecimientos[idx]:null;
     entregaInfo={establecimiento:est,fecha:document.getElementById("cart-fecha")?document.getElementById("cart-fecha").value:"",hora:document.getElementById("cart-hora")?document.getElementById("cart-hora").value:""};
   }
-  var ped={id:pid,ruc:USER.ruc,razon:USER.razon,fecha:now.toLocaleDateString(),pago:pago,modo:modo,notas:notas,items:items,subtotal:subtotal,iva:iva,total:total,puntos:ptsTotal,estado:"pendiente",entregaInfo:entregaInfo,esCanje:false};
+  var ped={id:pid,ruc:USER.ruc,razon:USER.razon,fecha:now.toLocaleDateString(),fechaISO:now.toISOString(),pago:pago,modo:modo,notas:notas,items:items,subtotal:subtotal,iva:iva,total:total,puntos:ptsTotal,estado:"pendiente",entregaInfo:entregaInfo,esCanje:false};
   PEDIDOS.push(ped);
   guardarPedidos();
   CARRITO=[];
@@ -541,7 +568,7 @@ function setHFiltro(f,btn){
 }
 
 function estadoLabel(e){
-  var m={pendiente:"⏳ Pendiente",autorizado:"✅ Autorizado",entrega:"🚚 En camino",facturado:"🧾 Facturado",finalizado:"✔️ Finalizado",cancelado:"✖ Cancelado"};
+  var m={pendiente:"⏳ Pendiente",autorizado:"✅ Autorizado",entrega:"🚚 En camino",facturado:"🧾 Facturado",finalizado:"✔️ Finalizado",cancelado:"✕ Cancelado"};
   return m[e]||e;
 }
 function estadoClass(e){
@@ -582,7 +609,7 @@ function cancelarPedido(pid){
   confirmar("¿Cancelar el pedido #"+pid+"? Esta acción no se puede deshacer.",function(){
     var p=PEDIDOS.find(function(x){return x.id===pid;});
     if(p)p.estado="cancelado";
-    guardarPedidos(); renderHistorial(); toast("✖ Pedido cancelado");
+    guardarPedidos(); renderHistorial(); toast("✕ Pedido cancelado");
   });
 }
 
@@ -618,6 +645,14 @@ function verDetallePed(pid){
     '<div style="margin-top:12px;font-size:13px;color:var(--g4)">'+
       '<b>Pago:</b> '+p.pago+'<br><b>Modo:</b> '+(p.modo==="retiro"?"Retiro en local":"Entrega a domicilio")+
     '</div>'+
+    // Fix #11: detalle de entrega si existe
+    ((p.modo==="entrega"&&p.entregaInfo&&p.entregaInfo.establecimiento)?
+      '<div style="margin-top:8px;font-size:13px;color:var(--g4)"><b>Entrega a:</b> '+
+      (p.entregaInfo.establecimiento.nm||"")+' — '+(p.entregaInfo.establecimiento.dir||"")+
+      (p.entregaInfo.fecha?'<br><b>Fecha:</b> '+p.entregaInfo.fecha:'')+
+      (p.entregaInfo.hora?'<br><b>Horario:</b> '+p.entregaInfo.hora:'')+
+      '</div>':'')+
+    (p.notas?'<div style="margin-top:8px;font-size:13px;color:var(--g4)"><b>Notas:</b> '+p.notas+'</div>':'')+
     (p.puntos?'<div style="margin-top:8px;font-size:13px;color:#B8860B;font-weight:700">🏆 '+fmtPts(p.puntos)+' puntos ganados</div>':'')+
     (p.calificacion?'<div style="margin-top:8px;font-size:13px">Calificación: '+"⭐".repeat(p.calificacion.estrellas)+'<br><i>'+( p.calificacion.comentario||"")+'</i></div>':'')+
     '<button class="btn btn-s btn-full" style="margin-top:16px" onclick="cerrarModal(\'modal-pedido-det\')">Cerrar</button>';
@@ -679,8 +714,10 @@ function renderRecompensas(){
 function canjear(pts,nm){
   if(saldoPuntos()<pts){toast("⚠️ No tienes suficientes puntos");return;}
   confirmar("¿Canjear <b>"+fmtPts(pts)+" puntos</b> por <b>"+nm+"</b>?<br><small>Se coordinará con tu próximo pedido.</small>",function(){
+    // Fix #12: revalidar al confirmar por si el saldo cambió
+    if(saldoPuntos()<pts){toast("⚠️ Ya no tienes suficientes puntos");renderRecompensas();return;}
     var pid="C"+Date.now().toString().slice(-5);
-    PEDIDOS.push({id:pid,ruc:USER.ruc,razon:USER.razon,fecha:new Date().toLocaleDateString(),esCanje:true,canjePts:pts,canjeNm:nm,estado:"pendiente",total:0,puntos:0});
+    PEDIDOS.push({id:pid,ruc:USER.ruc,razon:USER.razon,fecha:new Date().toLocaleDateString(),fechaISO:new Date().toISOString(),esCanje:true,canjePts:pts,canjeNm:nm,estado:"pendiente",total:0,puntos:0});
     guardarPedidos(); renderRecompensas();
     document.getElementById("topbar-pts-v").textContent=fmtPts(saldoPuntos());
     toastGold("🎁 Canje solicitado: "+nm);
@@ -729,7 +766,7 @@ function admVerPedido(pid){
   if(!p)return;
   var estados=['pendiente','autorizado','entrega','facturado','finalizado','cancelado'];
   var html='<div class="mhandle"></div><h3>'+(p.esCanje?"Canje":"Pedido")+" #"+p.id+'</h3>'+
-    '<div style="font-size:12px;color:var(--g3);margin-bottom:12px">'+p.razon+' · RUC: '+p.ruc+' · '+p.fecha+'</div>'+
+    '<div style="font-size:12px;color:var(--g3);margin-bottom:12px">'+p.razon+' · '+tipoDocLabel(DISTRIBUIDORES.find(function(d){return d.ruc===p.ruc;})||{ruc:p.ruc})+': '+p.ruc+' · '+p.fecha+'</div>'+
     '<label class="form-label">Estado</label>'+
     '<select class="form-select" id="adm-estado-sel">'+estados.map(function(e){return'<option value="'+e+'"'+(p.estado===e?" selected":"")+'>'+estadoLabel(e)+'</option>';}).join("")+'</select>';
   if(!p.esCanje&&p.items){
@@ -740,8 +777,12 @@ function admVerPedido(pid){
     if(p.puntos)html+='<div style="font-size:13px;color:#B8860B;font-weight:700;margin-top:4px">🏆 '+fmtPts(p.puntos)+' puntos</div>';
     if(p.calificacion)html+='<div style="margin-top:8px;font-size:13px">Calificación cliente: '+"⭐".repeat(p.calificacion.estrellas)+' '+( p.calificacion.comentario?'<i>"'+p.calificacion.comentario+'"</i>':"")+' </div>';
     html+='<button class="btn btn-s btn-full" style="margin-top:10px;background:#25D366;color:#fff;border-color:#25D366" onclick="generarWA(\''+p.id+'\')">📲 Enviar WhatsApp</button>';
-    html+='<button class="btn btn-s btn-full" style="margin-top:8px" onclick="generarAzur(\''+p.id+'\')">🧾 Generar factura en Azur</button>';
-    if(p.azurFactura)html+='<div style="margin-top:6px;font-size:12px;color:var(--verde)">✅ Factura Azur: '+p.azurFactura+'</div>';
+    if(p.azurFactura){
+      html+='<div style="margin-top:10px;background:var(--verdec);border:1.5px solid var(--verde);border-radius:10px;padding:10px 12px;font-size:12px;color:var(--verde)">✅ <b>Factura emitida en Azur</b><br><span style="font-size:10px;word-break:break-all;color:var(--g4)">Clave: '+p.azurFactura+'</span></div>';
+      html+='<button class="btn btn-s btn-full" style="margin-top:8px" onclick="generarAzur(\''+p.id+'\')">🔄 Re-enviar a Azur</button>';
+    } else {
+      html+='<button class="btn btn-s btn-full" style="margin-top:8px" onclick="generarAzur(\''+p.id+'\')">🧾 Generar factura en Azur</button>';
+    }
     // Resumen mensual
     html+=renderResumenDist(p.ruc);
   }
@@ -753,12 +794,23 @@ function admVerPedido(pid){
   abrir("modal-pedido-det");
 }
 
+// Fix #8: parseo de fecha robusto (acepta ISO o dd/mm/yyyy de toLocaleDateString)
+function parseFechaPed(p){
+  if(p.fechaISO)return new Date(p.fechaISO);
+  if(p.fecha&&p.fecha.indexOf("/")!==-1){
+    var partes=p.fecha.split("/");
+    // formato dd/mm/yyyy
+    return new Date(parseInt(partes[2],10),parseInt(partes[1],10)-1,parseInt(partes[0],10));
+  }
+  return new Date(p.fecha);
+}
+
 function renderResumenDist(ruc){
   var peds=PEDIDOS.filter(function(p){return p.ruc===ruc&&!p.esCanje;});
   var ahora=new Date();
-  var esteMes=peds.filter(function(p){var d=new Date(p.fecha);return d.getMonth()===ahora.getMonth()&&d.getFullYear()===ahora.getFullYear();});
-  var mesPas=peds.filter(function(p){var d=new Date(p.fecha);var m=ahora.getMonth()-1;var y=ahora.getFullYear();if(m<0){m=11;y--;}return d.getMonth()===m&&d.getFullYear()===y;});
-  var anio=peds.filter(function(p){var d=new Date(p.fecha);return d.getFullYear()===ahora.getFullYear();});
+  var esteMes=peds.filter(function(p){var d=parseFechaPed(p);return d.getMonth()===ahora.getMonth()&&d.getFullYear()===ahora.getFullYear();});
+  var mesPas=peds.filter(function(p){var d=parseFechaPed(p);var m=ahora.getMonth()-1;var y=ahora.getFullYear();if(m<0){m=11;y--;}return d.getMonth()===m&&d.getFullYear()===y;});
+  var anio=peds.filter(function(p){var d=parseFechaPed(p);return d.getFullYear()===ahora.getFullYear();});
   var totEste=esteMes.reduce(function(s,p){return s+p.total;},0);
   var totPas=mesPas.reduce(function(s,p){return s+p.total;},0);
   var totAnio=anio.reduce(function(s,p){return s+p.total;},0);
@@ -804,13 +856,92 @@ function generarAzur(pid){
   var p=PEDIDOS.find(function(x){return x.id===pid;});
   if(!p)return;
   if(!AZUR_TOKEN){toast("⚠️ Configura el token de Azur primero (variable AZUR_TOKEN)");return;}
-  var payload={ruc:p.ruc,items:p.items.map(function(it){return{codigo:it.id,descripcion:it.nm,cantidad:it.cant,precio:it.pr,descuento:it.descPct||0};}),formaPago:p.pago,total:p.total,iva:p.iva};
-  fetch(AZUR_API+"facturas",{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+AZUR_TOKEN},body:JSON.stringify(payload)})
-    .then(function(r){return r.json();})
-    .then(function(data){
-      if(data.numero){p.azurFactura=data.numero;guardarPedidos();toast("🧾 Factura "+data.numero+" generada en Azur");admVerPedido(pid);}
-      else{toast("⚠️ Error: "+JSON.stringify(data));}
-    }).catch(function(e){toast("⚠️ Error de conexión con Azur");});
+
+  var dist=DISTRIBUIDORES.find(function(d){return d.ruc===p.ruc;})||{};
+
+  // Tipo de identificación según tabla Azur: 04=RUC, 05=CÉDULA, 07=CONSUMIDOR FINAL
+  var numDoc=(p.ruc||"").replace(/[^0-9]/g,"");
+  var tipoIdent="04";
+  if(dist.tipoDoc==="cedula"||numDoc.length===10) tipoIdent="05";
+  if(numDoc==="9999999999999"||numDoc==="9999999999") tipoIdent="07";
+
+  // Fecha YYYY/MM/DD
+  var ahora=new Date();
+  var fechaAzur=ahora.getFullYear()+"/"+String(ahora.getMonth()+1).padStart(2,"0")+"/"+String(ahora.getDate()).padStart(2,"0");
+
+  // Items según estructura Azur (tipo_iva 4 = 15%, tipoproducto 1 = BIEN)
+  var itemsAzur=(p.items||[]).map(function(it){
+    return {
+      codigo_principal: it.id,
+      codigo_auxiliar: null,
+      descripcion: it.nm,
+      tipoproducto: 1,
+      tipo_iva: 4,
+      precio_unitario: parseFloat(it.pr.toFixed(2)),
+      cantidad: it.cant,
+      descuento: 0
+    };
+  });
+
+  // Forma de pago según tabla Azur (01=efectivo, 20=otros sistema financiero)
+  var pagoMap={"Efectivo":"01","Transferencia":"20","Cheque":"20","Crédito 30 días":"20","Crédito 60 días":"20","Crédito 90 días":"20"};
+  var codigoPago=pagoMap[p.pago]||"20";
+
+  var payload={
+    api_key: AZUR_TOKEN,
+    codigoDoc: "01",
+    emisor:{ manejo_interno_secuencia:"SI", fecha_emision: fechaAzur },
+    comprador:{
+      tipo_identificacion: tipoIdent,
+      identificacion: p.ruc,
+      razon_social: dist.razon||p.razon,
+      direccion: (dist.establecimientos&&dist.establecimientos[0]&&dist.establecimientos[0].dir)?dist.establecimientos[0].dir:"S/N",
+      telefono: dist.tel||null,
+      celular: null,
+      correo: dist.correo||null
+    },
+    items: itemsAzur,
+    pagos:[{ tipo: codigoPago, total: parseFloat(p.total.toFixed(2)) }],
+    informacion_adicional:[
+      {nombre:"Pedido Portal",detalle:"#"+p.id},
+      {nombre:"Forma de Pago",detalle:p.pago}
+    ]
+  };
+
+  toast("⏳ Enviando a Azur...");
+  fetch(AZUR_API+"factura/emision",{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify(payload)
+  })
+  .then(function(r){return r.json();})
+  .then(function(data){
+    if(data.creado==="true"||data.creado===true){
+      p.azurFactura=data.claveacceso;
+      p.azurEstado="enviado";
+      guardarPedidos();
+      toastGold("🧾 Factura enviada a Azur ✅");
+      admVerPedido(pid);
+    } else {
+      var errores=(data.errors||["Error desconocido"]).join(" · ");
+      toast("⚠️ Azur: "+errores.substring(0,90));
+      console.error("Azur errors:",data);
+    }
+  })
+  .catch(function(e){
+    toast("⚠️ Error de conexión con Azur");
+    console.error("Azur fetch error:",e);
+  });
+}
+
+// Detecta tipo de documento: usa tipoDoc si existe, si no lo deduce por longitud
+function tipoDocLabel(d){
+  if(d.tipoDoc==="cedula")return"Cédula";
+  if(d.tipoDoc==="ruc")return"RUC";
+  var n=(d.ruc||"").replace(/[^0-9]/g,"");
+  if(n.length===10)return"Cédula";
+  if(n.length===13)return"RUC";
+  return"Doc";
 }
 
 function renderAdmDist(){
@@ -823,7 +954,7 @@ function renderAdmDist(){
     return '<div class="card"><div class="card-b">'+
       '<div style="font-weight:700;font-size:15px">'+d.razon+'</div>'+
       (d.empresa?'<div style="font-size:12px;color:var(--azul);font-weight:600">'+d.empresa+'</div>':'')+
-      '<div style="font-size:12px;color:var(--g3);margin-top:3px">RUC: '+d.ruc+(d.tel?' · Tel: '+d.tel:'')+'</div>'+
+      '<div style="font-size:12px;color:var(--g3);margin-top:3px">'+tipoDocLabel(d)+': '+d.ruc+(d.tel?' · Tel: '+d.tel:'')+'</div>'+
       '<div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap">'+
         '<span class="badge b-verde">'+nped+' pedidos</span>'+
         (esp?'<span class="badge b-oro">★ '+esp+' precios esp.</span>':'')+
@@ -833,9 +964,43 @@ function renderAdmDist(){
 }
 function filtrarDist(){renderAdmDist();}
 function abrirNuevoDist(){abrir("modal-nuevo-dist");}
+
+// Consulta datos del contribuyente en el SRI y autocompleta el formulario.
+// Usa el servicio público del SRI. Si falla (CORS/red), el admin llena a mano.
+function buscarSRI(){
+  var ruc=document.getElementById("nd-ruc").value.trim().replace(/[^0-9]/g,"");
+  if(ruc.length!==10&&ruc.length!==13){toast("⚠️ Ingresa una cédula (10) o RUC (13) válido");return;}
+  // Detectar y fijar tipo de documento automáticamente
+  var tipoSel=document.getElementById("nd-tipodoc");
+  if(tipoSel)tipoSel.value=(ruc.length===10)?"cedula":"ruc";
+  toast("🔍 Consultando SRI...");
+  // El SRI espera el RUC de 13 dígitos para razón social; para cédula consulta natural
+  var rucConsulta=(ruc.length===10)?ruc+"001":ruc;
+  var url="https://srienlinea.sri.gob.ec/sri-catastro-sujeto-servicio-internet/rest/ConsolidadoContribuyente/obtenerPorNumerosRuc?&ruc="+rucConsulta;
+  fetch(url)
+    .then(function(r){return r.json();})
+    .then(function(data){
+      var c=Array.isArray(data)?data[0]:data;
+      if(!c||(!c.razonSocial&&!c.nombreComercial)){toast("⚠️ No se encontró en el SRI. Llena los datos a mano.");return;}
+      document.getElementById("nd-razon").value=c.razonSocial||c.nombreComercial||"";
+      if(c.nombreComercial&&c.nombreComercial!==c.razonSocial)document.getElementById("nd-empresa").value=c.nombreComercial;
+      // Dirección si viene en la respuesta
+      var dir="";
+      if(c.informacionFechasContribuyente&&c.informacionFechasContribuyente.direccionMatriz)dir=c.informacionFechasContribuyente.direccionMatriz;
+      if(c.direccionMatriz)dir=c.direccionMatriz;
+      if(dir)document.getElementById("nd-dir").value=dir;
+      toast("✅ Datos cargados del SRI. Revisa y completa correo/teléfono.");
+    })
+    .catch(function(e){
+      console.error("SRI error:",e);
+      toast("⚠️ No se pudo consultar el SRI desde el navegador. Llena los datos a mano.");
+    });
+}
+
 function guardarNuevoDist(){
   var r=document.getElementById("nd-razon").value.trim();
   var emp=document.getElementById("nd-empresa").value.trim();
+  var tipoDoc=document.getElementById("nd-tipodoc")?document.getElementById("nd-tipodoc").value:"ruc";
   var ruc=document.getElementById("nd-ruc").value.trim();
   var tel=document.getElementById("nd-tel").value.trim();
   var co=document.getElementById("nd-correo").value.trim();
@@ -843,13 +1008,22 @@ function guardarNuevoDist(){
   var dir=document.getElementById("nd-dir").value.trim();
   var ent=document.getElementById("nd-entrega").checked;
   var min=parseFloat(document.getElementById("nd-min").value)||30;
-  if(!r||!ruc||!pw){toast("⚠️ Completa razón social, RUC y contraseña");return;}
-  var nd={ruc:ruc,razon:r,pass:pw,tel:tel,correo:co,entrega:{habilitada:ent,montoMin:min}};
+  if(!r||!ruc||!pw){toast("⚠️ Completa razón social, documento y contraseña");return;}
+  // Validar longitud según tipo de documento
+  var soloNum=ruc.replace(/[^0-9]/g,"");
+  if(tipoDoc==="cedula"&&soloNum.length!==10){toast("⚠️ La cédula debe tener 10 dígitos");return;}
+  if(tipoDoc==="ruc"&&soloNum.length!==13){toast("⚠️ El RUC debe tener 13 dígitos");return;}
+  // Fix #5: evitar RUC/cédula duplicado
+  var existe=DISTRIBUIDORES.find(function(d){return d.ruc.toLowerCase()===ruc.toLowerCase();});
+  if(existe){toast("⚠️ Ya existe un distribuidor con ese documento");return;}
+  var nd={ruc:ruc,tipoDoc:tipoDoc,razon:r,pass:pw,tel:tel,correo:co,entrega:{habilitada:ent,montoMin:min},_nuevo:true};
   if(emp)nd.empresa=emp;
   if(dir)nd.establecimientos=[{nm:"Local principal",dir:dir,obs:""}];
   DISTRIBUIDORES.push(nd);
+  guardarDistribuidores(); // Fix #6: persistir
   cerrarModal("modal-nuevo-dist");renderAdmDist();toast("✅ "+r+" registrado");
   ["nd-razon","nd-empresa","nd-ruc","nd-tel","nd-correo","nd-pass","nd-dir"].forEach(function(x){document.getElementById(x).value="";});
+  if(document.getElementById("nd-tipodoc"))document.getElementById("nd-tipodoc").value="ruc";
 }
 
 function renderAdmStock(){
@@ -884,19 +1058,43 @@ function confirmar(html,cb){
   document.getElementById("modal-conf-c").innerHTML='<div class="mhandle"></div><div style="font-size:15px;line-height:1.5;margin-bottom:18px">'+html+'</div>'+
     '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><button class="btn btn-s" onclick="cerrarModal(\'modal-conf\')">Cancelar</button><button class="btn btn-p" id="conf-ok">Confirmar</button></div>';
   abrir("modal-conf");
-  document.getElementById("conf-ok").onclick=function(){cerrarModal("modal-conf");cb();};
+  var ok=document.getElementById("conf-ok");
+  ok.onclick=function(){cerrarModal("modal-conf");ok.onclick=null;cb();};
 }
 
 // Persistencia
 function cargarCarrito(){try{return JSON.parse(localStorage.getItem("pyro_cart_"+USER.ruc)||"[]");}catch(e){return[];}}
-function guardarCarrito(){try{localStorage.setItem("pyro_cart_"+USER.ruc,JSON.stringify(CARRITO));}catch(e){}}
+function guardarCarrito(){try{localStorage.setItem("pyro_cart_"+USER.ruc,JSON.stringify(CARRITO));}catch(e){avisarStorage();}}
 function cargarPedidos(){try{return JSON.parse(localStorage.getItem("pyro_pedidos")||"[]");}catch(e){return[];}}
-function guardarPedidos(){try{localStorage.setItem("pyro_pedidos",JSON.stringify(PEDIDOS));}catch(e){}}
+function guardarPedidos(){try{localStorage.setItem("pyro_pedidos",JSON.stringify(PEDIDOS));}catch(e){avisarStorage();}}
+// Fix #6: persistir distribuidores creados desde el admin
+function guardarDistribuidores(){
+  try{
+    var extra=DISTRIBUIDORES.filter(function(d){return d._nuevo;});
+    localStorage.setItem("pyro_dist_extra",JSON.stringify(extra));
+  }catch(e){avisarStorage();}
+}
+function cargarDistribuidoresExtra(){
+  try{
+    var extra=JSON.parse(localStorage.getItem("pyro_dist_extra")||"[]");
+    extra.forEach(function(d){
+      if(!DISTRIBUIDORES.find(function(x){return x.ruc===d.ruc;})){DISTRIBUIDORES.push(d);}
+    });
+  }catch(e){}
+}
+// Fix #20: avisar al usuario si el almacenamiento falla
+var _storageAvisado=false;
+function avisarStorage(){
+  if(_storageAvisado)return;
+  _storageAvisado=true;
+  toast("⚠️ No se pudo guardar localmente. Revisa el espacio o el modo privado del navegador.");
+}
 
 // Cerrar modal al tocar fondo
 document.addEventListener("click",function(e){if(e.target.classList.contains("ov"))e.target.classList.remove("open");});
-// Enter login
+// Enter login + carga inicial
 window.addEventListener("load",function(){
+  cargarDistribuidoresExtra(); // Fix #6
   var lp=document.getElementById("login-pass"),lu=document.getElementById("login-user");
   if(lp)lp.addEventListener("keydown",function(e){if(e.key==="Enter")hacerLogin();});
   if(lu)lu.addEventListener("keydown",function(e){if(e.key==="Enter")lp.focus();});
