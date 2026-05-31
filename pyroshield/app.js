@@ -112,13 +112,9 @@ function fmtPts(n){return (n||0).toString().replace(/\B(?=(\d{3})+(?!\d))/g,".")
 function fmt$(n){return"$"+(n||0).toFixed(2);}
 
 // ════════════════════ LOGIN ════════════════════
-function hacerLogin(){
-  var u=document.getElementById("login-user").value.trim();
-  var pw=document.getElementById("login-pass").value.trim();
-  var err=document.getElementById("login-err");
-  err.style.display="none";
-  var d=DISTRIBUIDORES.find(function(x){return x.ruc.toLowerCase()===u.toLowerCase()&&x.pass===pw;});
-  if(!d){err.style.display="block";return;}
+function loginConCredenciales(ruc,pw){
+  var d=DISTRIBUIDORES.find(function(x){return x.ruc.toLowerCase()===ruc.toLowerCase()&&x.pass===pw;});
+  if(!d)return false;
   USER=d; PEDIDOS=cargarPedidos(); cargarStock();
   if(d.esAdmin){mostrar("s-admin");renderAdmin();}
   else{
@@ -127,14 +123,29 @@ function hacerLogin(){
     irTab("inicio");
     renderCatalogo();
     actualizarBadge();
-    // Saludo flash
+  }
+  return true;
+}
+function hacerLogin(){
+  var u=document.getElementById("login-user").value.trim();
+  var pw=document.getElementById("login-pass").value.trim();
+  var err=document.getElementById("login-err");
+  err.style.display="none";
+  if(!loginConCredenciales(u,pw)){err.style.display="block";return;}
+  try{localStorage.setItem("pyro_sesion",JSON.stringify({ruc:u,pass:pw}));}catch(e){}
+  if(!USER.esAdmin){
     mostrarSaludoFlash();
-    // Tutorial primer ingreso
     var key="pyro_tut_"+USER.ruc;
     if(!localStorage.getItem(key)){iniciarTutorial();}
   }
 }
-function logout(){USER=null;CARRITO=[];mostrar("s-login");document.getElementById("login-user").value="";document.getElementById("login-pass").value="";}
+function logout(){
+  USER=null;CARRITO=[];
+  try{localStorage.removeItem("pyro_sesion");}catch(e){}
+  mostrar("s-login");
+  document.getElementById("login-user").value="";
+  document.getElementById("login-pass").value="";
+}
 function mostrar(id){document.querySelectorAll(".screen").forEach(function(s){s.classList.remove("active");});document.getElementById(id).classList.add("active");window.scrollTo(0,0);}
 
 function mostrarSaludoFlash(){
@@ -1345,9 +1356,13 @@ function avisarStorage(){
 
 // Cerrar modal al tocar fondo
 document.addEventListener("click",function(e){if(e.target.classList.contains("ov"))e.target.classList.remove("open");});
-// Enter login + carga inicial
+// Enter login + carga inicial + restaurar sesión
 window.addEventListener("load",function(){
   cargarDistribuidoresExtra(); // Fix #6
+  try{
+    var s=JSON.parse(localStorage.getItem("pyro_sesion")||"null");
+    if(s&&s.ruc&&s.pass){loginConCredenciales(s.ruc,s.pass);}
+  }catch(e){}
   var lp=document.getElementById("login-pass"),lu=document.getElementById("login-user");
   if(lp)lp.addEventListener("keydown",function(e){if(e.key==="Enter")hacerLogin();});
   if(lu)lu.addEventListener("keydown",function(e){if(e.key==="Enter")lp.focus();});
