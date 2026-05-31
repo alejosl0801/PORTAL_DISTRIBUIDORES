@@ -119,7 +119,7 @@ function hacerLogin(){
   err.style.display="none";
   var d=DISTRIBUIDORES.find(function(x){return x.ruc.toLowerCase()===u.toLowerCase()&&x.pass===pw;});
   if(!d){err.style.display="block";return;}
-  USER=d; PEDIDOS=cargarPedidos();
+  USER=d; PEDIDOS=cargarPedidos(); cargarStock();
   if(d.esAdmin){mostrar("s-admin");renderAdmin();}
   else{
     CARRITO=cargarCarrito();
@@ -583,6 +583,11 @@ function confirmarPedido(){
   var ped={id:pid,ruc:USER.ruc,razon:USER.razon,fecha:now.toLocaleDateString(),fechaISO:now.toISOString(),pago:pago,modo:modo,notas:notas,items:items,subtotal:subtotal,iva:iva,total:total,puntos:ptsTotal,estado:"pendiente",entregaInfo:entregaInfo,esCanje:false};
   PEDIDOS.push(ped);
   guardarPedidos();
+  items.forEach(function(it){
+    var p=PRODUCTOS.find(function(x){return x.id===it.id;});
+    if(p){p.stock=Math.max(0,p.stock-it.cant);if(p.stock===0)p.ago=true;}
+  });
+  guardarStock();
   CARRITO=[];
   guardarCarrito();
   actualizarBadge();
@@ -600,13 +605,23 @@ function setHFiltro(f,btn){
 }
 
 function estadoLabel(e){
-  var m={pendiente:"⏳ Pendiente",autorizado:"✅ Autorizado",entrega:"🚚 En camino",facturado:"🧾 Facturado",finalizado:"✔️ Finalizado",cancelado:"✕ Cancelado"};
+  var m={
+    pendiente:"⏳ Pendiente",
+    en_proceso:"🔄 En proceso",
+    autorizado:"🔄 En proceso",
+    entrega:"🔄 En proceso",
+    entregado:"📦 Entregado (pend. factura)",
+    facturado:"🧾 Facturado (pend. entrega)",
+    finalizado:"✔️ Finalizado",
+    cancelado:"✕ Cancelado"
+  };
   return m[e]||e;
 }
 function estadoClass(e){
   if(e==="pendiente")return"est-pendiente";
-  if(e==="autorizado"||e==="facturado")return"est-autorizado";
-  if(e==="entrega")return"est-entrega";
+  if(e==="en_proceso"||e==="autorizado"||e==="entrega")return"est-en-proceso";
+  if(e==="entregado")return"est-entregado";
+  if(e==="facturado")return"est-facturado";
   if(e==="finalizado")return"est-finalizado";
   if(e==="cancelado")return"est-cancelado";
   return"est-pendiente";
@@ -614,25 +629,34 @@ function estadoClass(e){
 
 function renderHistorial(){
   var mp=misPedidos().slice().reverse();
-  if(H_FILTRO==="pendiente")mp=mp.filter(function(p){return p.estado==="pendiente"||p.estado==="autorizado";});
-  else if(H_FILTRO==="proceso")mp=mp.filter(function(p){return p.estado==="entrega"||p.estado==="facturado";});
+  if(H_FILTRO==="pendiente")mp=mp.filter(function(p){return p.estado==="pendiente";});
+  else if(H_FILTRO==="proceso")mp=mp.filter(function(p){return["en_proceso","autorizado","entrega","entregado","facturado"].indexOf(p.estado)!==-1;});
   else if(H_FILTRO==="finalizado")mp=mp.filter(function(p){return p.estado==="finalizado";});
   document.getElementById("hist-lista").innerHTML=mp.length?mp.map(function(p){
-    var ptsHtml=p.esCanje?'<div class="ped-pts">🎁 Canjeaste '+p.canjePts+' pts</div>':'<div class="ped-pts">🏆 Este pedido te dio '+fmtPts(p.puntos||0)+' puntos</div>';
-    var cancelBtn=(p.estado==="pendiente")?'<button class="btn btn-sm" style="background:var(--rojoc);color:var(--rojo);border:1.5px solid var(--rojo)" onclick="cancelarPedido(\''+p.id+'\')">Cancelar</button>':"";
-    var califBtn=(p.estado==="finalizado"&&!p.calificacion)?'<button class="btn btn-sm btn-s" onclick="abrirCalif(\''+p.id+'\')">⭐ Calificar</button>':"";
+    var ptsHtml=p.esCanje?
+      '<div class="ped-pts">🎁 Canjeaste '+p.canjePts+' pts</div>'+
+      '<div style="font-size:11px;color:var(--g3);margin-top:3px">Tu regalo será entregado en 0 a 7 días laborables, según disponibilidad.</div>':
+      '<div class="ped-pts">🏆 Este pedido te dio '+fmtPts(p.puntos||0)+' puntos</div>';
     var califShow=p.calificacion?'<div style="font-size:11px;color:var(--g3);margin-top:4px">Calificación: '+"⭐".repeat(p.calificacion.estrellas)+'</div>':"";
+    var accBtns='<button class="btn btn-sm btn-s" onclick="verDetallePed(\''+p.id+'\')">Ver detalle</button>';
+    if(!p.esCanje){
+      if(p.estado==="pendiente"){
+        accBtns+='<button class="btn btn-sm btn-s" onclick="editarPedido(\''+p.id+'\')">✏️ Editar</button>';
+        accBtns+='<button class="btn btn-sm" style="background:var(--rojoc);color:var(--rojo);border:1.5px solid var(--rojo)" onclick="cancelarPedido(\''+p.id+'\')">Cancelar</button>';
+      } else if(p.estado==="finalizado"){
+        accBtns+='<button class="btn btn-sm btn-s" onclick="repetirPedido(\''+p.id+'\')">↩ Repetir</button>';
+        if(!p.calificacion)accBtns+='<button class="btn btn-sm btn-s" onclick="abrirCalif(\''+p.id+'\')">⭐ Calificar</button>';
+      } else if(p.estado==="cancelado"){
+        accBtns+='<button class="btn btn-sm btn-s" onclick="repetirPedido(\''+p.id+'\')">↩ Volver a solicitar</button>';
+      }
+    }
     return '<div class="ped">'+
-      '<div class="ped-top"><div><div class="ped-id">Pedido #'+p.id+'</div><div style="font-size:12px;color:var(--g3)">'+p.fecha+'</div></div>'+
+      '<div class="ped-top"><div><div class="ped-id">'+(p.esCanje?"Canje":"Pedido")+' #'+p.id+'</div><div style="font-size:12px;color:var(--g3)">'+p.fecha+'</div></div>'+
       '<span class="est-chip '+estadoClass(p.estado)+'">'+estadoLabel(p.estado)+'</span></div>'+
       '<div class="ped-total">'+fmt$(p.total)+'</div>'+
-      '<div class="ped-items">'+(p.items?p.items.length:0)+' producto(s) · '+p.pago+'</div>'+
+      (p.esCanje?'<div class="ped-items">🎁 '+p.canjeNm+'</div>':'<div class="ped-items">'+(p.items?p.items.length:0)+' producto(s) · '+p.pago+'</div>')+
       ptsHtml+califShow+
-      '<div class="ped-acc">'+
-        '<button class="btn btn-sm btn-s" onclick="verDetallePed(\''+p.id+'\')">Ver detalle</button>'+
-        '<button class="btn btn-sm btn-s" onclick="repetirPedido(\''+p.id+'\')">↩ Repetir</button>'+
-        cancelBtn+califBtn+
-      '</div>'+
+      '<div class="ped-acc">'+accBtns+'</div>'+
     '</div>';
   }).join(""):'<div class="empty"><div class="ico">📭</div><p>No hay pedidos en esta categoría</p></div>';
 }
@@ -640,8 +664,40 @@ function renderHistorial(){
 function cancelarPedido(pid){
   confirmar("¿Cancelar el pedido #"+pid+"? Esta acción no se puede deshacer.",function(){
     var p=PEDIDOS.find(function(x){return x.id===pid;});
-    if(p)p.estado="cancelado";
+    if(p){
+      p.estado="cancelado";
+      if(p.items){
+        p.items.forEach(function(it){
+          var prod=PRODUCTOS.find(function(x){return x.id===it.id;});
+          if(prod){prod.stock+=it.cant;prod.ago=false;}
+        });
+        guardarStock();
+      }
+    }
     guardarPedidos(); renderHistorial(); toast("✕ Pedido cancelado");
+  });
+}
+
+function editarPedido(pid){
+  confirmar("¿Devolver el pedido #"+pid+" al carrito para editarlo?",function(){
+    var p=PEDIDOS.find(function(x){return x.id===pid;});
+    if(!p||!p.items)return;
+    p.items.forEach(function(it){
+      var prod=PRODUCTOS.find(function(x){return x.id===it.id;});
+      if(prod){prod.stock+=it.cant;prod.ago=false;}
+    });
+    guardarStock();
+    p.items.forEach(function(it){
+      var prod=PRODUCTOS.find(function(x){return x.id===it.id;});
+      if(!prod)return;
+      var exist=CARRITO.find(function(c){return c.id===it.id;});
+      if(exist)exist.cant+=it.cant;
+      else CARRITO.push({id:it.id,cant:it.cant});
+    });
+    PEDIDOS=PEDIDOS.filter(function(x){return x.id!==pid;});
+    guardarPedidos(); guardarCarrito(); actualizarBadge();
+    irTab("carrito");
+    toast("✏️ Pedido #"+pid+" devuelto al carrito para edición.");
   });
 }
 
@@ -796,7 +852,7 @@ function renderAdmPedidos(){
 function admVerPedido(pid){
   var p=PEDIDOS.find(function(x){return x.id===pid;});
   if(!p)return;
-  var estados=['pendiente','autorizado','entrega','facturado','finalizado','cancelado'];
+  var estados=['pendiente','en_proceso','entregado','facturado','finalizado','cancelado'];
   var html='<div class="mhandle"></div><h3>'+(p.esCanje?"Canje":"Pedido")+" #"+p.id+'</h3>'+
     '<div style="font-size:12px;color:var(--g3);margin-bottom:12px">'+p.razon+' · '+tipoDocLabel(DISTRIBUIDORES.find(function(d){return d.ruc===p.ruc;})||{ruc:p.ruc})+': '+p.ruc+' · '+p.fecha+'</div>'+
     '<label class="form-label">Estado</label>'+
@@ -860,7 +916,16 @@ function renderResumenDist(ruc){
 function guardarEstadoPed(pid){
   var p=PEDIDOS.find(function(x){return x.id===pid;});
   var sel=document.getElementById("adm-estado-sel");
-  if(p&&sel)p.estado=sel.value;
+  if(!p||!sel)return;
+  var estadoViejo=p.estado;
+  p.estado=sel.value;
+  if(sel.value==="cancelado"&&estadoViejo!=="cancelado"&&p.items){
+    p.items.forEach(function(it){
+      var prod=PRODUCTOS.find(function(x){return x.id===it.id;});
+      if(prod){prod.stock+=it.cant;prod.ago=false;}
+    });
+    guardarStock();
+  }
   guardarPedidos(); cerrarModal("modal-pedido-det"); renderAdmPedidos();
   toast("✅ Estado actualizado");
 }
@@ -1059,7 +1124,12 @@ function guardarNuevoDist(){
 }
 
 function renderAdmStock(){
-  var cont=document.getElementById("adm-stock-lista");var html="";
+  var cont=document.getElementById("adm-stock-lista");
+  var topHtml='<div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">'+
+    '<button class="btn btn-s btn-sm" onclick="exportarExcelStock()">📥 Exportar Excel</button>'+
+    '<label class="btn btn-s btn-sm" style="cursor:pointer">📤 Importar CSV<input type="file" accept=".csv" style="display:none" onchange="importarStock(event)"></label>'+
+  '</div>';
+  var html="";
   Object.keys(CATS).forEach(function(ck){
     var cat=CATS[ck];
     cat.subs.forEach(function(sn){
@@ -1069,19 +1139,102 @@ function renderAdmStock(){
       html+=ps.map(function(p){
         var col=p.ago?"b-rojo":p.stock<20?"b-amar":"b-verde";
         var lab=p.ago?"Agotado":p.stock<20?"Bajo":"OK";
-        return '<div class="card" style="margin-bottom:8px"><div class="card-b" style="display:flex;justify-content:space-between;align-items:center">'+
-          '<div><div style="font-size:13px;font-weight:700">'+p.nm+'</div><div style="font-size:11px;color:var(--g3)">'+p.id+'</div></div>'+
-          '<div style="text-align:right"><div style="font-size:18px;font-weight:800;font-family:\'Barlow Condensed\',sans-serif">'+p.stock+'</div><span class="badge '+col+'">'+lab+'</span></div>'+
+        return '<div class="card" style="margin-bottom:8px"><div class="card-b" style="display:flex;justify-content:space-between;align-items:center;gap:10px">'+
+          '<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:700">'+p.nm+'</div><div style="font-size:11px;color:var(--g3)">'+p.id+'</div></div>'+
+          '<div style="display:flex;align-items:center;gap:8px;flex-shrink:0">'+
+            '<span class="badge '+col+'">'+lab+'</span>'+
+            '<input type="number" min="0" value="'+p.stock+'" id="st-'+p.id+'" style="width:70px;padding:6px 8px;border:1.5px solid var(--g2);border-radius:8px;font-size:14px;font-weight:700;text-align:center">'+
+            '<button class="btn btn-sm btn-p" style="padding:7px 12px;min-height:0" onclick="ajustarStock(\''+p.id+'\',document.getElementById(\'st-'+p.id+'\').value)">✓</button>'+
+          '</div>'+
         '</div></div>';
       }).join("");
     });
   });
-  cont.innerHTML=html;
+  cont.innerHTML=topHtml+html;
+}
+
+function ajustarStock(id,val){
+  var p=PRODUCTOS.find(function(x){return x.id===id;});
+  if(!p)return;
+  var n=parseInt(val,10);
+  if(isNaN(n)||n<0){toast("⚠️ Ingresa un número válido");return;}
+  p.stock=n;
+  p.ago=(n===0);
+  guardarStock();
+  renderAdmStock();
+  toast("✅ Stock actualizado: "+p.nm);
+}
+
+function exportarExcelStock(){
+  function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
+  var cabeceras=["ID","Nombre","Categoría","Subcategoría","Stock","Estado"];
+  var filas=[];
+  Object.keys(CATS).forEach(function(ck){
+    var cat=CATS[ck];
+    cat.subs.forEach(function(sn){
+      PRODUCTOS.filter(function(p){return p.cat===ck&&p.sub===sn;}).forEach(function(p){
+        filas.push([p.id,p.nm,cat.nombre,sn,p.stock,p.ago?"Agotado":p.stock<20?"Bajo":"OK"]);
+      });
+    });
+  });
+  var xml='<?xml version="1.0" encoding="UTF-8"?><?mso-application progid="Excel.Sheet"?>'+
+    '<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">'+
+    '<Styles><Style ss:ID="h"><Interior ss:Color="#1A1A1A" ss:Pattern="Solid"/><Font ss:Bold="1" ss:Color="#FFFFFF"/></Style></Styles>'+
+    '<Worksheet ss:Name="Stock"><Table>'+
+    '<Column ss:Width="100"/><Column ss:Width="200"/><Column ss:Width="100"/><Column ss:Width="100"/><Column ss:Width="60"/><Column ss:Width="70"/>';
+  xml+='<Row>';
+  cabeceras.forEach(function(c){xml+='<Cell ss:StyleID="h"><Data ss:Type="String">'+esc(c)+'</Data></Cell>';});
+  xml+='</Row>';
+  filas.forEach(function(fila){
+    xml+='<Row>';
+    fila.forEach(function(cel,i){
+      xml+='<Cell><Data ss:Type="'+(i===4?"Number":"String")+'">'+esc(String(cel))+'</Data></Cell>';
+    });
+    xml+='</Row>';
+  });
+  xml+='</Table></Worksheet></Workbook>';
+  var blob=new Blob([xml],{type:"application/vnd.ms-excel;charset=utf-8"});
+  var url=URL.createObjectURL(blob);
+  var a=document.createElement("a");
+  a.href=url; a.download="stock_pyroshield_"+new Date().toISOString().slice(0,10)+".xls";
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a); URL.revokeObjectURL(url);
+  toast("📥 "+filas.length+" productos exportados");
+}
+
+function importarStock(event){
+  var file=event.target.files[0];
+  if(!file)return;
+  var reader=new FileReader();
+  reader.onload=function(e){
+    var lines=e.target.result.replace(/\r/g,"").split("\n");
+    if(!lines.length){toast("⚠️ Archivo vacío");return;}
+    var header=lines[0].toLowerCase().split(",").map(function(h){return h.trim();});
+    var idIdx=header.indexOf("id");
+    var stIdx=header.indexOf("stock");
+    if(idIdx<0||stIdx<0){toast("⚠️ El CSV debe tener columnas 'id' y 'stock'");return;}
+    var actualizados=0;
+    lines.slice(1).forEach(function(line){
+      if(!line.trim())return;
+      var cols=line.split(",");
+      if(!cols[idIdx])return;
+      var id=cols[idIdx].trim().replace(/^"|"$/g,"");
+      var stock=parseInt(cols[stIdx],10);
+      if(isNaN(stock))return;
+      var p=PRODUCTOS.find(function(x){return x.id===id;});
+      if(p){p.stock=Math.max(0,stock);p.ago=(p.stock===0);actualizados++;}
+    });
+    guardarStock();
+    renderAdmStock();
+    toast("✅ "+actualizados+" productos actualizados desde CSV");
+    event.target.value="";
+  };
+  reader.readAsText(file);
 }
 
 // ════════════════════ EXPORTAR EXCEL ════════════════════
 function exportarExcel(){
-  var estadosMap={pendiente:"Pendiente",autorizado:"Autorizado",entrega:"En camino",facturado:"Facturado",finalizado:"Finalizado",cancelado:"Cancelado"};
+  var estadosMap={pendiente:"Pendiente",en_proceso:"En proceso",autorizado:"En proceso",entrega:"En proceso",entregado:"Entregado (pend. factura)",facturado:"Facturado (pend. entrega)",finalizado:"Finalizado",cancelado:"Cancelado"};
   var cabeceras=["ID","Fecha","Tipo","Distribuidor","RUC","Estado","Forma de pago","Modo entrega","Productos / Premio","Subtotal","IVA 15%","Total","Puntos","Notas"];
 
   var filas=PEDIDOS.slice().reverse().map(function(p){
@@ -1165,6 +1318,8 @@ function cargarCarrito(){try{return JSON.parse(localStorage.getItem("pyro_cart_"
 function guardarCarrito(){try{localStorage.setItem("pyro_cart_"+USER.ruc,JSON.stringify(CARRITO));}catch(e){avisarStorage();}}
 function cargarPedidos(){try{return JSON.parse(localStorage.getItem("pyro_pedidos")||"[]");}catch(e){return[];}}
 function guardarPedidos(){try{localStorage.setItem("pyro_pedidos",JSON.stringify(PEDIDOS));}catch(e){avisarStorage();}}
+function guardarStock(){var st={};PRODUCTOS.forEach(function(p){st[p.id]={stock:p.stock,ago:p.ago};});try{localStorage.setItem("pyro_stock",JSON.stringify(st));}catch(e){}}
+function cargarStock(){try{var st=JSON.parse(localStorage.getItem("pyro_stock")||"{}");PRODUCTOS.forEach(function(p){if(st[p.id]!=null){p.stock=st[p.id].stock;p.ago=st[p.id].ago;}});}catch(e){}}
 // Fix #6: persistir distribuidores creados desde el admin
 function guardarDistribuidores(){
   try{

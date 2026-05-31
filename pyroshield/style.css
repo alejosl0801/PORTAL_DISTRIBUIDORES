@@ -215,8 +215,10 @@ body{font-family:'Barlow',sans-serif;background:var(--g1);color:var(--negro);min
 .adm-stat .l{font-size:11px;color:var(--g3);margin-top:2px}
 .est-chip{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700}
 .est-pendiente{background:#FEF9E7;color:#B8860B}
+.est-en-proceso{background:var(--azulc);color:var(--azul)}
 .est-autorizado{background:var(--azulc);color:var(--azul)}
 .est-entrega{background:#EBF5FB;color:#1A5FAA}
+.est-entregado{background:#E8F8F5;color:#1A6B3A}
 .est-facturado{background:#E8F8F5;color:#1A6B3A}
 .est-finalizado{background:var(--verdec);color:var(--verde)}
 .est-cancelado{background:var(--g2);color:var(--g3)}
