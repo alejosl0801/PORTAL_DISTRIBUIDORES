@@ -400,7 +400,7 @@ function renderCarrito(){
         sigHtml+
       '</div>'+
       '<div class="qty">'+
-        '<button class="qb" onclick="cambiarCant(\''+it.id+'\',-1)">−</button>'+
+        '<button class="qb" onclick="cambiarCant(\''+it.id+'\',-1)"'+(it.cant===0?' disabled style="opacity:.3;pointer-events:none"':'')+'>−</button>'+
         '<span class="qv">'+it.cant+'</span>'+
         '<button class="qb" onclick="cambiarCant(\''+it.id+'\',1)">+</button>'+
       '</div>'+
@@ -470,7 +470,7 @@ function cambiarCant(id,d){
     }
   }
   it.cant+=d;
-  if(it.cant<=0)CARRITO=CARRITO.filter(function(i){return i.id!==id;});
+  if(it.cant<0)it.cant=0;
   guardarCarrito(); renderCarrito(); actualizarBadge();
 }
 function quitarItem(id){
@@ -523,7 +523,8 @@ function eliminarBorrador(i){
 
 // ════════════════════ CONFIRMAR PEDIDO ════════════════════
 function confirmarPedido(){
-  if(!CARRITO.length){toast("⚠️ Tu carrito está vacío");return;}
+  var hayItems=CARRITO.some(function(i){var p=PRODUCTOS.find(function(x){return x.id===i.id;});return p&&!p.ago&&i.cant>0;});
+  if(!hayItems){toast("⚠️ Tu carrito está vacío");return;}
   var pago=document.getElementById("cart-pago").value;
   var modo=document.getElementById("cart-modo").value;
   var notas=document.getElementById("cart-notas").value;
@@ -531,7 +532,7 @@ function confirmarPedido(){
   var items=[];
   CARRITO.forEach(function(it){
     var p=PRODUCTOS.find(function(x){return x.id===it.id;});
-    if(!p||p.ago)return;
+    if(!p||p.ago||it.cant<=0)return;
     var rv=precioConVolumen(p,it.cant);
     var pr=rv.precio;
     var pts=calcPuntos(pr,p.costo)*it.cant;
@@ -1045,6 +1046,72 @@ function renderAdmStock(){
     });
   });
   cont.innerHTML=html;
+}
+
+// ════════════════════ EXPORTAR EXCEL ════════════════════
+function exportarExcel(){
+  var estadosMap={pendiente:"Pendiente",autorizado:"Autorizado",entrega:"En camino",facturado:"Facturado",finalizado:"Finalizado",cancelado:"Cancelado"};
+  var cabeceras=["ID","Fecha","Tipo","Distribuidor","RUC","Estado","Forma de pago","Modo entrega","Productos / Premio","Subtotal","IVA 15%","Total","Puntos","Notas"];
+
+  var filas=PEDIDOS.slice().reverse().map(function(p){
+    var dist=DISTRIBUIDORES.find(function(d){return d.ruc===p.ruc;})||{};
+    var nombre=(dist.empresa||p.razon||"").trim();
+    if(p.esCanje){
+      return [p.id,p.fecha,"Canje",nombre,p.ruc,estadosMap[p.estado]||p.estado,"—","—",p.canjeNm||"",0,0,0,p.canjePts||0,""];
+    }
+    var prods=(p.items||[]).map(function(it){return it.nm+" x"+it.cant;}).join(" | ");
+    return [
+      p.id, p.fecha, "Pedido", nombre, p.ruc,
+      estadosMap[p.estado]||p.estado, p.pago||"",
+      p.modo==="retiro"?"Retiro en local":"Entrega a domicilio",
+      prods,
+      parseFloat((p.subtotal||0).toFixed(2)),
+      parseFloat((p.iva||0).toFixed(2)),
+      parseFloat((p.total||0).toFixed(2)),
+      p.puntos||0,
+      p.notas||""
+    ];
+  });
+
+  function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
+  var NUM_COLS={9:1,10:1,11:1,12:1};
+
+  var xml='<?xml version="1.0" encoding="UTF-8"?><?mso-application progid="Excel.Sheet"?>'+
+    '<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">'+
+    '<Styles>'+
+      '<Style ss:ID="h"><Interior ss:Color="#1A1A1A" ss:Pattern="Solid"/><Font ss:Bold="1" ss:Color="#FFFFFF"/></Style>'+
+      '<Style ss:ID="n"><NumberFormat ss:Format="0.00"/></Style>'+
+    '</Styles>'+
+    '<Worksheet ss:Name="Pedidos"><Table>'+
+    '<Column ss:Width="55"/><Column ss:Width="80"/><Column ss:Width="60"/><Column ss:Width="160"/><Column ss:Width="100"/>'+
+    '<Column ss:Width="85"/><Column ss:Width="110"/><Column ss:Width="120"/><Column ss:Width="220"/>'+
+    '<Column ss:Width="70"/><Column ss:Width="60"/><Column ss:Width="70"/><Column ss:Width="60"/><Column ss:Width="120"/>';
+
+  xml+='<Row>';
+  cabeceras.forEach(function(c){xml+='<Cell ss:StyleID="h"><Data ss:Type="String">'+esc(c)+'</Data></Cell>';});
+  xml+='</Row>';
+
+  filas.forEach(function(fila){
+    xml+='<Row>';
+    fila.forEach(function(cel,i){
+      if(NUM_COLS[i]){
+        xml+='<Cell ss:StyleID="n"><Data ss:Type="Number">'+parseFloat(cel)+'</Data></Cell>';
+      } else {
+        xml+='<Cell><Data ss:Type="String">'+esc(String(cel))+'</Data></Cell>';
+      }
+    });
+    xml+='</Row>';
+  });
+
+  xml+='</Table></Worksheet></Workbook>';
+
+  var blob=new Blob([xml],{type:"application/vnd.ms-excel;charset=utf-8"});
+  var url=URL.createObjectURL(blob);
+  var a=document.createElement("a");
+  a.href=url; a.download="pedidos_pyroshield_"+new Date().toISOString().slice(0,10)+".xls";
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a); URL.revokeObjectURL(url);
+  toast("📥 "+filas.length+" registros exportados");
 }
 
 // ════════════════════ MODALES / UTIL ════════════════════
