@@ -36,7 +36,7 @@ var PCT_ALTO = 0.10;
 var PCT_NORMAL = 0.08;
 var PUNTOS_X_DOLAR = 100;
 var AZUR_TOKEN = "API_1851_2064_5fcfa1b47f430";
-var AZUR_API = "https://azur.com.ec/plataforma/api/v2/";
+var AZUR_API = "https://azur-proxy.alejosl0801.workers.dev/";
 
 // ════════════════════ PROMOCIONES ════════════════════
 var PROMOS = [
