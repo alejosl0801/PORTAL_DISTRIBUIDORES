@@ -1084,7 +1084,7 @@ function buscarSRI(){
   toast("🔍 Consultando SRI...");
   // El SRI espera el RUC de 13 dígitos para razón social; para cédula consulta natural
   var rucConsulta=(ruc.length===10)?ruc+"001":ruc;
-  var url="https://srienlinea.sri.gob.ec/sri-catastro-sujeto-servicio-internet/rest/ConsolidadoContribuyente/obtenerPorNumerosRuc?&ruc="+rucConsulta;
+  var url="https://azur-proxy.alejosl0801.workers.dev/sri/"+rucConsulta;
   fetch(url)
     .then(function(r){return r.json();})
     .then(function(data){
