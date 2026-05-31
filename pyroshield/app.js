@@ -1,8 +1,9 @@
 // ════════════════════ PRODUCTOS ════════════════════
 var CATS = {
-  extintores:{nombre:"Extintores",ico:"🧯",subs:["PQS","CO2"]},
+  extintores:{nombre:"Extintores",ico:"🧯",subs:["PQS","CO2","H2O"]},
   accesorios:{nombre:"Accesorios",ico:"🔧",subs:["Cabezales","Manómetros","Mangueras","Soportes","Otros"]},
-  gabinetes:{nombre:"Gabinetes",ico:"🏗️",subs:["Mangueras","Válvulas","Hidrantes","Otros"]}
+  gabinetes:{nombre:"Gabinetes",ico:"🏗️",subs:["Válvulas","Hidrantes","Otros"]},
+  mangueras_hid:{nombre:"Mangueras HID",ico:"💧",subs:["Mangueras"]}
 };
 
 var PRODUCTOS = [
@@ -16,7 +17,7 @@ var PRODUCTOS = [
   {id:"VENT5CO2",nm:"Extintor 5 LBS CO2",cat:"extintores",sub:"CO2",pv:26.70,pb:22.40,costo:15.03,stock:59,ago:false,img:"VENT5CO2",descVol:[[5,1],[8,2],[12,3],[15,5],[20,6]]},
   {id:"VENT10CO2",nm:"Extintor 10 LBS CO2",cat:"extintores",sub:"CO2",pv:34.65,pb:33.85,costo:23.92,stock:0,ago:true,img:"VENT10CO2",descVol:[[3,1],[5,2],[8,3],[10,5],[15,6]]},
   {id:"VENT20CO2C",nm:"Extintor 20 LBS CO2 + Carro",cat:"extintores",sub:"CO2",pv:106.99,pb:104.99,costo:40.99,stock:19,ago:false,img:"VENT20CO2C",descVol:[[2,1],[3,2],[4,3],[5,5],[8,6]]},
-  {id:"VENT25AQ",nm:"Extintor 2.5 Glns Agua Química",cat:"extintores",sub:"CO2",pv:63.00,pb:61.25,costo:38.25,stock:24,ago:false,img:"VENT25AQ",descVol:[[2,1],[3,2],[4,3],[5,5],[8,5]]},
+  {id:"VENT25AQ",nm:"Extintor 2.5 Glns Agua Química",cat:"extintores",sub:"H2O",pv:63.00,pb:61.25,costo:38.25,stock:24,ago:false,img:"VENT25AQ",descVol:[[2,1],[3,2],[4,3],[5,5],[8,5]]},
   // ACCESORIOS - CABEZALES
   {id:"CABPQS1020",nm:"Cabezal PQS 10/20 LBS",cat:"accesorios",sub:"Cabezales",pv:2.95,pb:2.80,costo:1.24,stock:0,ago:true,img:null,descVol:[[20,1],[40,2],[60,3],[80,5],[120,6]]},
   {id:"CABCO2510",nm:"Cabezal CO2 5/10 LBS",cat:"accesorios",sub:"Cabezales",pv:7.80,pb:7.00,costo:4.71,stock:222,ago:false,img:"CABCO2510",descVol:[[10,1],[20,2],[30,3],[40,5],[50,6]]},
@@ -37,8 +38,8 @@ var PRODUCTOS = [
   {id:"ABRPQS",nm:"Abrazaderas Plásticas",cat:"accesorios",sub:"Otros",pv:0.26,pb:0.24,costo:0.12,stock:2619,ago:false,img:null,descVol:[[100,1],[200,2],[300,3],[500,5],[1000,6]]},
   {id:"SEGPLAM",nm:"Seguros Plásticos Amarillo",cat:"accesorios",sub:"Otros",pv:0.08,pb:0.06,costo:0.03,stock:14767,ago:false,img:null,descVol:[[200,1],[500,2],[800,3],[1000,5],[2000,6]]},
   // GABINETES - MANGUERAS
-  {id:"MANG15M",nm:"Manguera 15M doble chaqueta 1½\"",cat:"gabinetes",sub:"Mangueras",pv:38.61,pb:36.98,costo:29.93,stock:162,ago:false,img:"MANG15M",descVol:[[3,1],[5,2],[8,3]]},
-  {id:"MANG30M",nm:"Manguera 30M doble chaqueta 1½\"",cat:"gabinetes",sub:"Mangueras",pv:69.10,pb:64.28,costo:46.14,stock:99,ago:false,img:"MANG30M",descVol:[[3,1],[5,2],[8,3],[10,4],[15,5]]},
+  {id:"MANG15M",nm:"Manguera 15M doble chaqueta 1½\"",cat:"mangueras_hid",sub:"Mangueras",pv:38.61,pb:36.98,costo:29.93,stock:162,ago:false,img:"MANG15M",descVol:[[3,1],[5,2],[8,3]]},
+  {id:"MANG30M",nm:"Manguera 30M doble chaqueta 1½\"",cat:"mangueras_hid",sub:"Mangueras",pv:69.10,pb:64.28,costo:46.14,stock:99,ago:false,img:"MANG30M",descVol:[[3,1],[5,2],[8,3],[10,4],[15,5]]},
   // GABINETES - VÁLVULAS
   {id:"ANG112",nm:"Angular 1½\" 300 lbs bronce",cat:"gabinetes",sub:"Válvulas",pv:33.83,pb:31.48,costo:23.19,stock:149,ago:false,img:"ANG112",descVol:[[3,1],[5,2],[8,3],[10,4],[15,5]]},
   {id:"ANG212",nm:"Angular 2½\" 300 lbs bronce",cat:"gabinetes",sub:"Válvulas",pv:67.11,pb:61.26,costo:46.85,stock:76,ago:false,img:"ANG212",descVol:[[3,1],[5,2],[8,3],[10,4]]},
@@ -52,7 +53,7 @@ var PRODUCTOS = [
 ];
 
 // ════════════════════ ESTADO GLOBAL ════════════════════
-var USER=null, CARRITO=[], PEDIDOS=[], FILTRO="todos", ADM_TAB="pedidos";
+var USER=null, CARRITO=[], PEDIDOS=[], FILTRO="todos", SUB_FILTRO=null, ADM_TAB="pedidos";
 var CALIF_PED_ID=null, CALIF_ESTRELLAS=0;
 var TUT_PASO=0;
 var TUT_PASOS=[
@@ -217,27 +218,25 @@ function renderInicio(){
 function renderPromosHome(){
   limpiarContadores();
   var cont=document.getElementById("promos-home");
-  cont.innerHTML="<div class='sec-titulo'>Promociones</div>"+PROMOS.map(function(pr){
-    var activa=pr.estado==="activa";
-    var badge=activa?'<span class="promo-badge act">⏰ Activa</span>':'<span class="promo-badge fin">Finalizada</span>';
+  var activas=PROMOS.filter(function(pr){return pr.estado==="activa";});
+  if(!activas.length){cont.innerHTML="";return;}
+  cont.innerHTML="<div class='sec-titulo'>Promociones</div>"+activas.map(function(pr){
     var items=pr.items.map(function(it){
+      var prod=PRODUCTOS.find(function(x){return x.id===it.id;});
+      var imgHtml=prod&&prod.img&&IMGS[prod.img]?'<img src="'+IMGS[prod.img]+'" alt="'+it.nm+'" style="width:60px;height:60px;object-fit:cover;border-radius:8px;margin-bottom:6px">':'';
       return '<div class="promo-it">'+
+        imgHtml+
         '<div class="nm">'+it.nm+'</div>'+
         '<div class="pv">'+fmt$(it.pv)+'</div>'+
         '<div class="pp">'+fmt$(it.pp)+'</div>'+
         '<div class="sv">Ahorras '+fmt$(it.ahorro)+'</div>'+
       '</div>';
     }).join("");
-    var foot='';
-    if(activa){
-      var cntId="cnt-"+pr.id;
-      foot='<div class="promo-foot"><span class="promo-cnt" id="'+cntId+'">Calculando...</span><span class="iva">+ IVA 15%</span></div>';
-      setTimeout(function(){iniciarContador(pr.fechaVence,cntId);},100);
-    } else {
-      foot='<div class="promo-foot"><span class="dt">Finalizada el <b>'+pr.fechaVence+'</b></span><span class="iva">+ IVA 15%</span></div>';
-    }
+    var cntId="cnt-"+pr.id;
+    var foot='<div class="promo-foot"><span class="promo-cnt" id="'+cntId+'">Calculando...</span><span class="iva">+ IVA 15%</span></div>';
+    setTimeout(function(){iniciarContador(pr.fechaVence,cntId);},100);
     return '<div class="promo-card">'+
-      '<div class="promo-head"><div class="tit">PROMO <b>'+pr.titulo+'</b></div>'+badge+'</div>'+
+      '<div class="promo-head"><div class="tit">PROMO <b>'+pr.titulo+'</b></div><span class="promo-badge act">⏰ Activa</span></div>'+
       '<div class="promo-items">'+items+'</div>'+foot+
     '</div>';
   }).join("");
@@ -267,9 +266,30 @@ function limpiarContadores(){
 // ════════════════════ CATÁLOGO ════════════════════
 function setFiltro(f,btn){
   FILTRO=f;
+  SUB_FILTRO=null;
   document.querySelectorAll(".filtros .fbtn").forEach(function(b){b.classList.remove("active");});
   btn.classList.add("active");
+  renderSubFiltros();
   renderCatalogo();
+}
+
+function setSubFiltro(s,btn){
+  SUB_FILTRO=(SUB_FILTRO===s)?null:s;
+  document.querySelectorAll("#sub-filtros .fbtn").forEach(function(b){b.classList.remove("active");});
+  if(SUB_FILTRO)btn.classList.add("active");
+  renderCatalogo();
+}
+
+function renderSubFiltros(){
+  var el=document.getElementById("sub-filtros");
+  if(!el)return;
+  if(FILTRO==="todos"||!CATS[FILTRO]){el.innerHTML="";return;}
+  var subs=CATS[FILTRO].subs;
+  el.innerHTML='<div class="filtros" style="margin-bottom:10px">'+
+    subs.map(function(s){
+      return '<button class="fbtn'+(SUB_FILTRO===s?" active":"")+'\" onclick="setSubFiltro(\''+s+'\',this)">'+s+'</button>';
+    }).join("")+
+  '</div>';
 }
 
 function renderCatalogo(){
@@ -279,11 +299,11 @@ function renderCatalogo(){
   var html="";
   Object.keys(CATS).forEach(function(ck){
     var cat=CATS[ck];
-    if(FILTRO!=="todos"&&FILTRO!==ck&&FILTRO!=="disponibles")return;
+    if(FILTRO!=="todos"&&FILTRO!==ck)return;
     cat.subs.forEach(function(sn){
+      if(SUB_FILTRO&&SUB_FILTRO!==sn)return;
       var ps=PRODUCTOS.filter(function(p){
         if(p.cat!==ck||p.sub!==sn)return false;
-        if(FILTRO==="disponibles"&&p.ago)return false;
         if(q&&p.nm.toLowerCase().indexOf(q)===-1&&p.id.toLowerCase().indexOf(q)===-1)return false;
         return true;
       });
@@ -384,19 +404,22 @@ function renderCarrito(){
     if(!p)return"";
     if(p.ago){omitidos.push(p.nm);return"";}
     var rv=precioConVolumen(p,it.cant);
-    var pr=rv.precio, dcto=rv.descVol, total=pr*it.cant;
+    var pr=rv.precio, total=pr*it.cant;
     var pts=calcPuntos(pr,p.costo)*it.cant;
     subtotal+=total; ptsTotal+=pts;
     var sig=siguienteNivel(p,it.cant);
-    var volHtml=dcto>0?'<span class="vol-badge">−'+dcto.toFixed(0)+'% vol.</span>':"";
     var sigHtml=sig?'<div class="prx-sig">+'+sig.falta+' más → −'+sig.pct+'% adicional</div>':"";
+    var descLineas='';
+    if(rv.descBase>0)descLineas+='<div class="desc-linea desc-pref">−'+rv.descBase.toFixed(0)+'% precio preferencial</div>';
+    if(rv.descVol>0)descLineas+='<div class="desc-linea desc-vol">−'+rv.descVol.toFixed(0)+'% por volumen</div>';
     return '<div class="item">'+
       '<div class="item-i">'+
         '<div class="item-nm">'+p.nm+'</div>'+
         '<div class="item-pr">'+
-          (dcto>0?'<span class="prx-orig">'+fmt$(precioCliente(p))+'</span> <span class="prx-dcto">'+fmt$(pr)+'</span> ':fmt$(pr)+'/u ')+
-          volHtml+' <span class="pts">🏆 '+pts+' pts</span>'+
+          '<span class="prx-vitrina">'+fmt$(p.pv)+'</span> <span class="prx-final">'+fmt$(pr)+'/u</span>'+
+          ' <span class="pts">🏆 '+pts+' pts</span>'+
         '</div>'+
+        descLineas+
         sigHtml+
       '</div>'+
       '<div class="qty">'+
@@ -448,12 +471,20 @@ function renderModoEntrega(){
   if(!sel||!ex)return;
   if(sel.value==="entrega"){
     var ests=(USER.establecimientos||[]).map(function(e,i){return'<option value="'+i+'">'+e.nm+" — "+e.dir+'</option>';}).join("");
+    var hoy=new Date().toISOString().split("T")[0];
     ex.innerHTML='<label class="form-label">Establecimiento</label>'+
       '<select class="form-select" id="cart-est">'+ests+'<option value="nuevo">+ Agregar dirección</option></select>'+
-      '<label class="form-label">Fecha preferida</label>'+
-      '<input class="form-input" id="cart-fecha" type="date">'+
-      '<label class="form-label">Horario preferido</label>'+
-      '<input class="form-input" id="cart-hora" placeholder="Ej: 09:00 - 12:00">';
+      '<label class="form-label">Fecha de entrega</label>'+
+      '<input class="form-input" id="cart-fecha" type="date" min="'+hoy+'">'+
+      '<label class="form-label">Horario preferido (opcional)</label>'+
+      '<select class="form-select" id="cart-hora">'+
+        '<option value="">Sin preferencia</option>'+
+        '<option value="08-10">08:00 - 10:00</option>'+
+        '<option value="10-12">10:00 - 12:00</option>'+
+        '<option value="12-14">12:00 - 14:00</option>'+
+        '<option value="14-16">14:00 - 16:00</option>'+
+        '<option value="16-18">16:00 - 18:00</option>'+
+      '</select>';
   } else {
     ex.innerHTML='<p style="font-size:12px;color:var(--g3);margin-bottom:12px">📍 Portete #3007 y Gallegos Lara, Guayaquil</p>';
   }

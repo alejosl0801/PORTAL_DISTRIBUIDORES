@@ -86,7 +86,7 @@ body{font-family:'Barlow',sans-serif;background:var(--g1);color:var(--negro);min
 .promo-badge.act{background:var(--oro);color:var(--negro)}
 .promo-badge.fin{background:rgba(255,255,255,.15);color:rgba(255,255,255,.6)}
 .promo-items{display:flex}
-.promo-it{flex:1;padding:14px;text-align:center;border-right:1px solid rgba(255,255,255,.08)}
+.promo-it{flex:1;padding:14px;text-align:center;border-right:1px solid rgba(255,255,255,.08);display:flex;flex-direction:column;align-items:center}
 .promo-it:last-child{border-right:none}
 .promo-it .nm{font-family:'Barlow Condensed',sans-serif;color:#fff;font-weight:700;font-size:15px;line-height:1.05;margin-bottom:8px;min-height:32px;display:flex;align-items:center;justify-content:center}
 .promo-it .pv{font-size:11px;color:rgba(255,255,255,.4);text-decoration:line-through}
@@ -142,6 +142,11 @@ body{font-family:'Barlow',sans-serif;background:var(--g1);color:var(--negro);min
 .brm{background:none;border:none;color:var(--rojo);font-size:18px;cursor:pointer;padding:4px;min-height:36px}
 .prx-orig{font-size:10px;color:var(--g3);text-decoration:line-through}
 .prx-dcto{font-size:13px;font-weight:700;color:var(--verde)}
+.prx-vitrina{font-size:10px;color:var(--g3);text-decoration:line-through}
+.prx-final{font-size:13px;font-weight:700;color:var(--verde)}
+.desc-linea{font-size:10px;margin-top:2px;font-weight:600}
+.desc-pref{color:var(--azul)}
+.desc-vol{color:var(--verde)}
 .prx-sig{font-size:10px;color:var(--azul);margin-top:2px}
 .resumen{background:var(--blanco);border-radius:var(--rad);border:1.5px solid var(--g2);padding:16px;margin-top:12px;box-shadow:var(--som)}
 .rrow{display:flex;justify-content:space-between;padding:5px 0;font-size:14px}
