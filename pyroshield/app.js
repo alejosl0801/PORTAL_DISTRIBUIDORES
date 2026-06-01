@@ -240,6 +240,7 @@ function loginConCredenciales(ruc,pw){
   var d=DISTRIBUIDORES.find(function(x){return x.ruc.toLowerCase()===ruc.toLowerCase()&&passCoincide(x.pass,pw);});
   if(!d)return false;
   USER=d; PEDIDOS=cargarPedidos(); cargarStock();
+  setTimeout(reintentarSyncPendientes,2000);
   if(d.esAdmin){mostrar("s-admin");renderAdmin();iniciarNotificacionesAdmin();}
   else{
     CARRITO=cargarCarrito();
@@ -1206,25 +1207,7 @@ function confirmarPedido(){
   PEDIDOS.push(ped);
   if(navigator.vibrate)navigator.vibrate([30,20,60]);
   guardarPedidos();
-  (function enviarASheets(){
-    var payload={
-      accion:"guardarPedidoPyro",
-      id_pedido:ped.id,
-      fecha:ped.fechaISO,
-      ruc_dist:ped.ruc,
-      nombre_dist:ped.razon,
-      items_json:JSON.stringify(ped.items),
-      total:ped.total,
-      estado:ped.estado
-    };
-    fetch("https://script.google.com/macros/s/AKfycbwiIAupZxy2T33EiDHbwkLBHTw0Q2Uv98r8pc9L351b6lXwY_mOD6kI2tvfzqdIUdxG/exec",{
-      method:"POST",
-      headers:{"Content-Type":"text/plain;charset=utf-8"},
-      body:JSON.stringify(payload)
-    }).catch(function(){
-      toast("⚠️ Pedido guardado localmente. No se pudo sincronizar con la nube.");
-    });
-  })();
+  sincronizarConSheets(ped, false);
   items.forEach(function(it){
     var p=PRODUCTOS.find(function(x){return x.id===it.id;});
     if(p){p.stock=Math.max(0,p.stock-it.cant);if(p.stock===0)p.ago=true;}
@@ -2573,6 +2556,53 @@ function chequearPedidosNuevos(){
   if(nuevos.length)try{localStorage.setItem("pyro_notif_vistas",JSON.stringify(vistos));}catch(e){}
 }
 
+// ════════════════════ SINCRONIZACIÓN GOOGLE SHEETS ════════════════════
+// NOTA para doPost en Apps Script: parsear con JSON.parse(e.postData.contents)
+var GAS_URL="https://script.google.com/macros/s/AKfycbwiIAupZxy2T33EiDHbwkLBHTw0Q2Uv98r8pc9L351b6lXwY_mOD6kI2tvfzqdIUdxG/exec";
+
+function cargarSyncPendientes(){
+  try{return JSON.parse(localStorage.getItem("pyro_sync_pendientes")||"[]");}catch(e){return[];}
+}
+function guardarSyncPendientes(lista){
+  try{localStorage.setItem("pyro_sync_pendientes",JSON.stringify(lista));}catch(e){}
+}
+
+function sincronizarConSheets(ped, silencioso){
+  var payload={
+    accion:"guardarPedidoPyro",
+    id_pedido:ped.id,
+    fecha:ped.fechaISO,
+    ruc_dist:ped.ruc,
+    nombre_dist:ped.razon,
+    items_json:JSON.stringify(ped.items||[]),
+    total:ped.total,
+    estado:ped.estado
+  };
+  fetch(GAS_URL,{
+    method:"POST",
+    headers:{"Content-Type":"text/plain;charset=utf-8"},
+    body:JSON.stringify(payload)
+  }).then(function(){
+    var pend=cargarSyncPendientes();
+    pend=pend.filter(function(x){return x.id!==ped.id;});
+    guardarSyncPendientes(pend);
+  }).catch(function(){
+    var pend=cargarSyncPendientes();
+    if(!pend.some(function(x){return x.id===ped.id;})){
+      pend.push(ped);
+      guardarSyncPendientes(pend);
+    }
+    if(!silencioso)toast("☁️ Pendiente de sincronización (se reintentará)");
+  });
+}
+
+function reintentarSyncPendientes(){
+  if(!navigator.onLine)return;
+  var pend=cargarSyncPendientes();
+  if(!pend.length)return;
+  pend.forEach(function(ped){sincronizarConSheets(ped,true);});
+}
+
 // ════════════════════ MODALES / UTIL ════════════════════
 function abrir(id){document.getElementById(id).classList.add("open");}
 function cerrarModal(id){document.getElementById(id).classList.remove("open");}
@@ -2773,7 +2803,7 @@ function iniciarAutoguardado(){
 document.addEventListener("click",function(e){if(e.target.classList.contains("ov"))e.target.classList.remove("open");});
 window.addEventListener("load",function(){
   actualizarBannerOffline();
-  window.addEventListener("online",actualizarBannerOffline);
+  window.addEventListener("online",function(){actualizarBannerOffline();reintentarSyncPendientes();});
   window.addEventListener("offline",actualizarBannerOffline);
   setTimeout(function(){
     var sp=document.getElementById("splash");
