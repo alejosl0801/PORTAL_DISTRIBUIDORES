@@ -69,6 +69,24 @@ var PROMOS = [
   }
 ];
 
+// ════════════════════ PROMOS VIGENTES ════════════════════
+function promosVigentes(){
+  var hoy=new Date(); hoy.setHours(0,0,0,0);
+  return PROMOS.filter(function(pr){
+    if(pr.estado!=="activa")return false;
+    var fin=new Date(pr.fechaVence+"T23:59:59");
+    return fin>=hoy;
+  });
+}
+function promoDelProducto(pid){
+  var vigentes=promosVigentes();
+  for(var i=0;i<vigentes.length;i++){
+    var it=vigentes[i].items.find(function(x){return x.id===pid;});
+    if(it)return it;
+  }
+  return null;
+}
+
 // ════════════════════ DATOS DISTRIBUIDORES ════════════════════
 // Nota: el campo "ruc" admite RUC (13 díg) o CÉDULA (10 díg) — ambos válidos para facturar.
 //   El campo "tipoDoc" indica cuál es ("ruc" o "cedula"); si falta, se detecta por longitud.

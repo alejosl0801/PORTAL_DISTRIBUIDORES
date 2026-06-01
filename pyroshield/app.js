@@ -31,7 +31,7 @@ var PRODUCTOS = [
   {id:"CO2CABMAR",nm:"Cabezal Marítimo CO2",cat:"accesorios",sub:"Cabezales",pv:42.25,pb:38.46,costo:18.93,stock:73,ago:false,img:"CO2CABMAR",descVol:[[2,1],[3,2],[5,3],[8,5],[10,6]]},
   {id:"CO2DISRAP",nm:"CO2 Disparo Rápido (50-100 LBS)",cat:"accesorios",sub:"Cabezales",pv:16.80,pb:13.95,costo:5.92,stock:121,ago:false,img:"CO2DISRAP",descVol:[[5,1],[10,2],[15,3],[20,5],[30,6]]},
   // ACCESORIOS - MANÓMETROS
-  {id:"MANOPQS",nm:"Manómetro 195 PSI",cat:"accesorios",sub:"Manómetros",pv:0.85,pb:0.70,costo:0.36,stock:0,ago:true,img:null,descVol:[[30,1],[50,2],[100,3],[150,5],[300,6]]},
+  {id:"MANOPQS",nm:"Manómetro 195 PSI",cat:"accesorios",sub:"Manómetros",pv:0.85,pb:0.70,costo:0.36,stock:0,ago:true,img:null,descVol:[[30,1],[50,2],[100,3],[150,5],[300,6]],cantMin:10},
   // ACCESORIOS - MANGUERAS
   {id:"MANG10PQS",nm:"Manguera 10 PQS",cat:"accesorios",sub:"Mangueras",pv:0.90,pb:0.80,costo:0.36,stock:327,ago:false,img:null,descVol:[[30,1],[50,2],[80,3],[100,5],[150,6]]},
   {id:"MANG20PQS",nm:"Manguera 20 PQS",cat:"accesorios",sub:"Mangueras",pv:0.90,pb:0.80,costo:0.34,stock:679,ago:false,img:null,descVol:[[30,1],[50,2],[80,3],[100,5],[150,6]]},
@@ -43,7 +43,7 @@ var PRODUCTOS = [
   {id:"SOPPQS20",nm:"Soporte PQS 20",cat:"accesorios",sub:"Soportes",pv:0.98,pb:0.85,costo:0.28,stock:506,ago:false,img:null,descVol:[[50,1],[100,2],[150,3],[200,5],[400,6]]},
   // ACCESORIOS - OTROS
   {id:"ABRPQS",nm:"Abrazaderas Plásticas",cat:"accesorios",sub:"Otros",pv:0.26,pb:0.24,costo:0.12,stock:2619,ago:false,img:null,descVol:[[100,1],[200,2],[300,3],[500,5],[1000,6]]},
-  {id:"SEGPLAM",nm:"Seguros Plásticos Amarillo",cat:"accesorios",sub:"Otros",pv:0.08,pb:0.06,costo:0.03,stock:14767,ago:false,img:null,descVol:[[200,1],[500,2],[800,3],[1000,5],[2000,6]]},
+  {id:"SEGPLAM",nm:"Seguros Plásticos Amarillo",cat:"accesorios",sub:"Otros",pv:0.08,pb:0.06,costo:0.03,stock:14767,ago:false,img:null,descVol:[[200,1],[500,2],[800,3],[1000,5],[2000,6]],cantMin:200},
   // MANGUERAS HID
   {id:"MANG15M",nm:"Manguera 15M doble chaqueta 1½\"",cat:"mangueras_hid",sub:"Mangueras",pv:38.61,pb:36.98,costo:29.93,stock:162,ago:false,img:"MANG15M",descVol:[[3,1],[5,2],[8,3]]},
   {id:"MANG30M",nm:"Manguera 30M doble chaqueta 1½\"",cat:"mangueras_hid",sub:"Mangueras",pv:69.10,pb:64.28,costo:46.14,stock:99,ago:false,img:"MANG30M",descVol:[[3,1],[5,2],[8,3],[10,4],[15,5]]},
@@ -88,10 +88,18 @@ function calcPuntos(precioAplicado, costo){
   return Math.min(pts,PUNTOS_MAX_UNIT);
 }
 function precioCliente(p){
+  var promo=promoDelProducto(p.id);
+  if(promo)return promo.pp;
   if(USER&&USER.preciosEsp&&USER.preciosEsp[p.id]!=null)return USER.preciosEsp[p.id];
   return p.pb;
 }
 function tieneEspecial(p){return!!(USER&&USER.preciosEsp&&USER.preciosEsp[p.id]!=null);}
+function cantMinProducto(p){return p.cantMin||1;}
+function validarCantMinMsg(p,cant){
+  var min=cantMinProducto(p);
+  if(min>1&&cant>0&&cant<min)return"Cantidad mínima para "+p.nm+": "+min+" unidades";
+  return null;
+}
 
 // Descuento por volumen — respeta flag sinDescVol del distribuidor
 function precioConVolumen(p, cant){
@@ -252,25 +260,39 @@ function hacerLogin(){
   }
 }
 
-// Otorga (una sola vez) un canje gratis de bienvenida al primer login del cliente
+// Otorga (una sola vez por cuenta) un canje gratis de bienvenida al primer login
 function otorgarBienvenida(){
   if(!USER||USER.esAdmin)return;
   var flag="pyro_bienvenida_"+USER.ruc;
+  // PEDIDOS es la fuente de verdad — funciona aunque entre desde otro dispositivo
   var yaTiene=PEDIDOS.some(function(p){return p.ruc===USER.ruc&&p.esBienvenida;});
-  if(localStorage.getItem(flag)||yaTiene){try{localStorage.setItem(flag,"1");}catch(e){}return;}
+  if(yaTiene){try{localStorage.setItem(flag,"1");}catch(e){}return;}
+  if(localStorage.getItem(flag))return;
   var now=new Date();
   var bid="B"+now.getTime().toString().slice(-5);
   PEDIDOS.push({
     id:bid,ruc:USER.ruc,razon:USER.razon,
     fecha:now.toLocaleDateString(),fechaISO:now.toISOString(),
     esCanje:true,esBienvenida:true,canjePts:0,
-    canjeNm:"Combo KFC 2 presas + papas + cola",
+    canjeNm:"Combo KFC 3 presas + papas + cola",
     estado:"pendiente",total:0,puntos:0
   });
   guardarPedidos();
   try{localStorage.setItem(flag,"1");}catch(e){}
   if(typeof renderInicio==="function")renderInicio();
-  setTimeout(function(){toastGold("🎁 ¡Bienvenido! Tienes un Combo KFC de regalo");},1400);
+  setTimeout(function(){mostrarOverlayBienvenida();},1400);
+}
+function mostrarOverlayBienvenida(){
+  var ov=document.createElement("div");
+  ov.id="bienvenida-ov";
+  ov.style.cssText="position:fixed;inset:0;background:rgba(0,0,0,.65);display:flex;align-items:center;justify-content:center;z-index:9999";
+  ov.innerHTML='<div style="background:var(--bg);border-radius:20px;padding:32px 28px;max-width:320px;width:90%;text-align:center;box-shadow:0 8px 40px rgba(0,0,0,.4)">'+
+    '<div style="font-size:52px;margin-bottom:12px">🎁</div>'+
+    '<div style="font-size:20px;font-weight:800;color:var(--oro);margin-bottom:8px">¡Tienes un regalo de bienvenida!</div>'+
+    '<div style="font-size:15px;color:var(--g4);margin-bottom:20px;line-height:1.5">Combo KFC por registrarte<br><span style="font-size:13px;color:var(--g3)">3 presas + papas + cola 🍗</span></div>'+
+    '<button class="btn btn-p" style="width:100%;font-size:16px" onclick="document.getElementById(\'bienvenida-ov\').remove()">¡Genial! 🔥</button>'+
+  '</div>';
+  document.body.appendChild(ov);
 }
 function logout(){
   USER=null;CARRITO=[];
@@ -384,8 +406,8 @@ function renderInicio(){
 function renderPromosHome(){
   limpiarContadores();
   var cont=document.getElementById("promos-home");
-  var activas=PROMOS.filter(function(pr){return pr.estado==="activa";});
-  if(!activas.length){cont.innerHTML="";return;}
+  var activas=promosVigentes();
+  if(!activas.length){cont.innerHTML='<div class="sec-titulo">Promociones</div><div class="empty" style="padding:12px 0"><p>No hay promociones disponibles en este momento</p></div>';return;}
   cont.innerHTML="<div class='sec-titulo'>Promociones</div>"+activas.map(function(pr){
     var items=pr.items.map(function(it){
       var prod=PRODUCTOS.find(function(x){return x.id===it.id;});
@@ -461,6 +483,22 @@ function renderCatalogo(){
   if(!searchEl)return;
   var q=(searchEl.value||"").toLowerCase();
   var html="";
+  // Productos en promo vigente al tope del filtro "todos"
+  if(FILTRO==="todos"){
+    var prodsEnPromo=[];
+    promosVigentes().forEach(function(pr){
+      pr.items.forEach(function(it){
+        var p=PRODUCTOS.find(function(x){return x.id===it.id;});
+        if(!p||p.ago)return;
+        if(q&&p.nm.toLowerCase().indexOf(q)===-1&&p.id.toLowerCase().indexOf(q)===-1)return;
+        prodsEnPromo.push(p);
+      });
+    });
+    if(prodsEnPromo.length){
+      html+='<div class="subcat">🔥 En Promoción</div>';
+      html+=prodsEnPromo.map(function(p){return renderProdCard(p);}).join("");
+    }
+  }
   Object.keys(CATS).forEach(function(ck){
     var cat=CATS[ck];
     if(FILTRO!=="todos"&&FILTRO!==ck)return;
@@ -481,17 +519,19 @@ function renderCatalogo(){
 }
 
 function renderProdCard(p){
-  var pc=precioCliente(p);
-  var esp=tieneEspecial(p);
-  var descPct=p.pv>0?Math.round((p.pv-pc)/p.pv*100):0;
-  var stockBadge=p.ago?'<span class="badge b-rojo">Agotado</span>':(p.stock<20?'<span class="badge b-amar">⚠️ Pocas ('+p.stock+')</span>':'<span class="badge b-verde">Stock: '+p.stock+'</span>');
-  var pts=calcPuntos(pc,p.costo);
-  var volBadge=(!USER||!USER.sinDescVol)&&p.descVol?'<span class="badge b-azul" style="font-size:9px">Desc. volumen disponible</span>':'';
-  var imgHtml=p.img&&IMGS[p.img]?'<img src="'+IMGS[p.img]+'" alt="'+p.nm+'" loading="lazy">':"<div class='ph'>🧯</div>";
+  var promoIt=promoDelProducto(p.id);
+  var esp=tieneEspecial(p)&&!promoIt;
   var cartItem=CARRITO.find(function(i){return i.id===p.id;});
   var cantActual=cartItem?cartItem.cant:0;
+  // Precio y descuento calculados con la cantidad actual (o 1 si no hay nada en carrito)
+  var rv=precioConVolumen(p,cantActual>0?cantActual:1);
+  var pc=rv.precio;
+  var pts=calcPuntos(pc,p.costo);
+  var stockBadge=p.ago?'<span class="badge b-rojo">Agotado</span>':(p.stock<20?'<span class="badge b-amar">⚠️ Pocas ('+p.stock+')</span>':'<span class="badge b-verde">Stock: '+p.stock+'</span>');
+  var promoBadge=promoIt?'<span class="badge b-rojo" style="font-size:9px">🔥 PROMO</span>':'';
+  var volBadge=(!USER||!USER.sinDescVol)&&p.descVol&&!promoIt?'<span class="badge b-azul" style="font-size:9px">Desc. volumen disponible</span>':'';
+  var imgHtml=p.img&&IMGS[p.img]?'<img src="'+IMGS[p.img]+'" alt="'+p.nm+'" loading="lazy">':"<div class='ph'>🧯</div>";
 
-  // Input numérico editable en la tarjeta
   var addHtml=p.ago
     ?'<button class="badd" disabled style="opacity:.4">Agotado</button>'
     :'<div class="prod-add-row">'+
@@ -505,13 +545,15 @@ function renderProdCard(p){
         '</button>'+
       '</div>';
 
-  // Precio con relevancia visual
+  var descPctDisp=rv.descPct>0?Math.round(rv.descPct):0;
   var precioHtml='<div class="prod-precio-bloque">'+
     '<div class="prod-pv-label">P. público</div>'+
     '<div class="prod-pv">'+fmt$(p.pv)+'</div>'+
-    (descPct>0?'<div class="prod-desc-badge">−'+descPct+'%</div>':'')+
+    (descPctDisp>0?'<div class="prod-desc-badge">−'+descPctDisp+'%</div>':'')+
     '<div class="prod-pu">'+fmt$(pc)+'</div>'+
-    (esp?'<div class="prod-esp-label">★ Tu precio</div>':'')+
+    (promoIt?'<div class="prod-esp-label" style="color:#e03c31">🔥 Precio promocional</div>':(esp?'<div class="prod-esp-label">★ Tu precio</div>':''))+
+    (rv.descVol>0?'<div style="font-size:9px;color:var(--verde);margin-top:2px">+Vol −'+rv.descVol.toFixed(1)+'%</div>':'')+
+    (cantActual>0?'<div style="font-size:10px;color:var(--g3);margin-top:2px">Total: '+fmt$(pc*cantActual)+'</div>':'')+
     '<div class="prod-pts">🏆 '+pts+' pts/u</div>'+
   '</div>';
 
@@ -519,7 +561,7 @@ function renderProdCard(p){
     '<div class="prod-img">'+imgHtml+'</div>'+
     '<div class="prod-info">'+
       '<div class="prod-nm">'+p.nm+'</div>'+
-      '<div class="prod-meta">'+stockBadge+volBadge+'</div>'+
+      '<div class="prod-meta">'+stockBadge+promoBadge+volBadge+'</div>'+
     '</div>'+
     '<div class="prod-r">'+
       precioHtml+
@@ -543,6 +585,8 @@ function cambiarCantCatalogo(id, d){
   } else {
     CARRITO.push({id:id,cant:nueva});
   }
+  var msg=validarCantMinMsg(p,nueva);
+  if(msg)toast("⚠️ "+msg);
   guardarCarrito();
   actualizarBadge();
   // Actualizar solo el input de esa tarjeta
@@ -566,6 +610,8 @@ function setCantCatalogo(id, val){
   } else {
     CARRITO.push({id:id,cant:n});
   }
+  var msg=validarCantMinMsg(p,n);
+  if(msg)toast("⚠️ "+msg);
   guardarCarrito();
   actualizarBadge();
   renderCatalogo();
@@ -576,12 +622,13 @@ function agregarAlCarrito(id){
   if(!p||p.ago)return;
   var item=CARRITO.find(function(i){return i.id===id;});
   if(!item){
-    // Si no hay nada en el input, agregar 1
-    CARRITO.push({id:id,cant:1});
+    var min=cantMinProducto(p);
+    CARRITO.push({id:id,cant:min});
+    if(min>1)toast("ℹ️ Cant. mínima: "+min+" unidades de "+p.nm);
+    else toast("🛒 "+p.nm+" en carrito");
+  } else {
+    toast("🛒 "+p.nm+" en carrito");
   }
-  guardarCarrito();
-  actualizarBadge();
-  toast("🛒 "+p.nm+" en carrito");
   var cb=document.getElementById("cbadge");
   if(cb){cb.classList.remove("pop");void cb.offsetWidth;cb.classList.add("pop");}
   renderCatalogo();
@@ -732,6 +779,8 @@ function setCantCarrito(id, val){
   if(p.stock!=null&&n>p.stock){n=p.stock;toast("⚠️ Solo hay "+p.stock+" unidades disponibles");}
   var it=CARRITO.find(function(i){return i.id===id;});
   if(it)it.cant=n;
+  var msg=validarCantMinMsg(p,n);
+  if(msg)toast("⚠️ "+msg);
   guardarCarrito();
   renderCarrito();
   actualizarBadge();
@@ -792,11 +841,12 @@ function toggleFechaEntrega(){
 function cambiarCant(id,d){
   var it=CARRITO.find(function(i){return i.id===id;});
   if(!it)return;
+  var p=PRODUCTOS.find(function(x){return x.id===id;});
   if(d>0){
-    var p=PRODUCTOS.find(function(x){return x.id===id;});
     if(p&&p.stock!=null&&it.cant>=p.stock){toast("⚠️ Solo hay "+p.stock+" unidades disponibles");return;}
   }
   it.cant+=d;
+  if(p){var msg=validarCantMinMsg(p,it.cant);if(msg&&it.cant>0)toast("⚠️ "+msg);}
   if(it.cant<0)it.cant=0;
   guardarCarrito(); renderCarrito(); actualizarBadge();
 }
@@ -852,6 +902,17 @@ function eliminarBorrador(i){
 function confirmarPedido(){
   var hayItems=CARRITO.some(function(i){var p=PRODUCTOS.find(function(x){return x.id===i.id;});return p&&!p.ago&&i.cant>0;});
   if(!hayItems){toast("⚠️ Tu carrito está vacío");return;}
+
+  // Validar cantidades mínimas antes de continuar
+  var errMin=null;
+  CARRITO.forEach(function(it){
+    if(errMin)return;
+    var p=PRODUCTOS.find(function(x){return x.id===it.id;});
+    if(!p||p.ago)return;
+    var msg=validarCantMinMsg(p,it.cant);
+    if(msg)errMin=msg;
+  });
+  if(errMin){toast("⚠️ "+errMin);return;}
 
   var pagoSel=document.getElementById("cart-pago");
   var modoSel=document.getElementById("cart-modo");
@@ -951,9 +1012,9 @@ function estadoLabel(e){
     en_proceso:"🚚 En proceso",
     autorizado:"🚚 En proceso",
     entrega:"🚚 En proceso",
-    entregado:"✔️ Finalizado",
+    entregado:"📦 Entregado",
     facturado:"🚚 En proceso",
-    finalizado:"✔️ Finalizado",
+    finalizado:"📦 Entregado",
     cancelado:"✕ Cancelado"
   };
   return m[e]||e;
@@ -1236,7 +1297,12 @@ function renderAdmPedidos(){
       '<div style="display:flex;justify-content:space-between;align-items:center">'+
         '<div><div style="font-weight:700">'+(p.esCanje?"🎁 Canje":"Pedido #"+p.id)+'</div>'+
         '<div style="font-size:12px;color:var(--g3)">'+p.razon+' · '+p.fecha+'</div></div>'+
+        '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">'+
         '<span class="est-chip '+estadoClass(p.estado)+'">'+estadoLabelAdmin(p.estado)+'</span>'+
+        (!p.esCanje&&p.estado==="entregado"?(p.azurFactura
+          ?'<span class="badge b-verde" style="font-size:10px">✔️ Finalizado</span>'
+          :'<span class="badge b-amar" style="font-size:10px">⚠️ Pend. facturar</span>'):'')+
+        '</div>'+
       '</div>'+
       (!p.esCanje?'<div style="font-size:18px;font-weight:800;font-family:\'Barlow Condensed\',sans-serif;margin-top:6px">'+fmt$(p.total)+'</div>':'')+
     '</div></div>';
@@ -1261,9 +1327,10 @@ function estadoLabelAdmin(e){
 function admVerPedido(pid){
   var p=PEDIDOS.find(function(x){return x.id===pid;});
   if(!p)return;
-  // Estados simplificados para el flujo admin
-  var estadosAdmin=['pendiente','en_proceso','entregado','finalizado','cancelado'];
+  // Estados editables por admin (finalizado se asigna automáticamente al facturar)
+  var estadosAdmin=['pendiente','en_proceso','entregado','cancelado'];
   var html='<div class="mhandle"></div><h3>'+(p.esCanje?"Canje":"Pedido")+" #"+p.id+'</h3>'+
+    (p.esCanje&&p.canjeNm?'<div style="font-size:15px;font-weight:700;color:var(--oro);margin-bottom:8px">🎁 '+p.canjeNm+'</div>':'')+
     '<div style="font-size:12px;color:var(--g3);margin-bottom:12px">'+p.razon+' · '+tipoDocLabel(DISTRIBUIDORES.find(function(d){return d.ruc===p.ruc;})||{ruc:p.ruc})+': '+p.ruc+' · '+p.fecha+'</div>'+
     '<label class="form-label">Estado</label>'+
     '<select class="form-select" id="adm-estado-sel">'+estadosAdmin.map(function(e){return'<option value="'+e+'"'+(p.estado===e?" selected":"")+'>'+estadoLabelAdmin(e)+'</option>';}).join("")+'</select>';
