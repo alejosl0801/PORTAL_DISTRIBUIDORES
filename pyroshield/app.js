@@ -905,6 +905,25 @@ function confirmarPedido(){
   var ped={id:pid,ruc:USER.ruc,razon:USER.razon,fecha:now.toLocaleDateString(),fechaISO:now.toISOString(),pago:pago,modo:modo,notas:notas,items:items,subtotal:subtotal,iva:iva,total:total,puntos:ptsTotal,estado:"pendiente",entregaInfo:entregaInfo,esCanje:false};
   PEDIDOS.push(ped);
   guardarPedidos();
+  (function enviarASheets(){
+    var payload={
+      accion:"guardarPedidoPyro",
+      id_pedido:ped.id,
+      fecha:ped.fechaISO,
+      ruc_dist:ped.ruc,
+      nombre_dist:ped.razon,
+      items_json:JSON.stringify(ped.items),
+      total:ped.total,
+      estado:ped.estado
+    };
+    fetch("https://script.google.com/macros/s/AKfycbwiIAupZxy2T33EiDHbwkLBHTw0Q2Uv98r8pc9L351b6lXwY_mOD6kI2tvfzqdIUdxG/exec",{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify(payload)
+    }).catch(function(){
+      toast("⚠️ Pedido guardado localmente. No se pudo sincronizar con la nube.");
+    });
+  })();
   items.forEach(function(it){
     var p=PRODUCTOS.find(function(x){return x.id===it.id;});
     if(p){p.stock=Math.max(0,p.stock-it.cant);if(p.stock===0)p.ago=true;}
