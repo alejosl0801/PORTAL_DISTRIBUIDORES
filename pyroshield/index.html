@@ -49,11 +49,11 @@
         <div class="hero-saludo">Bienvenido de vuelta,</div>
         <div class="hero-nombre" id="hero-nombre">—</div>
         <div class="hero-pts-box">
-          <div><div class="l">Tus puntos</div><div class="v" id="hero-pts">0</div></div>
+          <div><div class="l">Tus puntos confirmados</div><div class="v" id="hero-pts">0</div></div>
           <div class="ico">🏆</div>
         </div>
         <div class="hero-stats">
-          <div class="hstat"><div class="v" id="hs-pedidos">0</div><div class="l">Pedidos</div></div>
+          <div class="hstat"><div class="v" id="hs-pedidos">0</div><div class="l">Entregados</div></div>
           <div class="hstat"><div class="v" id="hs-proceso">0</div><div class="l">En proceso</div></div>
           <div class="hstat"><div class="v" id="hs-carrito">0</div><div class="l">En carrito</div></div>
         </div>
@@ -107,7 +107,8 @@
     <div id="tab-recompensas" class="tab-panel">
       <div class="rec-saldo">
         <div class="rec-v" id="rec-pts-v">0</div>
-        <div class="rec-l">puntos acumulados</div>
+        <div class="rec-l">puntos confirmados</div>
+        <div id="rec-pts-pend-box"></div>
         <div class="rec-mot" id="rec-mot"></div>
       </div>
       <div class="sec-titulo">Canjea tus puntos</div>
@@ -187,10 +188,34 @@
     <button class="btn btn-s btn-full" style="margin-top:10px" onclick="cerrarModal('modal-contacto')">Cerrar</button>
   </div>
 </div>
+
 <div class="ov" id="modal-conf"><div class="modal"><div id="modal-conf-c"></div></div></div>
 <div class="ov" id="modal-pedido-det"><div class="modal"><div id="modal-pedido-det-c"></div></div></div>
-<div class="ov" id="modal-nuevo-dist">
+
+<!-- MODAL EDITAR DISTRIBUIDOR -->
+<div class="ov" id="modal-editar-dist">
   <div class="modal">
+    <div id="modal-editar-dist-c"></div>
+  </div>
+</div>
+
+<!-- MODAL PRECIOS ESPECIALES -->
+<div class="ov" id="modal-precios-esp">
+  <div class="modal" style="max-height:88vh;overflow-y:auto;">
+    <div id="modal-precios-esp-c"></div>
+  </div>
+</div>
+
+<!-- MODAL RESUMEN DISTRIBUIDOR -->
+<div class="ov" id="modal-resumen-dist">
+  <div class="modal">
+    <div id="modal-resumen-dist-c"></div>
+  </div>
+</div>
+
+<!-- MODAL NUEVO DISTRIBUIDOR -->
+<div class="ov" id="modal-nuevo-dist">
+  <div class="modal" style="max-height:88vh;overflow-y:auto;">
     <div class="mhandle"></div>
     <h3>Nuevo Distribuidor</h3>
     <label class="form-label">Razón social *</label>
@@ -205,7 +230,7 @@
     <label class="form-label">Número de RUC / Cédula *</label>
     <div style="display:flex;gap:8px;margin-bottom:12px">
       <input class="form-input" id="nd-ruc" placeholder="0000000000001" inputmode="numeric" style="margin:0;flex:1">
-      <button class="btn btn-s btn-sm" type="button" onclick="buscarSRI()" style="white-space:nowrap;margin:0">🔍 Buscar SRI</button>
+      <button class="btn btn-s btn-sm" type="button" onclick="buscarSRI()" style="white-space:nowrap;margin:0">🔍 SRI</button>
     </div>
     <label class="form-label">Teléfono</label>
     <input class="form-input" id="nd-tel" placeholder="09XXXXXXXX">
@@ -221,12 +246,18 @@
     </div>
     <label class="form-label">Monto mínimo entrega ($)</label>
     <input class="form-input" id="nd-min" type="number" value="30">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+      <input type="checkbox" id="nd-sinvol" style="width:18px;height:18px">
+      <label for="nd-sinvol" style="font-size:14px;color:var(--rojo)">Sin descuentos por volumen</label>
+    </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px">
       <button class="btn btn-s" onclick="cerrarModal('modal-nuevo-dist')">Cancelar</button>
       <button class="btn btn-p" onclick="guardarNuevoDist()">Guardar</button>
     </div>
   </div>
 </div>
+
+<!-- MODAL CALIFICACIÓN -->
 <div class="ov" id="modal-calif">
   <div class="modal">
     <div class="mhandle"></div>

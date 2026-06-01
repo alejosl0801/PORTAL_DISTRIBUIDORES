@@ -74,7 +74,7 @@ var PROMOS = [
 //   El campo "tipoDoc" indica cuál es ("ruc" o "cedula"); si falta, se detecta por longitud.
 // ⚠️ POR CONFIRMAR: email "efreinreyesv539@gmail.com" → ¿posible typo de "efrain"?
 var DISTRIBUIDORES = [
-  {ruc:"ADMIN",pass:"pyro2024",razon:"Administrador PyroShield",esAdmin:true},
+  {ruc:"ADMIN",pass:"d0f0c1955aa832124e11c72a66f97da8cca523d3a1000e797df6f61586797f7d",razon:"Administrador PyroShield",esAdmin:true},
   {ruc:"0906872742001",pass:"jorge123",razon:"AVILES BRIONES JORGE ENRIQUE",empresa:"Sumiseg",tel:"0993704934",correo:"docs.sumiseg@outlook.com",
    entrega:{habilitada:true,montoMin:30},
    establecimientos:[{nm:"Local principal",dir:"AV. QUITO #1810 Y AYACUCHO",obs:""}],
