@@ -2939,9 +2939,8 @@ function guardarStock(){var st={};PRODUCTOS.forEach(function(p){st[p.id]={stock:
 function cargarStock(){try{var st=JSON.parse(localStorage.getItem("pyro_stock")||"{}");PRODUCTOS.forEach(function(p){if(st[p.id]!=null){p.stock=st[p.id].stock;p.ago=st[p.id].ago;}});}catch(e){}}
 function guardarDistribuidores(){
   try{
-    var extra=DISTRIBUIDORES.filter(function(d){return d._nuevo||d._editado;});
-    // Guardar TODOS con flag de edición para preservar cambios
-    var todos=DISTRIBUIDORES.filter(function(d){return!d.esAdmin;});
+    // Excluir admins y usuarios de sistema (rol:"impresion") — su fuente de verdad es datos.js
+    var todos=DISTRIBUIDORES.filter(function(d){return!d.esAdmin&&d.rol!=="impresion";});
     localStorage.setItem("pyro_dist_extra",JSON.stringify(todos));
   }catch(e){avisarStorage();}
 }
@@ -2951,7 +2950,8 @@ function cargarDistribuidoresExtra(){
     extra.forEach(function(d){
       var idx=DISTRIBUIDORES.findIndex(function(x){return x.ruc===d.ruc;});
       if(idx>-1){
-        // Actualizar distribuidor existente con datos guardados
+        // No sobreescribir usuarios de sistema (admin, impresion) — sus datos vienen de datos.js
+        if(DISTRIBUIDORES[idx].esAdmin||DISTRIBUIDORES[idx].rol==="impresion")return;
         Object.assign(DISTRIBUIDORES[idx],d);
       } else {
         DISTRIBUIDORES.push(d);
