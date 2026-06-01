@@ -918,7 +918,7 @@ function confirmarPedido(){
     };
     fetch("https://script.google.com/macros/s/AKfycbwiIAupZxy2T33EiDHbwkLBHTw0Q2Uv98r8pc9L351b6lXwY_mOD6kI2tvfzqdIUdxG/exec",{
       method:"POST",
-      headers:{"Content-Type":"application/json"},
+      headers:{"Content-Type":"text/plain;charset=utf-8"},
       body:JSON.stringify(payload)
     }).catch(function(){
       toast("⚠️ Pedido guardado localmente. No se pudo sincronizar con la nube.");
