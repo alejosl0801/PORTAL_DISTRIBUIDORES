@@ -83,15 +83,18 @@
     <div id="tab-catalogo" class="tab-panel">
       <div class="search-bar">
         <span>🔍</span>
-        <input type="text" placeholder="Buscar producto..." id="cat-search" oninput="renderCatalogo()">
+        <input type="text" placeholder="Buscar producto..." id="cat-search" oninput="onCatSearch()">
       </div>
+      <div id="search-recientes"></div>
       <div class="filtros">
         <button class="fbtn active" onclick="setFiltro('todos',this)">Todos</button>
         <button class="fbtn" onclick="setFiltro('extintores',this)">🧯 Extintores</button>
         <button class="fbtn" onclick="setFiltro('accesorios',this)">🔧 Accesorios</button>
         <button class="fbtn" onclick="setFiltro('gabinetes',this)">🏗️ Gabinetes</button>
         <button class="fbtn" onclick="setFiltro('mangueras_hid',this)">💧 Mangueras HID</button>
+        <button class="fbtn" onclick="setFiltro('favoritos',this)">❤️ Favoritos</button>
       </div>
+      <div id="cat-toolbar" class="cat-toolbar"></div>
       <div id="sub-filtros"></div>
       <div id="cat-lista"></div>
     </div>
@@ -111,6 +114,19 @@
         <button class="fbtn" onclick="setHFiltro('proceso',this)">🚚 En proceso</button>
         <button class="fbtn" onclick="setHFiltro('finalizado',this)">✅ Entregados</button>
       </div>
+      <div id="hfechas-wrap" class="hfechas-wrap">
+        <div class="hfechas-inner">
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+            <div><label class="form-label" style="margin-bottom:2px">Desde</label><input type="date" class="form-input" id="h-desde" style="margin:0;width:auto;min-width:130px;padding:8px 10px"></div>
+            <div><label class="form-label" style="margin-bottom:2px">Hasta</label><input type="date" class="form-input" id="h-hasta" style="margin:0;width:auto;min-width:130px;padding:8px 10px"></div>
+            <div style="display:flex;gap:6px;align-self:flex-end">
+              <button class="btn btn-sm btn-p" onclick="aplicarFiltroFecha()">Aplicar</button>
+              <button class="btn btn-sm btn-s" onclick="limpiarFiltroFecha()">✕ Limpiar</button>
+            </div>
+          </div>
+        </div>
+        <button class="hfechas-toggle fbtn" onclick="toggleFechasFiltro()">📅 Filtrar por fecha</button>
+      </div>
       <div id="hist-lista"></div>
     </div>
 
@@ -123,6 +139,10 @@
       </div>
       <div class="sec-titulo">Canjea tus puntos</div>
       <div id="rec-lista"></div>
+      <div id="pts-historial-wrap" style="margin-top:14px">
+        <button class="btn btn-s btn-full" onclick="togglePtsHistorial()">📊 Ver historial de puntos</button>
+        <div id="pts-historial-lista" style="display:none;margin-top:10px"></div>
+      </div>
     </div>
   </div>
 
@@ -299,6 +319,10 @@
   </div>
 </div>
 
+<div id="offline-banner" class="offline-banner" style="display:none">📵 Sin conexión — tus cambios se guardan localmente</div>
+<button id="btn-top" class="btn-top" onclick="scrollTop()" style="display:none">↑</button>
+<div id="ptr-indicator" class="ptr-indicator" style="display:none">↓ Suelta para actualizar</div>
+<div id="img-zoom-ov" class="img-zoom-ov" onclick="cerrarZoom()" style="display:none"><img id="img-zoom-img" alt="zoom"><button class="img-zoom-close" onclick="cerrarZoom()">✕</button></div>
 <div id="toast" class="toast"></div>
 
 <!-- OVERLAY DE ÉXITO -->
