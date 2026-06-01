@@ -235,7 +235,7 @@ function loginConCredenciales(ruc,pw){
   var d=DISTRIBUIDORES.find(function(x){return x.ruc.toLowerCase()===ruc.toLowerCase()&&passCoincide(x.pass,pw);});
   if(!d)return false;
   USER=d; PEDIDOS=cargarPedidos(); cargarStock();
-  if(d.esAdmin){mostrar("s-admin");renderAdmin();}
+  if(d.esAdmin){mostrar("s-admin");renderAdmin();iniciarNotificacionesAdmin();}
   else{
     CARRITO=cargarCarrito();
     mostrar("s-main");
@@ -1149,7 +1149,9 @@ function verDetallePed(pid){
     (p.notas?'<div style="margin-top:8px;font-size:13px;color:var(--g4)"><b>Notas:</b> '+p.notas+'</div>':'')+
     (p.puntos?'<div style="margin-top:8px;font-size:13px;color:#B8860B;font-weight:700">🏆 '+fmtPts(p.puntos)+' puntos '+(p.estado==="entregado"||p.estado==="finalizado"?"acreditados":"pendientes de entrega")+'</div>':'')+
     (p.calificacion?'<div style="margin-top:8px;font-size:13px">Calificación: '+"⭐".repeat(p.calificacion.estrellas)+'<br><i>'+(p.calificacion.comentario||"")+'</i></div>':'')+
-    ((!p.esCanje&&p.items&&p.items.length)?'<button class="btn btn-p btn-full" style="margin-top:16px" onclick="generarProforma(\''+p.id+'\')">📄 Descargar Proforma PDF</button>':'')+
+    ((!p.esCanje&&p.items&&p.items.length)?
+      '<button class="btn btn-p btn-full" style="margin-top:16px" onclick="generarProforma(\''+p.id+'\')">📄 Descargar Proforma PDF</button>'+
+      '<button class="btn btn-s btn-full" style="margin-top:8px" onclick="generarNotaEntrega(\''+p.id+'\')">📋 Nota de entrega</button>':'')+
     '<button class="btn btn-s btn-full" style="margin-top:10px" onclick="cerrarModal(\'modal-pedido-det\')">Cerrar</button>';
   document.getElementById("modal-pedido-det-c").innerHTML=html;
   abrir("modal-pedido-det");
@@ -1187,28 +1189,33 @@ var REWARDS=[
   {pts:3000,ico:"💳",nm:"Tarjeta consumo $30"},
   {pts:5000,ico:"💳",nm:"Tarjeta consumo $50"}
 ];
+function cargarRewards(){try{var r=JSON.parse(localStorage.getItem("pyro_rewards")||"null");if(r&&r.length)REWARDS=r;}catch(e){}}
+function guardarRewards(){try{localStorage.setItem("pyro_rewards",JSON.stringify(REWARDS));}catch(e){}}
+cargarRewards();
+
 function renderRecompensas(){
   var saldo=saldoPuntos();
   var pendiente=puntosPendientes();
   document.getElementById("rec-pts-v").textContent=fmtPts(saldo);
-  // Mostrar puntos pendientes si hay
   var pendHtml=pendiente>0?'<div class="rec-pts-pend">⏳ '+fmtPts(pendiente)+' pts pendientes de entrega</div>':'';
   document.getElementById("rec-pts-pend-box").innerHTML=pendHtml;
-  var siguiente=REWARDS.find(function(r){return r.pts>saldo;});
+  var activas=REWARDS.filter(function(r){return!r.agotado;});
+  var siguiente=activas.find(function(r){return r.pts>saldo;});
   var mot=siguiente?"¡Te faltan "+fmtPts(siguiente.pts-saldo)+" puntos para "+siguiente.nm+"!":"🎉 ¡Tienes puntos para canjear!";
   document.getElementById("rec-mot").textContent=mot;
   document.getElementById("rec-lista").innerHTML=REWARDS.map(function(r){
     var pct=Math.min(100,Math.round(saldo/r.pts*100));
-    var puede=saldo>=r.pts;
+    var puede=saldo>=r.pts&&!r.agotado;
     return '<div class="rec-item">'+
       '<div class="rec-top"><div class="rec-ico">'+r.ico+'</div>'+
-      '<div><div class="rec-nm">'+r.nm+'</div><div class="rec-pts-need">'+fmtPts(r.pts)+' puntos</div></div></div>'+
+      '<div><div class="rec-nm">'+r.nm+(r.agotado?' <span style="background:#e74c3c;color:#fff;font-size:10px;padding:1px 6px;border-radius:4px;font-weight:600">Agotado</span>':'')+'</div>'+
+      '<div class="rec-pts-need">'+fmtPts(r.pts)+' puntos</div></div></div>'+
       '<div class="rec-bar-wrap"><div class="rec-bar" style="width:0" data-pct="'+pct+'"></div></div>'+
       (puede?'<button class="btn btn-p btn-full rec-btn" onclick="canjear('+r.pts+',\''+r.nm+'\')">Canjear '+fmtPts(r.pts)+' pts</button>':
+       r.agotado?'<button class="btn btn-s btn-full rec-btn" disabled style="opacity:0.5">No disponible</button>':
        '<button class="btn btn-s btn-full rec-btn" disabled>Faltan '+fmtPts(r.pts-saldo)+' pts</button>')+
     '</div>';
   }).join("");
-  // Animar barras de progreso desde 0
   setTimeout(function(){
     document.querySelectorAll("#rec-lista .rec-bar").forEach(function(b){b.style.width=(b.getAttribute("data-pct")||0)+"%";});
   },60);
@@ -1235,6 +1242,7 @@ function admTab(t,btn){
   if(t==="pedidos")renderAdmPedidos();
   if(t==="distribuidores")renderAdmDist();
   if(t==="stock")renderAdmStock();
+  if(t==="recompensas")renderAdmRecompensas();
 }
 function renderAdmin(){renderAdmPedidos();}
 
@@ -1290,6 +1298,9 @@ function renderAdmPedidos(){
     '<div class="adm-stat"><div class="v">'+distActivos+'</div><div class="l">Distribuidores activos</div></div>'+
     '<div class="adm-stat"><div class="v">'+canjesPend+'</div><div class="l">Canjes pendientes</div></div>'+
     '<div class="adm-stat"><div class="v">'+canjesEntregados+'</div><div class="l">Canjes entregados</div></div>';
+  var extraEl=document.getElementById("adm-dashboard-extra");
+  if(extraEl)extraEl.innerHTML=renderTop5Distribuidores()+
+    '<button class="btn btn-s btn-full" style="margin-bottom:14px" onclick="generarReporteMensual()">📊 Reporte mensual PDF</button>';
 
   var lista=PEDIDOS.slice().reverse();
   document.getElementById("adm-ped-lista").innerHTML=lista.length?lista.map(function(p){
@@ -1361,6 +1372,7 @@ function admVerPedido(pid){
     html+='<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">'+
       '<button class="btn btn-s" style="flex:1;background:#25D366;color:#fff;border-color:#25D366" onclick="generarWA(\''+p.id+'\')">📲 WhatsApp</button>'+
       '<button class="btn btn-s" style="flex:1" onclick="generarProforma(\''+p.id+'\')">📄 Proforma</button>'+
+      '<button class="btn btn-s" style="flex:1" onclick="generarNotaEntrega(\''+p.id+'\')">📋 Nota de entrega</button>'+
     '</div>';
     if(p.azurFactura){
       html+='<div style="margin-top:10px;background:var(--verdec);border:1.5px solid var(--verde);border-radius:10px;padding:10px 12px;font-size:12px;color:var(--verde)">✅ <b>Factura emitida en Azur</b><br><span style="font-size:10px;word-break:break-all;color:var(--g4)">Clave: '+p.azurFactura+'</span></div>';
@@ -1433,44 +1445,59 @@ function generarProforma(pid){
   var p=PEDIDOS.find(function(x){return x.id===pid;});
   if(!p)return;
   var dist=DISTRIBUIDORES.find(function(d){return d.ruc===p.ruc;})||{};
-  // Generar HTML de proforma para imprimir/PDF
   var fecha=new Date().toLocaleDateString("es-EC");
+  var baseHref=window.location.href.substring(0,window.location.href.lastIndexOf("/")+1);
+  var ahorroTotal=0;
   var itemsHtml=(p.items||[]).map(function(it,i){
+    var pvUnit=it.pv||it.pr;
+    var descUnit=pvUnit-it.pr;
+    var descTotal=descUnit*it.cant;
+    ahorroTotal+=descTotal;
     return '<tr>'+
       '<td>'+(i+1)+'</td>'+
       '<td>'+it.id+'</td>'+
       '<td>'+it.nm+'</td>'+
       '<td style="text-align:center">'+it.cant+'</td>'+
-      '<td style="text-align:right">'+fmt$(it.pv)+'</td>'+
+      '<td style="text-align:right">'+fmt$(pvUnit)+'</td>'+
       '<td style="text-align:right">'+fmt$(it.pr)+'</td>'+
-      '<td style="text-align:right">'+fmt$(it.pr*it.cant)+'</td>'+
+      (descUnit>0.005?
+        '<td style="text-align:right;color:#27ae60">-'+fmt$(descUnit)+'</td>'+
+        '<td style="text-align:right;color:#27ae60">-'+fmt$(descTotal)+'</td>':
+        '<td style="text-align:right;color:#bbb">—</td>'+
+        '<td style="text-align:right;color:#bbb">—</td>')+
+      '<td style="text-align:right;font-weight:600">'+fmt$(it.pr*it.cant)+'</td>'+
     '</tr>';
   }).join("");
-  var win=window.open("","_blank","width=800,height=900");
+  var win=window.open("","_blank","width=860,height=960");
   win.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Proforma #'+p.id+'</title>'+
-    '<style>body{font-family:Arial,sans-serif;font-size:12px;color:#111;padding:20px}'+
-    'h1{font-size:20px;margin:0}'+
-    '.header{display:flex;justify-content:space-between;margin-bottom:20px}'+
-    '.company{color:#C0392B;font-weight:700}'+
+    '<base href="'+baseHref+'">'+
+    '<style>body{font-family:Arial,sans-serif;font-size:12px;color:#111;padding:24px;max-width:820px;margin:0 auto}'+
+    '.header{display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid #C0392B;padding-bottom:14px;margin-bottom:18px}'+
+    '.logo{height:64px;width:auto;display:block}'+
+    '.company{color:#C0392B;font-weight:900;font-size:22px;letter-spacing:1px;margin-top:4px}'+
     'table{width:100%;border-collapse:collapse;margin-top:12px}'+
     'th{background:#1A1A1A;color:#fff;padding:7px 10px;text-align:left;font-size:11px}'+
     'td{padding:7px 10px;border-bottom:1px solid #eee;font-size:11px}'+
     'tr:nth-child(even)td{background:#f9f9f9}'+
     '.totals{margin-top:16px;text-align:right}'+
-    '.totals table{width:280px;margin-left:auto}'+
+    '.totals table{width:300px;margin-left:auto}'+
     '.totals td{border:none;padding:4px 8px}'+
     '.total-final td{font-weight:700;font-size:14px;color:#C0392B;border-top:2px solid #C0392B}'+
+    '.ahorro-box{background:#eafaf1;border:1.5px solid #27ae60;border-radius:8px;padding:10px 16px;margin-top:14px;font-size:13px;color:#1e8449;font-weight:700;text-align:center}'+
     '.footer{margin-top:24px;font-size:10px;color:#888;border-top:1px solid #eee;padding-top:10px}'+
     '@media print{button{display:none}}'+
     '</style></head><body>'+
     '<div class="header">'+
-      '<div>'+
-        '<div class="company">PYROSHIELD</div>'+
-        '<div style="font-size:10px;color:#666">Portete #3007 y Gallegos Lara, Guayaquil</div>'+
-        '<div style="font-size:10px;color:#666">RUC: 0992220835001</div>'+
+      '<div style="display:flex;align-items:center;gap:14px">'+
+        '<img src="img/logo.jpg" class="logo" alt="PyroShield">'+
+        '<div>'+
+          '<div class="company">PYROSHIELD</div>'+
+          '<div style="font-size:10px;color:#666">Portete #3007 y Gallegos Lara, Guayaquil</div>'+
+          '<div style="font-size:10px;color:#666">RUC: 0992220835001</div>'+
+        '</div>'+
       '</div>'+
       '<div style="text-align:right">'+
-        '<div style="font-size:18px;font-weight:700">PROFORMA</div>'+
+        '<div style="font-size:20px;font-weight:700;color:#1A1A1A">PROFORMA</div>'+
         '<div style="font-size:11px;color:#666">N° '+p.id+'</div>'+
         '<div style="font-size:11px;color:#666">Fecha: '+fecha+'</div>'+
       '</div>'+
@@ -1482,7 +1509,15 @@ function generarProforma(pid){
       (dist.correo?'<div>Correo: '+dist.correo+'</div>':'')+
     '</div>'+
     '<table>'+
-      '<thead><tr><th>#</th><th>Código</th><th>Descripción</th><th style="text-align:center">Cant.</th><th style="text-align:right">P.Lista</th><th style="text-align:right">P.Unit.</th><th style="text-align:right">Total</th></tr></thead>'+
+      '<thead><tr>'+
+        '<th>#</th><th>Código</th><th>Descripción</th>'+
+        '<th style="text-align:center">Cant.</th>'+
+        '<th style="text-align:right">P.Lista</th>'+
+        '<th style="text-align:right">P.Unit.</th>'+
+        '<th style="text-align:right;color:#27ae60">Desc.Unit.</th>'+
+        '<th style="text-align:right;color:#27ae60">Desc.Total</th>'+
+        '<th style="text-align:right">Total</th>'+
+      '</tr></thead>'+
       '<tbody>'+itemsHtml+'</tbody>'+
     '</table>'+
     '<div class="totals"><table>'+
@@ -1490,6 +1525,7 @@ function generarProforma(pid){
       '<tr><td>IVA 15%:</td><td style="text-align:right">'+fmt$(p.iva)+'</td></tr>'+
       '<tr class="total-final"><td>TOTAL:</td><td style="text-align:right">'+fmt$(p.total)+'</td></tr>'+
     '</table></div>'+
+    (ahorroTotal>0.005?'<div class="ahorro-box">🎉 Ahorro total en este pedido: '+fmt$(ahorroTotal)+'</div>':'')+
     '<div style="margin-top:16px;font-size:11px"><b>Forma de pago:</b> '+p.pago+'</div>'+
     '<div class="footer">'+
       'Esta proforma tiene validez de 15 días a partir de la fecha de emisión.<br>'+
@@ -1497,6 +1533,85 @@ function generarProforma(pid){
     '</div>'+
     '<div style="margin-top:16px;text-align:center">'+
       '<button onclick="window.print()" style="padding:10px 24px;background:#C0392B;color:#fff;border:none;border-radius:8px;font-size:14px;cursor:pointer">🖨️ Imprimir / Guardar PDF</button>'+
+    '</div>'+
+    '</body></html>');
+  win.document.close();
+}
+
+function generarNotaEntrega(pid){
+  var p=PEDIDOS.find(function(x){return x.id===pid;});
+  if(!p||!p.items)return;
+  var dist=DISTRIBUIDORES.find(function(d){return d.ruc===p.ruc;})||{};
+  var fecha=new Date().toLocaleDateString("es-EC");
+  var baseHref=window.location.href.substring(0,window.location.href.lastIndexOf("/")+1);
+  var itemsHtml=p.items.map(function(it,i){
+    return '<tr>'+
+      '<td>'+(i+1)+'</td>'+
+      '<td>'+it.id+'</td>'+
+      '<td>'+it.nm+'</td>'+
+      '<td style="text-align:center;font-weight:700;font-size:14px">'+it.cant+'</td>'+
+    '</tr>';
+  }).join("");
+  var entregaDir="";
+  if(p.modo==="entrega"&&p.entregaInfo&&p.entregaInfo.establecimiento){
+    entregaDir=(p.entregaInfo.establecimiento.nm||"")+(p.entregaInfo.establecimiento.dir?" — "+p.entregaInfo.establecimiento.dir:"");
+  }
+  var win=window.open("","_blank","width=800,height=900");
+  win.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Nota de Entrega #'+p.id+'</title>'+
+    '<base href="'+baseHref+'">'+
+    '<style>body{font-family:Arial,sans-serif;font-size:12px;color:#111;padding:28px;max-width:720px;margin:0 auto}'+
+    '.header{display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid #1A1A1A;padding-bottom:14px;margin-bottom:18px}'+
+    '.logo{height:64px;width:auto;display:block}'+
+    '.company{font-weight:900;font-size:20px;color:#C0392B}'+
+    '.doc-title{font-size:22px;font-weight:700;text-align:right;letter-spacing:2px}'+
+    '.info-box{background:#f5f5f5;padding:12px 14px;border-radius:8px;margin-bottom:16px;font-size:13px}'+
+    'table{width:100%;border-collapse:collapse;margin-top:8px}'+
+    'th{background:#1A1A1A;color:#fff;padding:9px 12px;text-align:left;font-size:12px}'+
+    'td{padding:9px 12px;border-bottom:1px solid #ddd;font-size:12px}'+
+    'tr:nth-child(even)td{background:#f9f9f9}'+
+    '.firma-section{margin-top:40px;border-top:1px solid #ccc;padding-top:20px}'+
+    '.firma-grid{display:grid;grid-template-columns:1fr 1fr;gap:32px;margin-top:20px}'+
+    '.firma-box{border-top:1.5px solid #333;padding-top:8px;font-size:11px;color:#555}'+
+    '.firma-line{height:40px}'+
+    '.footer{margin-top:30px;font-size:10px;color:#aaa;border-top:1px solid #eee;padding-top:8px;text-align:center}'+
+    '@media print{button{display:none}}'+
+    '</style></head><body>'+
+    '<div class="header">'+
+      '<div style="display:flex;align-items:center;gap:14px">'+
+        '<img src="img/logo.jpg" class="logo" alt="PyroShield">'+
+        '<div>'+
+          '<div class="company">PYROSHIELD</div>'+
+          '<div style="font-size:10px;color:#666">Portete #3007 y Gallegos Lara, Guayaquil</div>'+
+          '<div style="font-size:10px;color:#666">RUC: 0992220835001</div>'+
+        '</div>'+
+      '</div>'+
+      '<div class="doc-title">NOTA DE<br>ENTREGA</div>'+
+    '</div>'+
+    '<div class="info-box">'+
+      '<div><b>N° Pedido:</b> '+p.id+'</div>'+
+      '<div><b>Fecha:</b> '+fecha+'</div>'+
+      '<div style="margin-top:8px"><b>Cliente:</b> '+p.razon+'</div>'+
+      '<div><b>RUC / Cédula:</b> '+p.ruc+'</div>'+
+      (entregaDir?'<div><b>Dirección de entrega:</b> '+entregaDir+'</div>':'')+
+      (dist.tel?'<div><b>Teléfono:</b> '+dist.tel+'</div>':'')+
+    '</div>'+
+    '<table>'+
+      '<thead><tr><th>#</th><th>Código</th><th>Descripción</th><th style="text-align:center">Cantidad</th></tr></thead>'+
+      '<tbody>'+itemsHtml+'</tbody>'+
+    '</table>'+
+    '<div class="firma-section">'+
+      '<div style="font-weight:700;font-size:14px;margin-bottom:6px">RECIBÍ CONFORME</div>'+
+      '<div style="font-size:12px;color:#555;margin-bottom:18px">Los artículos descritos arriba fueron recibidos en perfecto estado y en las cantidades indicadas.</div>'+
+      '<div class="firma-grid">'+
+        '<div><div class="firma-line"></div><div class="firma-box">Firma</div></div>'+
+        '<div><div class="firma-line"></div><div class="firma-box">Nombre completo</div></div>'+
+        '<div><div class="firma-line"></div><div class="firma-box">N° Cédula</div></div>'+
+        '<div><div class="firma-line"></div><div class="firma-box">Fecha de recepción</div></div>'+
+      '</div>'+
+    '</div>'+
+    '<div class="footer">PyroShield — Soluciones contra incendios · Portete #3007 y Gallegos Lara, Guayaquil</div>'+
+    '<div style="margin-top:16px;text-align:center">'+
+      '<button onclick="window.print()" style="padding:10px 24px;background:#1A1A1A;color:#fff;border:none;border-radius:8px;font-size:14px;cursor:pointer">🖨️ Imprimir / Guardar PDF</button>'+
     '</div>'+
     '</body></html>');
   win.document.close();
@@ -1943,6 +2058,241 @@ function exportarExcel(){
   document.body.appendChild(a); a.click();
   document.body.removeChild(a); URL.revokeObjectURL(url);
   toast("📥 "+filas.length+" registros exportados");
+}
+
+// ════════════════════ TOP 5 DISTRIBUIDORES ════════════════════
+function renderTop5Distribuidores(){
+  var montosDist={};
+  PEDIDOS.filter(function(p){return!p.esCanje&&(p.estado==="entregado"||p.estado==="finalizado");}).forEach(function(p){
+    if(!montosDist[p.ruc])montosDist[p.ruc]={ruc:p.ruc,razon:p.razon,total:0};
+    montosDist[p.ruc].total+=(p.subtotal||0);
+  });
+  var top5=Object.values(montosDist).sort(function(a,b){return b.total-a.total;}).slice(0,5);
+  if(!top5.length)return'';
+  return '<div style="background:var(--g1);border-radius:10px;padding:12px 14px;margin-bottom:14px">'+
+    '<div style="font-weight:700;margin-bottom:10px;font-size:14px">🏆 Top 5 distribuidores</div>'+
+    top5.map(function(d,i){
+      var dist=DISTRIBUIDORES.find(function(x){return x.ruc===d.ruc;})||{};
+      return '<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--g2)">'+
+        '<div><span style="font-weight:700;color:var(--azul);margin-right:8px">#'+(i+1)+'</span>'+
+        '<span style="font-size:13px">'+(dist.empresa||d.razon)+'</span></div>'+
+        '<span style="font-weight:700;font-size:13px">'+fmt$(d.total)+'</span>'+
+      '</div>';
+    }).join("")+
+  '</div>';
+}
+
+// ════════════════════ REPORTE MENSUAL PDF ════════════════════
+function generarReporteMensual(){
+  var ahora=new Date();
+  var mes=ahora.getMonth(),anio=ahora.getFullYear();
+  var meses=["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
+  var nombreMes=meses[mes]+" "+anio;
+  var pedMes=PEDIDOS.filter(function(p){
+    if(p.esCanje)return false;
+    var d=parseFechaPed(p);
+    return d.getMonth()===mes&&d.getFullYear()===anio&&(p.estado==="entregado"||p.estado==="finalizado"||p.estado==="facturado");
+  });
+  var totalVentas=pedMes.reduce(function(s,p){return s+(p.subtotal||0);},0);
+  var totalCosto=pedMes.reduce(function(s,p){
+    return s+(p.items||[]).reduce(function(cs,it){return cs+getCostoProducto(it.id)*(it.cant||0);},0);
+  },0);
+  var utilidad=totalVentas-totalCosto;
+  var numPedidos=pedMes.length;
+  var prodCounts={};
+  pedMes.forEach(function(p){(p.items||[]).forEach(function(it){
+    if(!prodCounts[it.id])prodCounts[it.id]={id:it.id,nm:it.nm,cant:0,subtotal:0};
+    prodCounts[it.id].cant+=it.cant;
+    prodCounts[it.id].subtotal+=it.pr*it.cant;
+  });});
+  var topProds=Object.values(prodCounts).sort(function(a,b){return b.subtotal-a.subtotal;}).slice(0,10);
+  var baseHref=window.location.href.substring(0,window.location.href.lastIndexOf("/")+1);
+  var win=window.open("","_blank","width=800,height=950");
+  win.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Reporte Mensual '+nombreMes+'</title>'+
+    '<base href="'+baseHref+'">'+
+    '<style>body{font-family:Arial,sans-serif;font-size:12px;color:#111;padding:28px;max-width:720px;margin:0 auto}'+
+    '.header{display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid #C0392B;padding-bottom:14px;margin-bottom:20px}'+
+    '.logo{height:64px;width:auto}'+
+    '.company{font-weight:900;font-size:20px;color:#C0392B}'+
+    '.kpis{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px}'+
+    '.kpi{background:#f5f5f5;border-radius:10px;padding:14px;text-align:center}'+
+    '.kpi-v{font-size:22px;font-weight:800;color:#C0392B}'+
+    '.kpi-l{font-size:11px;color:#888;margin-top:4px}'+
+    '.kpi-util{background:#eafaf1;border:1.5px solid #27ae60}'+
+    '.kpi-util .kpi-v{color:#1e8449}'+
+    'table{width:100%;border-collapse:collapse;margin-top:8px}'+
+    'th{background:#1A1A1A;color:#fff;padding:8px 10px;font-size:11px;text-align:left}'+
+    'td{padding:8px 10px;border-bottom:1px solid #eee;font-size:11px}'+
+    'tr:nth-child(even)td{background:#f9f9f9}'+
+    '.sec{font-weight:700;font-size:14px;margin:20px 0 8px}'+
+    '.footer{margin-top:24px;font-size:10px;color:#aaa;text-align:center;border-top:1px solid #eee;padding-top:8px}'+
+    '@media print{button{display:none}}'+
+    '</style></head><body>'+
+    '<div class="header">'+
+      '<div style="display:flex;align-items:center;gap:14px">'+
+        '<img src="img/logo.jpg" class="logo" alt="PyroShield">'+
+        '<div><div class="company">PYROSHIELD</div><div style="font-size:10px;color:#666">RUC: 0992220835001</div></div>'+
+      '</div>'+
+      '<div style="text-align:right"><div style="font-size:18px;font-weight:700">REPORTE MENSUAL</div><div style="font-size:13px;color:#666">'+nombreMes+'</div></div>'+
+    '</div>'+
+    '<div class="kpis">'+
+      '<div class="kpi"><div class="kpi-v">'+fmt$(totalVentas)+'</div><div class="kpi-l">Ventas del mes (subtotal)</div></div>'+
+      '<div class="kpi"><div class="kpi-v">'+fmt$(totalCosto)+'</div><div class="kpi-l">Costo total</div></div>'+
+      '<div class="kpi kpi-util"><div class="kpi-v">'+fmt$(utilidad)+'</div><div class="kpi-l">Utilidad generada</div></div>'+
+      '<div class="kpi"><div class="kpi-v">'+numPedidos+'</div><div class="kpi-l">Pedidos entregados/facturados</div></div>'+
+    '</div>'+
+    '<div class="sec">Top productos vendidos del mes</div>'+
+    (topProds.length?
+      '<table><thead><tr><th>#</th><th>Producto</th><th style="text-align:center">Cant.</th><th style="text-align:right">Subtotal</th></tr></thead>'+
+      '<tbody>'+topProds.map(function(p,i){
+        return '<tr><td>'+(i+1)+'</td><td>'+p.nm+'</td><td style="text-align:center">'+p.cant+'</td><td style="text-align:right">'+fmt$(p.subtotal)+'</td></tr>';
+      }).join("")+'</tbody></table>':
+      '<div style="color:#aaa;font-size:12px;padding:8px 0">No hay datos este mes.</div>')+
+    '<div class="footer">PyroShield · Reporte generado el '+new Date().toLocaleDateString("es-EC")+'</div>'+
+    '<div style="margin-top:16px;text-align:center"><button onclick="window.print()" style="padding:10px 24px;background:#C0392B;color:#fff;border:none;border-radius:8px;font-size:14px;cursor:pointer">🖨️ Imprimir / Guardar PDF</button></div>'+
+    '</body></html>');
+  win.document.close();
+}
+
+// ════════════════════ ADMIN RECOMPENSAS ════════════════════
+function renderAdmRecompensas(){
+  var html='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">'+
+    '<div style="font-size:15px;font-weight:700">Recompensas del programa de puntos</div>'+
+    '<button class="btn btn-p btn-sm" onclick="abrirNuevaRecompensa()">+ Nueva</button>'+
+  '</div>'+
+  (REWARDS.length?REWARDS.map(function(r,i){
+    return '<div class="card" style="margin-bottom:8px"><div class="card-b">'+
+      '<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">'+
+        '<div style="display:flex;align-items:center;gap:10px">'+
+          '<div style="font-size:28px">'+r.ico+'</div>'+
+          '<div>'+
+            '<div style="font-weight:700">'+r.nm+'</div>'+
+            '<div style="font-size:12px;color:var(--azul);font-weight:600">'+fmtPts(r.pts)+' puntos</div>'+
+            (r.agotado?'<span style="background:#e74c3c;color:#fff;font-size:10px;padding:2px 8px;border-radius:4px;font-weight:600">AGOTADO</span>':'<span style="background:var(--verdec);color:var(--verde);font-size:10px;padding:2px 8px;border-radius:4px;font-weight:600">Disponible</span>')+
+          '</div>'+
+        '</div>'+
+        '<div style="display:flex;gap:6px;flex-wrap:wrap">'+
+          '<button class="btn btn-sm btn-s" onclick="editarRecompensa('+i+')">✏️ Editar</button>'+
+          '<button class="btn btn-sm" style="background:'+(r.agotado?"var(--verdec)":"var(--amarc)")+';color:'+(r.agotado?"var(--verde)":"#8a6600")+';border-color:'+(r.agotado?"var(--verde)":"var(--amar)")+'" onclick="toggleAgotadoRecompensa('+i+')">'+(r.agotado?"✅ Disponible":"⚠️ Agotar")+'</button>'+
+          '<button class="btn btn-sm" style="background:var(--rojoc);color:var(--rojo);border-color:var(--rojo)" onclick="eliminarRecompensa('+i+')">🗑</button>'+
+        '</div>'+
+      '</div>'+
+    '</div></div>';
+  }).join(""):'<div class="empty"><div class="ico">🎁</div><p>No hay recompensas configuradas</p></div>');
+  document.getElementById("adm-recompensas").innerHTML=html;
+}
+
+function abrirNuevaRecompensa(){
+  document.getElementById("modal-rw-edit-c").innerHTML=
+    '<div class="mhandle"></div><h3>Nueva recompensa</h3>'+
+    '<label class="form-label">Ícono (emoji)</label>'+
+    '<input class="form-input" id="rw-ico" placeholder="🎁" maxlength="4">'+
+    '<label class="form-label">Nombre</label>'+
+    '<input class="form-input" id="rw-nm" placeholder="Ej: Tarjeta consumo $20">'+
+    '<label class="form-label">Puntos requeridos</label>'+
+    '<input class="form-input" id="rw-pts" type="number" min="1" placeholder="2000">'+
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">'+
+      '<button class="btn btn-s" onclick="cerrarModal(\'modal-rw-edit\')">Cancelar</button>'+
+      '<button class="btn btn-p" onclick="guardarNuevaRecompensa()">Guardar</button>'+
+    '</div>';
+  abrir("modal-rw-edit");
+}
+
+function guardarNuevaRecompensa(){
+  var ico=document.getElementById("rw-ico").value.trim()||"🎁";
+  var nm=document.getElementById("rw-nm").value.trim();
+  var pts=parseInt(document.getElementById("rw-pts").value,10);
+  if(!nm||isNaN(pts)||pts<1){toast("⚠️ Completa todos los campos");return;}
+  REWARDS.push({pts:pts,ico:ico,nm:nm,agotado:false});
+  guardarRewards(); cerrarModal("modal-rw-edit"); renderAdmRecompensas();
+  toast("✅ Recompensa agregada");
+}
+
+function editarRecompensa(idx){
+  var r=REWARDS[idx];
+  if(!r)return;
+  document.getElementById("modal-rw-edit-c").innerHTML=
+    '<div class="mhandle"></div><h3>Editar recompensa</h3>'+
+    '<label class="form-label">Ícono (emoji)</label>'+
+    '<input class="form-input" id="rw-ico" value="'+escHtml(r.ico)+'" maxlength="4">'+
+    '<label class="form-label">Nombre</label>'+
+    '<input class="form-input" id="rw-nm" value="'+escHtml(r.nm)+'">'+
+    '<label class="form-label">Puntos requeridos</label>'+
+    '<input class="form-input" id="rw-pts" type="number" min="1" value="'+r.pts+'">'+
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">'+
+      '<button class="btn btn-s" onclick="cerrarModal(\'modal-rw-edit\')">Cancelar</button>'+
+      '<button class="btn btn-p" onclick="guardarEditarRecompensa('+idx+')">Guardar</button>'+
+    '</div>';
+  abrir("modal-rw-edit");
+}
+
+function guardarEditarRecompensa(idx){
+  var r=REWARDS[idx];
+  if(!r)return;
+  var ico=document.getElementById("rw-ico").value.trim()||r.ico;
+  var nm=document.getElementById("rw-nm").value.trim();
+  var pts=parseInt(document.getElementById("rw-pts").value,10);
+  if(!nm||isNaN(pts)||pts<1){toast("⚠️ Completa todos los campos");return;}
+  r.ico=ico; r.nm=nm; r.pts=pts;
+  guardarRewards(); cerrarModal("modal-rw-edit"); renderAdmRecompensas();
+  toast("✅ Recompensa actualizada");
+}
+
+function toggleAgotadoRecompensa(idx){
+  var r=REWARDS[idx];
+  if(!r)return;
+  r.agotado=!r.agotado;
+  guardarRewards(); renderAdmRecompensas();
+  toast(r.agotado?"⚠️ Recompensa marcada como agotada":"✅ Recompensa disponible");
+}
+
+function eliminarRecompensa(idx){
+  confirmar("¿Eliminar esta recompensa?",function(){
+    REWARDS.splice(idx,1);
+    guardarRewards(); renderAdmRecompensas();
+    toast("✅ Recompensa eliminada");
+  });
+}
+
+// ════════════════════ NOTIFICACIONES ADMIN ════════════════════
+var _notifInterval=null;
+function iniciarNotificacionesAdmin(){
+  if(typeof Notification==="undefined")return;
+  Notification.requestPermission();
+  setTimeout(chequearPedidosNuevos,1200);
+  if(_notifInterval)clearInterval(_notifInterval);
+  _notifInterval=setInterval(function(){
+    chequearPedidosNuevos();
+    if(Notification.permission!=="granted")return;
+    var pendientes=PEDIDOS.filter(function(p){return p.estado==="pendiente"&&!p.esCanje;}).length;
+    var canjesPend=PEDIDOS.filter(function(p){return p.estado==="pendiente"&&p.esCanje;}).length;
+    if(pendientes>0||canjesPend>0){
+      var msg=[];
+      if(pendientes>0)msg.push(pendientes+" pedido(s) pendiente(s)");
+      if(canjesPend>0)msg.push(canjesPend+" canje(s) pendiente(s)");
+      new Notification("PyroShield — Pendientes sin procesar",{body:"Tienes "+msg.join(" y ")+" de procesar.",icon:"img/logo.jpg"});
+    }
+  },30*60*1000);
+  window.addEventListener("storage",function(e){
+    if(e.key==="pyro_pedidos"&&USER&&USER.esAdmin){
+      PEDIDOS=cargarPedidos(); chequearPedidosNuevos();
+    }
+  });
+}
+
+function chequearPedidosNuevos(){
+  if(Notification.permission!=="granted")return;
+  var vistos;
+  try{vistos=JSON.parse(localStorage.getItem("pyro_notif_vistas")||"[]");}catch(e){vistos=[];}
+  var nuevos=PEDIDOS.filter(function(p){return p.estado==="pendiente"&&vistos.indexOf(p.id)===-1;});
+  nuevos.forEach(function(p){
+    new Notification(p.esCanje?"PyroShield — Nuevo canje":"PyroShield — Nuevo pedido",{
+      body:p.esCanje?"Canje solicitado por "+p.razon:"Te ha llegado un pedido de "+p.razon,
+      icon:"img/logo.jpg"
+    });
+    vistos.push(p.id);
+  });
+  if(nuevos.length)try{localStorage.setItem("pyro_notif_vistas",JSON.stringify(vistos));}catch(e){}
 }
 
 // ════════════════════ MODALES / UTIL ════════════════════

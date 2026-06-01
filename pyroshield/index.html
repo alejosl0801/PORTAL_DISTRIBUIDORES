@@ -153,10 +153,12 @@
     <button class="adm-tab active" onclick="admTab('pedidos',this)">📦 Pedidos</button>
     <button class="adm-tab" onclick="admTab('distribuidores',this)">🏢 Distribuidores</button>
     <button class="adm-tab" onclick="admTab('stock',this)">📊 Stock</button>
+    <button class="adm-tab" onclick="admTab('recompensas',this)">🎁 Recompensas</button>
   </div>
   <div class="content" style="padding-top:12px">
     <div id="adm-pedidos" class="adm-panel active">
       <div class="adm-stats" id="adm-stats"></div>
+      <div id="adm-dashboard-extra"></div>
       <button class="btn btn-s btn-full" style="margin-bottom:14px" onclick="exportarExcel()">📥 Exportar a Excel</button>
       <div id="adm-ped-lista"></div>
     </div>
@@ -170,6 +172,7 @@
     <div id="adm-stock" class="adm-panel">
       <div id="adm-stock-lista"></div>
     </div>
+    <div id="adm-recompensas" class="adm-panel"></div>
   </div>
 </div>
 
@@ -264,6 +267,13 @@
       <button class="btn btn-s" onclick="cerrarModal('modal-nuevo-dist')">Cancelar</button>
       <button class="btn btn-p" onclick="guardarNuevoDist()">Guardar</button>
     </div>
+  </div>
+</div>
+
+<!-- MODAL RECOMPENSA NUEVA/EDITAR -->
+<div class="ov" id="modal-rw-edit">
+  <div class="modal">
+    <div id="modal-rw-edit-c"></div>
   </div>
 </div>
 
