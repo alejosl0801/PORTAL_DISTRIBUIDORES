@@ -62,6 +62,14 @@ var PRODUCTOS = [
 // ════════════════════ ESTADO GLOBAL ════════════════════
 var USER=null, CARRITO=[], PEDIDOS=[], FILTRO="todos", SUB_FILTRO=null, ADM_TAB="pedidos";
 var CALIF_PED_ID=null, CALIF_ESTRELLAS=0;
+var FRASES_MOTIVACIONALES=[
+  "El éxito es la suma de pequeños esfuerzos repetidos cada día.",
+  "Cada pedido que haces es un paso hacia tu próxima meta.",
+  "Los grandes negocios se construyen con constancia y visión.",
+  "Tu crecimiento es nuestro orgullo. ¡Sigamos adelante!",
+  "La disciplina de hoy es el éxito de mañana.",
+  "Invertir en tu negocio hoy es ganar libertad mañana."
+];
 var TUT_PASO=0;
 var TUT_PASOS=[
   {ico:"🧯",t:"Catálogo",d:"Encuentra todos nuestros productos con precios exclusivos para ti."},
@@ -152,8 +160,71 @@ function saldoPuntos(){
 }
 
 // ════════════════════ LOGIN ════════════════════
+// SHA-256 síncrono (impl. compacta de Geraint Luff, dominio público) para
+// soportar contraseñas guardadas como hash (ej. ADMIN) sin texto plano.
+function sha256(ascii){
+  function rightRotate(value,amount){return(value>>>amount)|(value<<(32-amount));}
+  var mathPow=Math.pow;var maxWord=mathPow(2,32);var result="";
+  var words=[];var asciiBitLength=ascii.length*8;
+  var hash=sha256.h=sha256.h||[];var k=sha256.k=sha256.k||[];var primeCounter=k.length;
+  var isComposite={};
+  for(var candidate=2;primeCounter<64;candidate++){
+    if(!isComposite[candidate]){
+      for(var i=0;i<313;i+=candidate){isComposite[i]=candidate;}
+      hash[primeCounter]=(mathPow(candidate,.5)*maxWord)|0;
+      k[primeCounter++]=(mathPow(candidate,1/3)*maxWord)|0;
+    }
+  }
+  ascii+="\x80";
+  while(ascii.length%64-56)ascii+="\x00";
+  for(var i=0;i<ascii.length;i++){
+    var j=ascii.charCodeAt(i);
+    if(j>>8)return;
+    words[i>>2]|=j<<((3-i)%4)*8;
+  }
+  words[words.length]=((asciiBitLength/maxWord)|0);
+  words[words.length]=(asciiBitLength);
+  for(var j=0;j<words.length;){
+    var w=words.slice(j,j+=16);var oldHash=hash;
+    hash=hash.slice(0,8);
+    for(var i=0;i<64;i++){
+      var w15=w[i-15],w2=w[i-2];
+      var a=hash[0],e=hash[4];
+      var temp1=hash[7]
+        +(rightRotate(e,6)^rightRotate(e,11)^rightRotate(e,25))
+        +((e&hash[5])^((~e)&hash[6]))
+        +k[i]
+        +(w[i]=(i<16)?w[i]:(
+            w[i-16]
+            +(rightRotate(w15,7)^rightRotate(w15,18)^(w15>>>3))
+            +w[i-7]
+            +(rightRotate(w2,17)^rightRotate(w2,19)^(w2>>>10))
+          )|0
+        );
+      var temp2=(rightRotate(a,2)^rightRotate(a,13)^rightRotate(a,22))
+        +((a&hash[1])^(a&hash[2])^(hash[1]&hash[2]));
+      hash=[(temp1+temp2)|0].concat(hash);
+      hash[4]=(hash[4]+temp1)|0;
+    }
+    for(var i=0;i<8;i++){hash[i]=(hash[i]+oldHash[i])|0;}
+  }
+  for(var i=0;i<8;i++){
+    for(var j=3;j+1;j--){
+      var b=(hash[i]>>(j*8))&255;
+      result+=((b<16)?0:"")+b.toString(16);
+    }
+  }
+  return result;
+}
+// Compara la contraseña ingresada contra la almacenada (texto plano o hash SHA-256 de 64 hex)
+function passCoincide(stored,pw){
+  if(stored==null)return false;
+  if(stored===pw)return true;
+  if(/^[a-f0-9]{64}$/i.test(stored))return sha256(pw)===stored.toLowerCase();
+  return false;
+}
 function loginConCredenciales(ruc,pw){
-  var d=DISTRIBUIDORES.find(function(x){return x.ruc.toLowerCase()===ruc.toLowerCase()&&x.pass===pw;});
+  var d=DISTRIBUIDORES.find(function(x){return x.ruc.toLowerCase()===ruc.toLowerCase()&&passCoincide(x.pass,pw);});
   if(!d)return false;
   USER=d; PEDIDOS=cargarPedidos(); cargarStock();
   if(d.esAdmin){mostrar("s-admin");renderAdmin();}
@@ -175,9 +246,31 @@ function hacerLogin(){
   try{localStorage.setItem("pyro_sesion",JSON.stringify({ruc:u,pass:pw}));}catch(e){}
   if(!USER.esAdmin){
     mostrarSaludoFlash();
+    otorgarBienvenida();
     var key="pyro_tut_"+USER.ruc;
     if(!localStorage.getItem(key)){iniciarTutorial();}
   }
+}
+
+// Otorga (una sola vez) un canje gratis de bienvenida al primer login del cliente
+function otorgarBienvenida(){
+  if(!USER||USER.esAdmin)return;
+  var flag="pyro_bienvenida_"+USER.ruc;
+  var yaTiene=PEDIDOS.some(function(p){return p.ruc===USER.ruc&&p.esBienvenida;});
+  if(localStorage.getItem(flag)||yaTiene){try{localStorage.setItem(flag,"1");}catch(e){}return;}
+  var now=new Date();
+  var bid="B"+now.getTime().toString().slice(-5);
+  PEDIDOS.push({
+    id:bid,ruc:USER.ruc,razon:USER.razon,
+    fecha:now.toLocaleDateString(),fechaISO:now.toISOString(),
+    esCanje:true,esBienvenida:true,canjePts:0,
+    canjeNm:"Combo KFC 2 presas + papas + cola",
+    estado:"pendiente",total:0,puntos:0
+  });
+  guardarPedidos();
+  try{localStorage.setItem(flag,"1");}catch(e){}
+  if(typeof renderInicio==="function")renderInicio();
+  setTimeout(function(){toastGold("🎁 ¡Bienvenido! Tienes un Combo KFC de regalo");},1400);
 }
 function logout(){
   USER=null;CARRITO=[];
@@ -236,6 +329,30 @@ function irTab(t){
   document.querySelector("#s-main .content").scrollTo(0,0);
 }
 
+// Actualiza el badge de puntos del topbar; hace pulse cuando el saldo sube
+function setTopbarPts(val){
+  var el=document.getElementById("topbar-pts-v");
+  if(!el)return;
+  var prev=parseInt(el.getAttribute("data-prev")||"0",10);
+  el.textContent=fmtPts(val);
+  if(val>prev){
+    var box=el.parentNode;
+    if(box){box.classList.remove("pulse");void box.offsetWidth;box.classList.add("pulse");}
+  }
+  el.setAttribute("data-prev",val);
+}
+
+// Overlay de éxito grande con animación (feedback al confirmar pedido)
+function mostrarExito(titulo,sub){
+  var ov=document.getElementById("exito-ov");
+  if(!ov){toastGold(titulo);return;}
+  var t=document.getElementById("exito-t"),s=document.getElementById("exito-s");
+  if(t)t.textContent=titulo||"¡Listo!";
+  if(s)s.textContent=sub||"";
+  ov.classList.remove("show");void ov.offsetWidth;ov.classList.add("show");
+  setTimeout(function(){ov.classList.remove("show");},2200);
+}
+
 // ════════════════════ INICIO ════════════════════
 function renderInicio(){
   // Solo pedidos entregados/finalizados para el contador principal
@@ -244,8 +361,10 @@ function renderInicio(){
   var pend=mp.filter(function(p){return p.estado==="pendiente"||p.estado==="en_proceso"||p.estado==="autorizado"||p.estado==="facturado";});
   var nm=USER.empresa||USER.razon.split(" ").slice(0,2).join(" ");
   document.getElementById("hero-nombre").textContent=nm;
+  var fe=document.getElementById("hero-frase");
+  if(fe&&!fe.textContent){fe.textContent=FRASES_MOTIVACIONALES[Math.floor(Math.random()*FRASES_MOTIVACIONALES.length)];}
   document.getElementById("hero-pts").textContent=fmtPts(saldoPuntos());
-  document.getElementById("topbar-pts-v").textContent=fmtPts(saldoPuntos());
+  setTopbarPts(saldoPuntos());
   document.getElementById("hs-pedidos").textContent=entregados.length;
   document.getElementById("hs-proceso").textContent=pend.length;
   document.getElementById("hs-carrito").textContent=CARRITO.reduce(function(s,i){return s+i.cant;},0);
@@ -491,11 +610,14 @@ function scrollToConfirm(){
 // ════════════════════ CARRITO ════════════════════
 function renderCarrito(){
   actualizarBadge();
+  // Preservar selección de pago/entrega entre re-renders
+  var prevPago=(document.getElementById("cart-pago")||{}).value||"";
+  var prevModo=(document.getElementById("cart-modo")||{}).value||"";
   var cont=document.getElementById("cart-lista");
   var res=document.getElementById("cart-resumen");
   renderBorradores();
   if(!CARRITO.length){
-    cont.innerHTML='<div class="cvacio"><div class="ico">🛒</div><p>Tu carrito está vacío</p><button class="btn btn-p" style="margin-top:16px" onclick="irTab(\'catalogo\')">Ver catálogo</button></div>';
+    cont.innerHTML='<div class="cvacio"><div class="ico cvacio-emoji">🛒</div><p style="font-size:17px;font-weight:800;color:var(--g4)">Tu carrito está vacío</p><p style="font-size:13px;color:var(--g3);margin-top:6px;max-width:260px;margin-left:auto;margin-right:auto;line-height:1.5">¡Empieza a armar tu pedido y suma puntos en cada compra! 🏆</p><button class="btn btn-p" style="margin-top:18px" onclick="irTab(\'catalogo\')">Explorar catálogo</button></div>';
     res.innerHTML="";
     return;
   }
@@ -562,11 +684,13 @@ function renderCarrito(){
     '</div>'+
     '<div style="margin-top:14px">'+
       '<label class="form-label">Forma de pago</label>'+
-      '<select class="form-select" id="cart-pago">'+
+      '<select class="form-select" id="cart-pago" onchange="validarConfirmar()">'+
+        '<option value="" disabled selected>Seleccionar...</option>'+
         opcionesPago.map(function(o){return'<option value="'+o.v+'">'+o.l+'</option>';}).join("")+
       '</select>'+
       '<label class="form-label">Modo de entrega</label>'+
-      '<select class="form-select" id="cart-modo" onchange="renderModoEntrega()">'+
+      '<select class="form-select" id="cart-modo" onchange="renderModoEntrega();validarConfirmar()">'+
+        '<option value="" disabled selected>Seleccionar...</option>'+
         '<option value="retiro">Retiro en local</option>'+
         (USER.entrega&&USER.entrega.habilitada?'<option value="entrega">Entrega a domicilio</option>':'')+
       '</select>'+
@@ -575,10 +699,28 @@ function renderCarrito(){
       '<input class="form-input" id="cart-notas" placeholder="Observaciones, referencias...">'+
       '<div style="display:flex;gap:8px;margin-bottom:8px">'+
         '<button class="btn btn-s" style="flex:1" onclick="guardarBorrador()">💾 Borrador</button>'+
-        '<button class="btn btn-p btn-full" id="confirmar-pedido" style="flex:2;min-height:52px" onclick="confirmarPedido()">Confirmar pedido</button>'+
+        '<button class="btn btn-p btn-full" id="confirmar-pedido" style="flex:2;min-height:52px" onclick="confirmarPedido()" disabled>Confirmar pedido</button>'+
       '</div>'+
+      '<div id="confirmar-hint" style="font-size:11px;color:var(--g3);text-align:center;font-style:italic">Selecciona forma de pago y modo de entrega para continuar</div>'+
     '</div>';
+  // Restaurar selección previa
+  if(prevPago){var pe=document.getElementById("cart-pago");if(pe)pe.value=prevPago;}
+  if(prevModo){var me=document.getElementById("cart-modo");if(me)me.value=prevModo;}
   renderModoEntrega();
+  validarConfirmar();
+}
+
+// Habilita "Confirmar pedido" solo cuando forma de pago y modo de entrega están elegidos
+function validarConfirmar(){
+  var pago=document.getElementById("cart-pago");
+  var modo=document.getElementById("cart-modo");
+  var btn=document.getElementById("confirmar-pedido");
+  var hint=document.getElementById("confirmar-hint");
+  if(!btn)return;
+  var ok=!!(pago&&pago.value&&modo&&modo.value);
+  btn.disabled=!ok;
+  btn.classList.toggle("btn-disabled",!ok);
+  if(hint)hint.style.display=ok?"none":"block";
 }
 
 // Editar cantidad directamente en carrito
@@ -633,8 +775,10 @@ function renderModoEntrega(){
       var box=document.getElementById("nueva-dir-box");
       if(box)box.style.display=(this.value==="nuevo")?"block":"none";
     });
-  } else {
+  } else if(sel.value==="retiro"){
     ex.innerHTML='<p style="font-size:12px;color:var(--g3);margin-bottom:12px">📍 Portete #3007 y Gallegos Lara, Guayaquil</p>';
+  } else {
+    ex.innerHTML="";
   }
 }
 
@@ -709,6 +853,11 @@ function confirmarPedido(){
   var hayItems=CARRITO.some(function(i){var p=PRODUCTOS.find(function(x){return x.id===i.id;});return p&&!p.ago&&i.cant>0;});
   if(!hayItems){toast("⚠️ Tu carrito está vacío");return;}
 
+  var pagoSel=document.getElementById("cart-pago");
+  var modoSel=document.getElementById("cart-modo");
+  if(!pagoSel||!pagoSel.value){toast("⚠️ Selecciona una forma de pago");return;}
+  if(!modoSel||!modoSel.value){toast("⚠️ Selecciona un modo de entrega");return;}
+
   var modo=document.getElementById("cart-modo").value;
   // Validar dirección si es entrega
   if(modo==="entrega"){
@@ -764,8 +913,8 @@ function confirmarPedido(){
   CARRITO=[];
   guardarCarrito();
   actualizarBadge();
-  toastGold("🎉 Pedido #"+pid+" enviado · "+fmtPts(ptsTotal)+" pts pendientes de confirmar");
-  irTab("historial");
+  mostrarExito("¡Pedido confirmado!","#"+pid+" · "+fmtPts(ptsTotal)+" pts pendientes de confirmar");
+  setTimeout(function(){irTab("historial");},950);
 }
 
 // ════════════════════ HISTORIAL ════════════════════
@@ -805,7 +954,10 @@ function renderHistorial(){
   else if(H_FILTRO==="finalizado")mp=mp.filter(function(p){return p.estado==="entregado"||p.estado==="finalizado";});
   document.getElementById("hist-lista").innerHTML=mp.length?mp.map(function(p){
     var confirmados=(p.estado==="entregado"||p.estado==="finalizado");
-    var ptsHtml=p.esCanje?
+    var ptsHtml=p.esBienvenida?
+      '<div class="ped-pts" style="color:#B8860B">🎁 Regalo de bienvenida</div>'+
+      '<div style="font-size:11px;color:var(--g3);margin-top:3px">¡Gracias por unirte! Coordinaremos tu combo con tu primer pedido.</div>':
+      p.esCanje?
       '<div class="ped-pts">🎁 Canjeaste '+fmtPts(p.canjePts)+' pts</div>'+
       '<div style="font-size:11px;color:var(--g3);margin-top:3px">Tu regalo será entregado en 0 a 7 días laborables.</div>':
       (confirmados
@@ -824,8 +976,9 @@ function renderHistorial(){
         accBtns+='<button class="btn btn-sm btn-s" onclick="repetirPedido(\''+p.id+'\')">↩ Volver a solicitar</button>';
       }
     }
-    return '<div class="ped">'+
-      '<div class="ped-top"><div><div class="ped-id">'+(p.esCanje?"Canje":"Pedido")+' #'+p.id+'</div><div style="font-size:12px;color:var(--g3)">'+p.fecha+'</div></div>'+
+    var bordCol={"est-pendiente":"var(--amar)","est-en-proceso":"var(--azul)","est-finalizado":"var(--verde)","est-cancelado":"var(--g3)"}[estadoClass(p.estado)]||"var(--g2)";
+    return '<div class="ped" style="border-left:4px solid '+bordCol+'">'+
+      '<div class="ped-top"><div><div class="ped-id">'+(p.esBienvenida?"🎁 Bienvenida":(p.esCanje?"Canje":"Pedido"))+' #'+p.id+'</div><div style="font-size:12px;color:var(--g3)">'+p.fecha+'</div></div>'+
       '<span class="est-chip '+estadoClass(p.estado)+'">'+estadoLabel(p.estado)+'</span></div>'+
       '<div class="ped-total">'+fmt$(p.total)+'</div>'+
       (p.esCanje?'<div class="ped-items">🎁 '+p.canjeNm+'</div>':'<div class="ped-items">'+(p.items?p.items.length:0)+' producto(s) · '+p.pago+'</div>')+
@@ -916,7 +1069,8 @@ function verDetallePed(pid){
     (p.notas?'<div style="margin-top:8px;font-size:13px;color:var(--g4)"><b>Notas:</b> '+p.notas+'</div>':'')+
     (p.puntos?'<div style="margin-top:8px;font-size:13px;color:#B8860B;font-weight:700">🏆 '+fmtPts(p.puntos)+' puntos '+(p.estado==="entregado"||p.estado==="finalizado"?"acreditados":"pendientes de entrega")+'</div>':'')+
     (p.calificacion?'<div style="margin-top:8px;font-size:13px">Calificación: '+"⭐".repeat(p.calificacion.estrellas)+'<br><i>'+(p.calificacion.comentario||"")+'</i></div>':'')+
-    '<button class="btn btn-s btn-full" style="margin-top:16px" onclick="cerrarModal(\'modal-pedido-det\')">Cerrar</button>';
+    ((!p.esCanje&&p.items&&p.items.length)?'<button class="btn btn-p btn-full" style="margin-top:16px" onclick="generarProforma(\''+p.id+'\')">📄 Descargar Proforma PDF</button>':'')+
+    '<button class="btn btn-s btn-full" style="margin-top:10px" onclick="cerrarModal(\'modal-pedido-det\')">Cerrar</button>';
   document.getElementById("modal-pedido-det-c").innerHTML=html;
   abrir("modal-pedido-det");
 }
@@ -969,11 +1123,15 @@ function renderRecompensas(){
     return '<div class="rec-item">'+
       '<div class="rec-top"><div class="rec-ico">'+r.ico+'</div>'+
       '<div><div class="rec-nm">'+r.nm+'</div><div class="rec-pts-need">'+fmtPts(r.pts)+' puntos</div></div></div>'+
-      '<div class="rec-bar-wrap"><div class="rec-bar" style="width:'+pct+'%"></div></div>'+
+      '<div class="rec-bar-wrap"><div class="rec-bar" style="width:0" data-pct="'+pct+'"></div></div>'+
       (puede?'<button class="btn btn-p btn-full rec-btn" onclick="canjear('+r.pts+',\''+r.nm+'\')">Canjear '+fmtPts(r.pts)+' pts</button>':
        '<button class="btn btn-s btn-full rec-btn" disabled>Faltan '+fmtPts(r.pts-saldo)+' pts</button>')+
     '</div>';
   }).join("");
+  // Animar barras de progreso desde 0
+  setTimeout(function(){
+    document.querySelectorAll("#rec-lista .rec-bar").forEach(function(b){b.style.width=(b.getAttribute("data-pct")||0)+"%";});
+  },60);
 }
 function canjear(pts,nm){
   if(saldoPuntos()<pts){toast("⚠️ No tienes suficientes puntos confirmados");return;}
@@ -982,7 +1140,7 @@ function canjear(pts,nm){
     var pid="C"+Date.now().toString().slice(-5);
     PEDIDOS.push({id:pid,ruc:USER.ruc,razon:USER.razon,fecha:new Date().toLocaleDateString(),fechaISO:new Date().toISOString(),esCanje:true,canjePts:pts,canjeNm:nm,estado:"pendiente",total:0,puntos:0});
     guardarPedidos(); renderRecompensas();
-    document.getElementById("topbar-pts-v").textContent=fmtPts(saldoPuntos());
+    setTopbarPts(saldoPuntos());
     toastGold("🎁 Canje solicitado: "+nm);
   });
 }
@@ -1754,6 +1912,10 @@ function avisarStorage(){
 
 document.addEventListener("click",function(e){if(e.target.classList.contains("ov"))e.target.classList.remove("open");});
 window.addEventListener("load",function(){
+  setTimeout(function(){
+    var sp=document.getElementById("splash");
+    if(sp){sp.classList.add("hide");setTimeout(function(){sp.style.display="none";},600);}
+  },1500);
   cargarDistribuidoresExtra();
   try{
     var s=JSON.parse(localStorage.getItem("pyro_sesion")||"null");

@@ -9,6 +9,16 @@
 </head>
 <body>
 
+<!-- ══ SPLASH ══ -->
+<div id="splash" class="splash">
+  <div class="splash-inner">
+    <div class="splash-logo-wrap"><img src="img/logo.jpg" alt="PyroShield" class="splash-logo"></div>
+    <div class="splash-brand">PYROSHIELD</div>
+    <div class="splash-sub">Portal Distribuidores</div>
+    <div class="splash-loader"><span></span></div>
+  </div>
+</div>
+
 <!-- ══ LOGIN ══ -->
 <div id="s-login" class="screen active">
   <div class="login-box">
@@ -48,6 +58,7 @@
       <div class="hero">
         <div class="hero-saludo">Bienvenido de vuelta,</div>
         <div class="hero-nombre" id="hero-nombre">—</div>
+        <div class="hero-frase" id="hero-frase"></div>
         <div class="hero-pts-box">
           <div><div class="l">Tus puntos confirmados</div><div class="v" id="hero-pts">0</div></div>
           <div class="ico">🏆</div>
@@ -280,6 +291,15 @@
 </div>
 
 <div id="toast" class="toast"></div>
+
+<!-- OVERLAY DE ÉXITO -->
+<div id="exito-ov" class="exito-ov">
+  <div class="exito-card">
+    <div class="exito-check">✓</div>
+    <div class="exito-t" id="exito-t"></div>
+    <div class="exito-s" id="exito-s"></div>
+  </div>
+</div>
 
 <script src="./datos.js"></script>
 <script src="./app.js"></script>
