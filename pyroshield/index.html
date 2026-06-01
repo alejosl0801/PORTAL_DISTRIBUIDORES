@@ -37,6 +37,12 @@
     <input class="field-inp" id="login-pass" type="password" placeholder="Tu contraseña" autocomplete="current-password">
     <button class="btn-login" onclick="hacerLogin()">Ingresar</button>
     <div class="login-err" id="login-err">RUC o contraseña incorrectos</div>
+    <div class="login-demo" id="login-demo-box" style="display:none">
+      <b>Credenciales demo</b><br>
+      ADMIN / pyro2024<br>
+      0906872742001 / jorge123<br>
+      Otros RUC / dist123
+    </div>
   </div>
 </div>
 
@@ -179,7 +185,7 @@
     <div id="adm-pedidos" class="adm-panel active">
       <div class="adm-stats" id="adm-stats"></div>
       <div id="adm-dashboard-extra"></div>
-      <button class="btn btn-s btn-full" style="margin-bottom:14px" onclick="exportarExcel()">📥 Exportar a Excel</button>
+      <button class="btn btn-s btn-full" id="adm-export-btn" style="margin-bottom:14px" onclick="exportarExcel()">📥 Exportar a Excel</button>
       <div id="adm-ped-lista"></div>
     </div>
     <div id="adm-distribuidores" class="adm-panel">
@@ -255,6 +261,8 @@
     <input class="form-input" id="nd-razon" placeholder="Nombre o empresa">
     <label class="form-label">Nombre comercial / empresa</label>
     <input class="form-input" id="nd-empresa" placeholder="Ej: Sumiseg">
+    <label class="form-label">Nombre del encargado</label>
+    <input class="form-input" id="nd-encargado" placeholder="Ej: Jorge">
     <label class="form-label">Tipo de documento *</label>
     <select class="form-select" id="nd-tipodoc">
       <option value="ruc">RUC (13 dígitos)</option>

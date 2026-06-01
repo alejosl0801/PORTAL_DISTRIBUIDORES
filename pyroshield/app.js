@@ -61,6 +61,7 @@ var PRODUCTOS = [
 
 // ════════════════════ ESTADO GLOBAL ════════════════════
 var USER=null, CARRITO=[], PEDIDOS=[], FILTRO="todos", SUB_FILTRO=null, ADM_TAB="pedidos";
+var ADM_PED_FILTRO="pendiente";
 var CALIF_PED_ID=null, CALIF_ESTRELLAS=0;
 var FAVORITOS=[];
 var H_DESDE=null, H_HASTA=null;
@@ -139,6 +140,7 @@ function siguienteNivel(p, cant){
 
 function fmtPts(n){return (n||0).toString().replace(/\B(?=(\d{3})+(?!\d))/g,".");}
 function fmt$(n){return"$"+(n||0).toFixed(2);}
+function primerNombre(razon){return String(razon||"").trim().split(/\s+/)[0]||"";}
 
 // ════════════════════ PUNTOS — LÓGICA CORREGIDA ════════════════════
 // Los puntos solo se confirman cuando el pedido está en estado "entregado" o "finalizado"
@@ -241,6 +243,12 @@ function loginConCredenciales(ruc,pw){
   if(!d)return false;
   USER=d; PEDIDOS=cargarPedidos(); cargarStock();
   setTimeout(reintentarSyncPendientes,2000);
+  if(d.rol==="impresion"){
+    // Rol de impresión: usa la pantalla admin con UI reducida (solo pedidos)
+    mostrar("s-admin");
+    renderAdmin();
+    return true;
+  }
   if(d.esAdmin){mostrar("s-admin");renderAdmin();iniciarNotificacionesAdmin();}
   else{
     CARRITO=cargarCarrito();
@@ -276,12 +284,72 @@ function hacerLogin(){
   err.style.display="none";
   if(!loginConCredenciales(u,pw)){err.style.display="block";return;}
   try{localStorage.setItem("pyro_sesion",JSON.stringify({ruc:u,pass:pw}));}catch(e){}
-  if(!USER.esAdmin){
+  if(!USER.esAdmin&&USER.rol!=="impresion"){
     mostrarSaludoFlash();
     otorgarBienvenida();
-    var key="pyro_tut_"+USER.ruc;
-    if(!localStorage.getItem(key)){iniciarTutorial();}
+    // Flujo de primer ingreso (bienvenida + cambio de contraseña + tutorial)
+    var keyPrimer="pyro_primer_ingreso_"+USER.ruc;
+    if(!localStorage.getItem(keyPrimer)){
+      mostrarPrimerIngreso();
+    } else {
+      var key="pyro_tut_"+USER.ruc;
+      if(!localStorage.getItem(key)){iniciarTutorial();}
+    }
   }
+}
+
+// ════════════════════ FLUJO PRIMER INGRESO ════════════════════
+function mostrarPrimerIngreso(){
+  if(!USER)return;
+  primerIngresoPaso1();
+}
+function _cerrarPrimerIngresoOv(){
+  var ov=document.getElementById("primer-ingreso-ov");
+  if(ov)ov.remove();
+}
+function _primerIngresoOv(innerHtml){
+  _cerrarPrimerIngresoOv();
+  var ov=document.createElement("div");
+  ov.id="primer-ingreso-ov";
+  ov.style.cssText="position:fixed;inset:0;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;z-index:9998;padding:20px";
+  ov.innerHTML='<div style="background:var(--blanco,#fff);border-radius:22px;padding:28px 24px;max-width:340px;width:100%;text-align:center;box-shadow:0 12px 50px rgba(0,0,0,.45)">'+innerHtml+'</div>';
+  document.body.appendChild(ov);
+}
+function primerIngresoPaso1(){
+  var enc=USER.encargado||primerNombre(USER.razon);
+  _primerIngresoOv(
+    '<div style="font-size:48px;margin-bottom:10px">🎁</div>'+
+    '<div style="font-size:21px;font-weight:800;color:var(--oro);margin-bottom:10px">¡Bienvenido/a, '+escHtml(enc)+'! 🎁</div>'+
+    '<div style="font-size:14px;color:var(--g4);margin-bottom:8px">Tienes un regalo de bienvenida:</div>'+
+    '<div style="font-size:15px;font-weight:700;margin-bottom:20px;line-height:1.4">Combo KFC 3 presas + papas + cola</div>'+
+    '<button class="btn btn-p" style="width:100%;font-size:16px" onclick="primerIngresoPaso2()">¡Genial! Continuar →</button>'
+  );
+}
+function primerIngresoPaso2(){
+  _primerIngresoOv(
+    '<div style="font-size:21px;font-weight:800;margin-bottom:10px">Cambia tu contraseña</div>'+
+    '<div style="font-size:13px;color:var(--g4);margin-bottom:16px;line-height:1.5">Tu contraseña actual es temporal. Te recomendamos cambiarla por una segura.</div>'+
+    '<input class="form-input" id="pi-pass1" type="password" placeholder="Nueva contraseña">'+
+    '<input class="form-input" id="pi-pass2" type="password" placeholder="Repetir contraseña">'+
+    '<button class="btn btn-p btn-full" style="margin-top:4px" onclick="primerIngresoGuardarPass()">Guardar contraseña</button>'+
+    '<button class="btn btn-s btn-full" style="margin-top:8px" onclick="primerIngresoPaso3()">Omitir por ahora</button>'
+  );
+}
+function primerIngresoGuardarPass(){
+  var p1=document.getElementById("pi-pass1"),p2=document.getElementById("pi-pass2");
+  var v1=p1?p1.value:"",v2=p2?p2.value:"";
+  if(v1.length<6){toast("⚠️ La contraseña debe tener al menos 6 caracteres");return;}
+  if(v1!==v2){toast("⚠️ Las contraseñas no coinciden");return;}
+  USER.pass=v1;
+  guardarDistribuidores();
+  try{localStorage.setItem("pyro_sesion",JSON.stringify({ruc:USER.ruc,pass:v1}));}catch(e){}
+  toast("✅ Contraseña actualizada");
+  primerIngresoPaso3();
+}
+function primerIngresoPaso3(){
+  _cerrarPrimerIngresoOv();
+  try{localStorage.setItem("pyro_primer_ingreso_"+USER.ruc,"1");}catch(e){}
+  iniciarTutorial();
 }
 
 // Otorga (una sola vez por cuenta) un canje gratis de bienvenida al primer login
@@ -371,7 +439,7 @@ function irTab(t){
   if(t==="historial")renderHistorial();
   if(t==="recompensas")renderRecompensas();
   var cb=document.getElementById("cart-bar");
-  if(cb)cb.style.display=(t==="carrito"&&CARRITO.length>0)?"flex":"none";
+  if(cb)cb.style.display="none"; // barra amarilla inferior del carrito desactivada
   document.querySelector("#s-main .content").scrollTo(0,0);
   if(USER&&!USER.esAdmin){try{localStorage.setItem("pyro_ultima_tab_"+USER.ruc,t);}catch(e){}}
 }
@@ -421,8 +489,10 @@ function renderInicio(){
   var mp=misPedidos();
   var entregados=mp.filter(function(p){return p.estado==="entregado"||p.estado==="finalizado";});
   var pend=mp.filter(function(p){return p.estado==="pendiente"||p.estado==="en_proceso"||p.estado==="autorizado"||p.estado==="facturado";});
-  var nm=USER.empresa||USER.razon.split(" ").slice(0,2).join(" ");
-  document.getElementById("hero-nombre").textContent=nm;
+  var saludoNm=USER.encargado||primerNombre(USER.razon);
+  var empresaNm=USER.empresa||USER.razon;
+  var heroTxt=(empresaNm&&empresaNm!==saludoNm)?saludoNm+" / "+empresaNm:saludoNm;
+  document.getElementById("hero-nombre").textContent=heroTxt;
   var fe=document.getElementById("hero-frase");
   if(fe&&!fe.textContent){fe.textContent=FRASES_MOTIVACIONALES[Math.floor(Math.random()*FRASES_MOTIVACIONALES.length)];}
   setTopbarPts(saldoPuntos());
@@ -486,13 +556,30 @@ function renderPromosHome(){
   cont.innerHTML="<div class='sec-titulo'>Promociones</div>"+activas.map(function(pr){
     var items=pr.items.map(function(it){
       var prod=PRODUCTOS.find(function(x){return x.id===it.id;});
-      var imgHtml=prod&&prod.img&&IMGS[prod.img]?'<img src="'+IMGS[prod.img]+'" alt="'+it.nm+'" style="width:60px;height:60px;object-fit:cover;border-radius:8px;margin-bottom:6px">':'';
+      var imgHtml=prod&&prod.img&&IMGS[prod.img]?'<img src="'+IMGS[prod.img]+'" alt="'+it.nm+'" onerror="this.style.display=\'none\'" style="width:60px;height:60px;object-fit:contain;background:#000;border-radius:8px;margin-bottom:6px">':'';
+      // Controles de cantidad + agregar al carrito (idénticos al catálogo)
+      var addCtl='';
+      if(prod&&!prod.ago){
+        var cartItem=CARRITO.find(function(i){return i.id===prod.id;});
+        var cantActual=cartItem?cartItem.cant:0;
+        addCtl='<div class="prod-add-row" style="align-items:center;margin-top:8px">'+
+          '<div class="qty-inline">'+
+            '<button class="qb-sm" onclick="cambiarCantCatalogo(\''+prod.id+'\',-1)" '+(cantActual===0?'style="opacity:.3;pointer-events:none"':'')+'>−</button>'+
+            '<input class="qty-inp" id="qty-cat-'+prod.id+'" type="number" min="0" max="'+prod.stock+'" value="'+cantActual+'" onchange="setCantCatalogo(\''+prod.id+'\',this.value)" onclick="this.select()">'+
+            '<button class="qb-sm" onclick="cambiarCantCatalogo(\''+prod.id+'\',1)">+</button>'+
+          '</div>'+
+          '<button class="badd'+(cantActual>0?' inc':'')+'" onclick="agregarAlCarrito(\''+prod.id+'\')">'+(cantActual>0?'✓ Añadir':'+ Añadir')+'</button>'+
+        '</div>';
+      } else if(prod&&prod.ago){
+        addCtl='<div style="margin-top:8px;font-size:10px;color:#fff;opacity:.6">Agotado</div>';
+      }
       return '<div class="promo-it">'+
         imgHtml+
         '<div class="nm">'+it.nm+'</div>'+
         '<div class="pv">'+fmt$(it.pv)+'</div>'+
         '<div class="pp">'+fmt$(it.pp)+'</div>'+
         '<div class="sv">Ahorras '+fmt$(it.ahorro)+'</div>'+
+        addCtl+
       '</div>';
     }).join("");
     var cntId="cnt-"+pr.id;
@@ -677,7 +764,7 @@ function renderProdCard(p){
   var promoBadge=promoIt?'<span class="badge b-rojo" style="font-size:9px">🔥 PROMO</span>':'';
   var volBadge=(!USER||!USER.sinDescVol)&&p.descVol&&!promoIt?'<span class="badge b-azul" style="font-size:9px">Desc. volumen disponible</span>':'';
   var imgSrc=p.img&&IMGS[p.img]?IMGS[p.img]:null;
-  var imgHtml=imgSrc?'<img src="'+imgSrc+'" alt="'+p.nm+'" loading="lazy" onclick="zoomImg(\''+imgSrc+'\')" style="cursor:zoom-in">':"<div class='ph'>🧯</div>";
+  var imgHtml=imgSrc?'<img src="'+imgSrc+'" alt="'+p.nm+'" loading="lazy" onerror="this.onerror=null;this.src=IMG_PLACEHOLDER" onclick="zoomImg(\''+imgSrc+'\')" style="cursor:zoom-in">':"<div class='ph'>🧯</div>";
   var favBtn='<button class="fav-btn'+(isFav?" active":"")+'\" onclick="toggleFav(\''+p.id+'\')">'+(isFav?"❤️":"🤍")+'</button>';
 
   // Indicador próximo descuento
@@ -707,7 +794,7 @@ function renderProdCard(p){
 
   if(CAT_GRID){
     return '<div class="prod prod-grid'+(p.ago?" ago":"")+'">'+
-      '<div class="prod-grid-img">'+(imgSrc?'<img src="'+imgSrc+'" alt="'+p.nm+'" loading="lazy" onclick="zoomImg(\''+imgSrc+'\')" style="cursor:zoom-in">':'<div class="ph" style="font-size:36px">🧯</div>')+'</div>'+
+      '<div class="prod-grid-img">'+(imgSrc?'<img src="'+imgSrc+'" alt="'+p.nm+'" loading="lazy" onerror="this.onerror=null;this.src=IMG_PLACEHOLDER" onclick="zoomImg(\''+imgSrc+'\')" style="cursor:zoom-in">':'<div class="ph" style="font-size:36px">🧯</div>')+'</div>'+
       favBtn+
       '<div class="prod-grid-body">'+
         '<div class="prod-nm">'+p.nm+'</div>'+
@@ -792,6 +879,12 @@ function cambiarCantCatalogo(id, d){
   if(inp)inp.value=nueva;
   // Actualizar estilo del botón
   renderCatalogo();
+  refrescarPromosSiVisible();
+}
+// Si la pestaña de inicio (con la promo de la semana) está visible, refresca los controles
+function refrescarPromosSiVisible(){
+  var tab=document.getElementById("tab-inicio");
+  if(tab&&tab.classList.contains("active")&&typeof renderPromosHome==="function")renderPromosHome();
 }
 
 function setCantCatalogo(id, val){
@@ -813,6 +906,7 @@ function setCantCatalogo(id, val){
   guardarCarrito();
   actualizarBadge();
   renderCatalogo();
+  refrescarPromosSiVisible();
 }
 
 function agregarAlCarrito(id){
@@ -833,6 +927,7 @@ function agregarAlCarrito(id){
   var cb=document.getElementById("cbadge");
   if(cb){cb.classList.remove("pop");void cb.offsetWidth;cb.classList.add("pop");}
   renderCatalogo();
+  refrescarPromosSiVisible();
 }
 
 function animarVueloCarrito(id){
@@ -864,14 +959,7 @@ function actualizarBadge(){
   var cb=document.getElementById("cbadge");
   if(cb){cb.style.display=tot>0?"flex":"none";cb.textContent=tot>9?"9+":tot;}
   var bar=document.getElementById("cart-bar");
-  var barInfo=document.getElementById("cart-bar-info");
-  if(bar&&barInfo){
-    if(tot>0&&document.getElementById("tab-carrito").classList.contains("active")){
-      var tot$=CARRITO.reduce(function(s,i){var p=PRODUCTOS.find(function(x){return x.id===i.id;});var res=precioConVolumen(p,i.cant);return s+res.precio*i.cant;},0);
-      barInfo.textContent=tot+" productos · "+fmt$(tot$*(1+IVA));
-      bar.style.display="flex";
-    } else {bar.style.display="none";}
-  }
+  if(bar)bar.style.display="none"; // barra amarilla inferior desactivada
 }
 
 function scrollToConfirm(){
@@ -996,7 +1084,18 @@ function renderCarrito(){
   validarConfirmar();
 }
 
+// Subtotal (sin IVA) del carrito actual, respetando precios y descuentos por volumen
+function calcularSubtotalCarrito(){
+  return CARRITO.reduce(function(s,i){
+    var p=PRODUCTOS.find(function(x){return x.id===i.id;});
+    if(!p||p.ago)return s;
+    var rv=precioConVolumen(p,i.cant);
+    return s+rv.precio*i.cant;
+  },0);
+}
+
 // Habilita "Confirmar pedido" solo cuando forma de pago y modo de entrega están elegidos
+// y, si es entrega a domicilio, cuando se alcanza el monto mínimo del distribuidor.
 function validarConfirmar(){
   var pago=document.getElementById("cart-pago");
   var modo=document.getElementById("cart-modo");
@@ -1004,9 +1103,22 @@ function validarConfirmar(){
   var hint=document.getElementById("confirmar-hint");
   if(!btn)return;
   var ok=!!(pago&&pago.value&&modo&&modo.value);
+  // Validación de monto mínimo para entrega a domicilio
+  var minMsg="";
+  if(modo&&modo.value==="entrega"&&USER&&USER.entrega&&USER.entrega.montoMin){
+    var subtotal=calcularSubtotalCarrito();
+    if(subtotal<USER.entrega.montoMin){
+      ok=false;
+      minMsg="⚠️ Pedido mínimo para entrega a domicilio: "+fmt$(USER.entrega.montoMin);
+    }
+  }
   btn.disabled=!ok;
   btn.classList.toggle("btn-disabled",!ok);
-  if(hint)hint.style.display=ok?"none":"block";
+  if(hint){
+    if(minMsg){hint.style.display="block";hint.textContent=minMsg;hint.style.color="var(--rojo)";}
+    else if(!ok){hint.style.display="block";hint.textContent="Selecciona forma de pago y modo de entrega para continuar";hint.style.color="";}
+    else{hint.style.display="none";}
+  }
 }
 
 // Editar cantidad directamente en carrito
@@ -1046,16 +1158,13 @@ function renderModoEntrega(){
         '<option value="especifica">Indicar fecha</option>'+
       '</select>'+
       '<div id="fecha-input-box" style="display:none">'+
-        '<input class="form-input" id="cart-fecha" type="date" min="'+hoy+'">'+
+        '<input class="form-input" id="cart-fecha" type="date" min="'+hoy+'" onclick="this.showPicker&&this.showPicker()">'+
       '</div>'+
       '<label class="form-label">Horario preferido (opcional)</label>'+
       '<select class="form-select" id="cart-hora">'+
-        '<option value="">Sin preferencia de horario</option>'+
-        '<option value="08-10">08:00 - 10:00</option>'+
-        '<option value="10-12">10:00 - 12:00</option>'+
-        '<option value="12-14">12:00 - 14:00</option>'+
-        '<option value="14-16">14:00 - 16:00</option>'+
-        '<option value="16-18">16:00 - 18:00</option>'+
+        '<option value="">Sin preferencia</option>'+
+        '<option value="08:00 - 12:00">08:00 - 12:00</option>'+
+        '<option value="13:00 - 17:00">13:00 - 17:00</option>'+
       '</select>';
     // Listener para nueva dirección
     var estSel=document.getElementById("cart-est");
@@ -1160,6 +1269,13 @@ function confirmarPedido(){
   if(!modoSel||!modoSel.value){toast("⚠️ Selecciona un modo de entrega");return;}
 
   var modo=document.getElementById("cart-modo").value;
+  // Validar monto mínimo para entrega a domicilio
+  if(modo==="entrega"&&USER&&USER.entrega&&USER.entrega.montoMin){
+    if(calcularSubtotalCarrito()<USER.entrega.montoMin){
+      toast("⚠️ Pedido mínimo para entrega a domicilio: "+fmt$(USER.entrega.montoMin));
+      return;
+    }
+  }
   // Validar dirección si es entrega
   if(modo==="entrega"){
     var estSel=document.getElementById("cart-est");
@@ -1382,6 +1498,14 @@ function verDetallePed(pid){
     '<div style="margin-top:12px;font-size:13px;color:var(--g4)">'+
       '<b>Pago:</b> '+p.pago+'<br><b>Modo:</b> '+(p.modo==="retiro"?"Retiro en local":"Entrega a domicilio")+
     '</div>'+
+    ((p.estado==="pendiente"&&!p.esCanje)?
+      '<div style="margin-top:10px">'+
+        '<label class="form-label">Cambiar forma de pago</label>'+
+        '<select class="form-select" id="det-pago-sel">'+
+          ["Efectivo","Transferencia","Cheque / Crédito 30 días","Cheque / Crédito 60 días","Cheque / Crédito 90 días"].map(function(o){return'<option value="'+o+'"'+(p.pago===o?" selected":"")+'>'+o+'</option>';}).join("")+
+        '</select>'+
+        '<button class="btn btn-p btn-full" style="margin-top:4px" onclick="guardarPagoCliente(\''+p.id+'\')">Guardar cambios</button>'+
+      '</div>':'')+
     ((p.modo==="entrega"&&p.entregaInfo&&p.entregaInfo.establecimiento)?
       '<div style="margin-top:8px;font-size:13px;color:var(--g4)"><b>Entrega a:</b> '+
       (p.entregaInfo.establecimiento.nm||"")+' — '+(p.entregaInfo.establecimiento.dir||"")+
@@ -1398,6 +1522,18 @@ function verDetallePed(pid){
     '<button class="btn btn-s btn-full" style="margin-top:10px" onclick="cerrarModal(\'modal-pedido-det\')">Cerrar</button>';
   document.getElementById("modal-pedido-det-c").innerHTML=html;
   abrir("modal-pedido-det");
+}
+
+function guardarPagoCliente(pid){
+  var p=PEDIDOS.find(function(x){return x.id===pid;});
+  var sel=document.getElementById("det-pago-sel");
+  if(!p||!sel)return;
+  if(p.estado!=="pendiente"){toast("⚠️ Solo se puede cambiar el pago en pedidos pendientes");return;}
+  p.pago=sel.value;
+  guardarPedidos();
+  cerrarModal("modal-pedido-det");
+  renderHistorial();
+  toast("✅ Forma de pago actualizada");
 }
 
 // ════════════════════ CALIFICACIÓN ════════════════════
@@ -1427,10 +1563,10 @@ function enviarCalif(){
 
 // ════════════════════ RECOMPENSAS ════════════════════
 var REWARDS=[
-  {pts:650,ico:"🍗",nm:"Combo KFC (3 presas + papas + cola)"},
-  {pts:1500,ico:"💳",nm:"Tarjeta consumo $15 (Coral / Ferrisariato)"},
-  {pts:3000,ico:"💳",nm:"Tarjeta consumo $30"},
-  {pts:5000,ico:"💳",nm:"Tarjeta consumo $50"}
+  {pts:650,ico:"🍗",nm:"Combo KFC (3 presas + papas + cola)",costoReal:6.50},
+  {pts:1500,ico:"💳",nm:"Tarjeta consumo $15 (Coral / Ferrisariato)",costoReal:15},
+  {pts:3000,ico:"💳",nm:"Tarjeta consumo $30",costoReal:30},
+  {pts:5000,ico:"💳",nm:"Tarjeta consumo $50",costoReal:50}
 ];
 function cargarRewards(){try{var r=JSON.parse(localStorage.getItem("pyro_rewards")||"null");if(r&&r.length)REWARDS=r;}catch(e){}}
 function guardarRewards(){try{localStorage.setItem("pyro_rewards",JSON.stringify(REWARDS));}catch(e){}}
@@ -1471,15 +1607,30 @@ function canjear(pts,nm){
     PEDIDOS.push({id:pid,ruc:USER.ruc,razon:USER.razon,fecha:new Date().toLocaleDateString(),fechaISO:new Date().toISOString(),esCanje:true,canjePts:pts,canjeNm:nm,estado:"pendiente",total:0,puntos:0});
     guardarPedidos(); renderRecompensas();
     setTopbarPts(saldoPuntos());
-    toastGold("🎁 Canje solicitado: "+nm);
+    mostrarOverlayCanje();
   });
+}
+function mostrarOverlayCanje(){
+  var prev=document.getElementById("canje-ov");
+  if(prev)prev.remove();
+  var ov=document.createElement("div");
+  ov.id="canje-ov";
+  ov.style.cssText="position:fixed;inset:0;background:rgba(0,0,0,.65);display:flex;align-items:center;justify-content:center;z-index:9999";
+  ov.innerHTML='<div style="background:var(--bg,#fff);border-radius:20px;padding:32px 28px;max-width:320px;width:90%;text-align:center;box-shadow:0 8px 40px rgba(0,0,0,.4)">'+
+    '<div style="font-size:52px;margin-bottom:12px">🎁</div>'+
+    '<div style="font-size:16px;color:var(--g4);margin-bottom:20px;line-height:1.5">Tu regalo será entregado en 0 a 7 días laborables o en tu próximo pedido</div>'+
+    '<button class="btn btn-p" style="width:100%;font-size:16px" onclick="document.getElementById(\'canje-ov\').remove()">Entendido</button>'+
+  '</div>';
+  document.body.appendChild(ov);
 }
 
 // ════════════════════ ADMIN ════════════════════
 function admTab(t,btn){
+  // Rol impresión: solo puede usar la pestaña de pedidos
+  if(USER&&USER.rol==="impresion"&&t!=="pedidos")return;
   ADM_TAB=t;
   document.querySelectorAll(".adm-tab").forEach(function(b){b.classList.remove("active");});
-  btn.classList.add("active");
+  if(btn)btn.classList.add("active");
   document.querySelectorAll(".adm-panel").forEach(function(p){p.classList.remove("active");});
   document.getElementById("adm-"+t).classList.add("active");
   if(t==="pedidos")renderAdmPedidos();
@@ -1487,7 +1638,52 @@ function admTab(t,btn){
   if(t==="stock")renderAdmStock();
   if(t==="recompensas")renderAdmRecompensas();
 }
-function renderAdmin(){renderAdmPedidos();}
+function renderAdmin(){
+  if(USER&&USER.rol==="impresion"){
+    // Ocultar pestañas no permitidas y mostrar solo Pedidos
+    var tabs=document.querySelectorAll(".adm-tab");
+    tabs.forEach(function(b,i){b.style.display=(i===0)?"":"none";});
+    document.querySelectorAll(".adm-panel").forEach(function(p){p.classList.remove("active");});
+    var ped=document.getElementById("adm-pedidos");if(ped)ped.classList.add("active");
+    renderRolImpresion();
+    return;
+  }
+  renderAdmPedidos();
+}
+
+// UI reducida para rol "impresion": lista de pedidos con filtros y botones de impresión directos
+function renderRolImpresion(){
+  // Ocultar el dashboard de stats/extra y el botón exportar
+  var stats=document.getElementById("adm-stats");if(stats)stats.innerHTML="";
+  var extra=document.getElementById("adm-dashboard-extra");if(extra)extra.innerHTML="";
+  var expBtn=document.getElementById("adm-export-btn");if(expBtn)expBtn.style.display="none";
+  var filtros=[
+    {f:"todos",l:"Todos"},
+    {f:"pendiente",l:"⏳ Pendientes"},
+    {f:"proceso",l:"🔄 En proceso"},
+    {f:"entregado",l:"📦 Entregados"},
+    {f:"finalizado",l:"✔️ Finalizados"},
+    {f:"cancelado",l:"✕ Cancelados"}
+  ];
+  var filtrosHtml='<div class="hfiltros" style="margin-bottom:10px">'+filtros.map(function(o){
+    return '<button class="fbtn'+(ADM_PED_FILTRO===o.f?" active":"")+'" onclick="setAdmPedFiltro(\''+o.f+'\')">'+o.l+'</button>';
+  }).join("")+'</div>';
+  var lista=PEDIDOS.slice().reverse().filter(function(p){return!p.esCanje;}).filter(filtrarPedAdmin);
+  document.getElementById("adm-ped-lista").innerHTML=filtrosHtml+(lista.length?lista.map(function(p){
+    return '<div class="card"><div class="card-b">'+
+      '<div style="display:flex;justify-content:space-between;align-items:center">'+
+        '<div><div style="font-weight:700">Pedido #'+p.id+'</div>'+
+        '<div style="font-size:12px;color:var(--g3)">'+p.razon+' · '+p.fecha+'</div></div>'+
+        '<span class="est-chip '+estadoClass(p.estado)+'">'+estadoLabelAdmin(p.estado)+'</span>'+
+      '</div>'+
+      '<div style="font-size:18px;font-weight:800;font-family:\'Barlow Condensed\',sans-serif;margin-top:6px">'+fmt$(p.total)+'</div>'+
+      '<div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">'+
+        '<button class="btn btn-s btn-sm" style="flex:1" onclick="generarProforma(\''+p.id+'\')">📄 Proforma</button>'+
+        '<button class="btn btn-s btn-sm" style="flex:1" onclick="generarNotaEntrega(\''+p.id+'\')">📋 Nota de entrega</button>'+
+      '</div>'+
+    '</div></div>';
+  }).join(""):'<div class="empty"><div class="ico">📦</div><p>No hay pedidos en esta categoría.</p></div>');
+}
 
 // Cargar costos desde localStorage (editables por admin)
 function cargarCostos(){
@@ -1501,6 +1697,18 @@ function getCostoProducto(id){
   if(costos[id]!=null)return costos[id];
   var p=PRODUCTOS.find(function(x){return x.id===id;});
   return p?p.costo:0;
+}
+
+// Costo real total de una lista de canjes, buscando la recompensa por nombre en REWARDS.
+// Si no se encuentra el costoReal, usa el promedio de costos reales conocidos.
+function costoCanjesEntregados(lista){
+  var conocidos=REWARDS.filter(function(r){return r.costoReal!=null;});
+  var prom=conocidos.length?conocidos.reduce(function(s,r){return s+r.costoReal;},0)/conocidos.length:0;
+  return lista.reduce(function(s,p){
+    var rw=REWARDS.find(function(r){return r.nm===p.canjeNm;});
+    var c=(rw&&rw.costoReal!=null)?rw.costoReal:prom;
+    return s+c;
+  },0);
 }
 
 function renderAdmPedidos(){
@@ -1529,10 +1737,11 @@ function renderAdmPedidos(){
 
   // Canjes pendientes (solo estado pendiente, no cancelados, no finalizados)
   var canjesPend=canjes.filter(function(p){return p.estado==="pendiente";}).length;
-  var canjesEntregados=canjes.filter(function(p){return p.estado==="entregado"||p.estado==="finalizado";}).length;
+  var canjesEntregadosArr=canjes.filter(function(p){return p.estado==="entregado"||p.estado==="finalizado";});
+  var canjesEntregados=canjesEntregadosArr.length;
 
-  // Costo total de canjes (aproximado por pts * $0.01 — ajustable)
-  var costoCanjes=canjesEntregados*15; // referencia aproximada
+  // Costo real de canjes entregados/finalizados (usando costoReal de REWARDS por nombre del canje)
+  var costoCanjes=costoCanjesEntregados(canjesEntregadosArr);
 
   document.getElementById("adm-stats").innerHTML=
     '<div class="adm-stat"><div class="v">'+nuevos+'</div><div class="l">Nuevos pedidos</div></div>'+
@@ -1540,27 +1749,59 @@ function renderAdmPedidos(){
     '<div class="adm-stat"><div class="v">'+fmt$(utilidad)+'</div><div class="l">Utilidad generada</div></div>'+
     '<div class="adm-stat"><div class="v">'+distActivos+'</div><div class="l">Distribuidores activos</div></div>'+
     '<div class="adm-stat"><div class="v">'+canjesPend+'</div><div class="l">Canjes pendientes</div></div>'+
-    '<div class="adm-stat"><div class="v">'+canjesEntregados+'</div><div class="l">Canjes entregados</div></div>';
+    '<div class="adm-stat"><div class="v">'+canjesEntregados+' canjes entregados</div><div class="l">me costaron '+fmt$(costoCanjes)+'</div></div>';
   var extraEl=document.getElementById("adm-dashboard-extra");
   if(extraEl)extraEl.innerHTML=renderTop5Distribuidores()+
     '<button class="btn btn-s btn-full" style="margin-bottom:14px" onclick="generarReporteMensual()">📊 Reporte mensual PDF</button>';
 
-  var lista=PEDIDOS.slice().reverse();
-  document.getElementById("adm-ped-lista").innerHTML=lista.length?lista.map(function(p){
+  // Barra de filtros de estado (chips)
+  var filtros=[
+    {f:"todos",l:"Todos"},
+    {f:"pendiente",l:"⏳ Pendientes"},
+    {f:"proceso",l:"🔄 En proceso"},
+    {f:"entregado",l:"📦 Entregados"},
+    {f:"finalizado",l:"✔️ Finalizados"},
+    {f:"cancelado",l:"✕ Cancelados"}
+  ];
+  var filtrosHtml='<div class="hfiltros" style="margin-bottom:10px">'+filtros.map(function(o){
+    return '<button class="fbtn'+(ADM_PED_FILTRO===o.f?" active":"")+'" onclick="setAdmPedFiltro(\''+o.f+'\')">'+o.l+'</button>';
+  }).join("")+'</div>';
+
+  var lista=PEDIDOS.slice().reverse().filter(filtrarPedAdmin);
+  document.getElementById("adm-ped-lista").innerHTML=filtrosHtml+(lista.length?lista.map(function(p){
+    var facBadge="";
+    if(!p.esCanje){
+      if(p.azurFactura)facBadge='<span class="badge b-verde" style="font-size:10px">✔️ Facturado</span>';
+      else if(p.estado==="entregado")facBadge='<span class="badge b-amar" style="font-size:10px">⚠️ Pendiente facturar</span>';
+    }
     return '<div class="card" onclick="admVerPedido(\''+p.id+'\')" style="cursor:pointer"><div class="card-b">'+
       '<div style="display:flex;justify-content:space-between;align-items:center">'+
         '<div><div style="font-weight:700">'+(p.esCanje?"🎁 Canje":"Pedido #"+p.id)+'</div>'+
         '<div style="font-size:12px;color:var(--g3)">'+p.razon+' · '+p.fecha+'</div></div>'+
         '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">'+
         '<span class="est-chip '+estadoClass(p.estado)+'">'+estadoLabelAdmin(p.estado)+'</span>'+
-        (!p.esCanje&&p.estado==="entregado"?(p.azurFactura
-          ?'<span class="badge b-verde" style="font-size:10px">✔️ Finalizado</span>'
-          :'<span class="badge b-amar" style="font-size:10px">⚠️ Pend. facturar</span>'):'')+
+        facBadge+
         '</div>'+
       '</div>'+
       (!p.esCanje?'<div style="font-size:18px;font-weight:800;font-family:\'Barlow Condensed\',sans-serif;margin-top:6px">'+fmt$(p.total)+'</div>':'')+
     '</div></div>';
-  }).join(""):'<div class="empty"><div class="ico">📦</div><p>No hay pedidos aún.</p></div>';
+  }).join(""):'<div class="empty"><div class="ico">📦</div><p>No hay pedidos en esta categoría.</p></div>');
+}
+
+// Filtra un pedido según ADM_PED_FILTRO
+function filtrarPedAdmin(p){
+  if(ADM_PED_FILTRO==="todos")return true;
+  if(ADM_PED_FILTRO==="pendiente")return p.estado==="pendiente";
+  if(ADM_PED_FILTRO==="proceso")return["en_proceso","autorizado","entrega","facturado"].indexOf(p.estado)!==-1;
+  if(ADM_PED_FILTRO==="entregado")return p.estado==="entregado";
+  if(ADM_PED_FILTRO==="finalizado")return p.estado==="finalizado";
+  if(ADM_PED_FILTRO==="cancelado")return p.estado==="cancelado";
+  return true;
+}
+function setAdmPedFiltro(f){
+  ADM_PED_FILTRO=f;
+  if(USER&&USER.rol==="impresion")renderRolImpresion();
+  else renderAdmPedidos();
 }
 
 // Label de estado completo para admin (más detallado)
@@ -1595,13 +1836,20 @@ function admVerPedido(pid){
       '<div style="display:flex;gap:8px;margin-bottom:8px">'+
         '<select class="form-select" id="adm-obs-sel" style="margin:0;flex:1">'+
           '<option value="">Sin observación adicional</option>'+
-          '<option value="Entregado — pendiente de factura">📦 Entregado — pendiente de factura</option>'+
-          '<option value="Facturado — pendiente de entrega">🧾 Facturado — pendiente de entrega</option>'+
           '<option value="Cheque recibido">✅ Cheque recibido</option>'+
           '<option value="Pago pendiente">💰 Pago pendiente</option>'+
         '</select>'+
       '</div>';
     if(p.obsAdmin)'<div style="font-size:12px;color:var(--azul);margin-bottom:8px">Obs. actual: '+p.obsAdmin+'</div>';
+    // Editar forma de pago (si el pedido no está finalizado)
+    if(p.estado!=="finalizado"){
+      var opcionesPagoAdm=["Efectivo","Transferencia","Cheque / Crédito 30 días","Cheque / Crédito 60 días","Cheque / Crédito 90 días"];
+      html+='<label class="form-label" style="margin-top:4px">Forma de pago</label>'+
+        '<select class="form-select" id="adm-pago-sel">'+
+          opcionesPagoAdm.map(function(o){return'<option value="'+o+'"'+(p.pago===o?" selected":"")+'>'+o+'</option>';}).join("")+
+          (opcionesPagoAdm.indexOf(p.pago)===-1&&p.pago?'<option value="'+escHtml(p.pago)+'" selected>'+escHtml(p.pago)+'</option>':'')+
+        '</select>';
+    }
   }
 
   if(!p.esCanje&&p.items){
@@ -1672,6 +1920,9 @@ function guardarEstadoPed(pid){
   var estadoViejo=p.estado;
   p.estado=sel.value;
   if(obsSel&&obsSel.value)p.obsAdmin=obsSel.value;
+  // Guardar forma de pago editada (si el selector existe y el pedido no está finalizado)
+  var pagoSel=document.getElementById("adm-pago-sel");
+  if(pagoSel&&p.estado!=="finalizado")p.pago=pagoSel.value;
   // Restaurar stock si cancela
   if(sel.value==="cancelado"&&estadoViejo!=="cancelado"&&p.items){
     p.items.forEach(function(it){
@@ -1978,12 +2229,14 @@ function abrirEditarDist(ruc){
     '<input class="form-input" id="ed-razon" value="'+escHtml(d.razon)+'">'+
     '<label class="form-label">Nombre comercial</label>'+
     '<input class="form-input" id="ed-empresa" value="'+escHtml(d.empresa||"")+'">'+
+    '<label class="form-label">Nombre del encargado</label>'+
+    '<input class="form-input" id="ed-encargado" value="'+escHtml(d.encargado||"")+'">'+
     '<label class="form-label">Teléfono</label>'+
     '<input class="form-input" id="ed-tel" value="'+escHtml(d.tel||"")+'">'+
     '<label class="form-label">Correo</label>'+
     '<input class="form-input" id="ed-correo" value="'+escHtml(d.correo||"")+'">'+
     '<label class="form-label">Contraseña</label>'+
-    '<input class="form-input" id="ed-pass" value="'+escHtml(d.pass||"")+'">'+
+    '<input class="form-input" id="ed-pass" type="text" value="'+escHtml(d.pass||"")+'">'+
     '<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">'+
       '<input type="checkbox" id="ed-entrega" '+(d.entrega&&d.entrega.habilitada?"checked":"")+' style="width:18px;height:18px">'+
       '<label for="ed-entrega" style="font-size:14px">Entrega a domicilio habilitada</label>'+
@@ -1994,12 +2247,52 @@ function abrirEditarDist(ruc){
       '<input type="checkbox" id="ed-sinvol" '+(d.sinDescVol?"checked":"")+' style="width:18px;height:18px">'+
       '<label for="ed-sinvol" style="font-size:14px;color:var(--rojo)">Sin descuentos por volumen</label>'+
     '</div>'+
+    '<label class="form-label">Establecimientos / Direcciones de entrega</label>'+
+    '<div id="ed-dirs-lista" style="margin-bottom:8px"></div>'+
+    '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">'+
+      '<input class="form-input" id="ed-dir-nm" placeholder="Nombre del local" style="margin:0;flex:1;min-width:120px">'+
+      '<input class="form-input" id="ed-dir-dir" placeholder="Dirección" style="margin:0;flex:1.5;min-width:140px">'+
+      '<button class="btn btn-s btn-sm" type="button" onclick="agregarDirEditar(\''+ruc+'\')" style="margin:0">+ Agregar</button>'+
+    '</div>'+
     '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px">'+
       '<button class="btn btn-s" onclick="cerrarModal(\'modal-editar-dist\')">Cancelar</button>'+
       '<button class="btn btn-p" onclick="guardarEditarDist(\''+ruc+'\')">Guardar</button>'+
     '</div>';
   document.getElementById("modal-editar-dist-c").innerHTML=html;
+  renderDirsEditar(ruc);
   abrir("modal-editar-dist");
+}
+
+// Renderiza la lista de direcciones del distribuidor en el modal de edición
+function renderDirsEditar(ruc){
+  var d=DISTRIBUIDORES.find(function(x){return x.ruc===ruc;});
+  var cont=document.getElementById("ed-dirs-lista");
+  if(!d||!cont)return;
+  var ests=d.establecimientos||[];
+  if(!ests.length){cont.innerHTML='<div style="font-size:12px;color:var(--g3);padding:4px 0">Sin direcciones registradas</div>';return;}
+  cont.innerHTML=ests.map(function(e,i){
+    return '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;background:var(--g1);border-radius:8px;padding:8px 10px;margin-bottom:6px">'+
+      '<div style="font-size:12px;flex:1"><b>'+escHtml(e.nm||"")+'</b><br><span style="color:var(--g3)">'+escHtml(e.dir||"")+'</span></div>'+
+      '<button class="btn btn-sm" style="background:var(--rojoc);color:var(--rojo);border:1.5px solid var(--rojo);margin:0" onclick="eliminarDirEditar(\''+ruc+'\','+i+')">🗑 Eliminar</button>'+
+    '</div>';
+  }).join("");
+}
+function agregarDirEditar(ruc){
+  var d=DISTRIBUIDORES.find(function(x){return x.ruc===ruc;});
+  if(!d)return;
+  var nmEl=document.getElementById("ed-dir-nm"),dirEl=document.getElementById("ed-dir-dir");
+  var nm=(nmEl&&nmEl.value||"").trim(),dir=(dirEl&&dirEl.value||"").trim();
+  if(!nm||!dir){toast("⚠️ Ingresa nombre y dirección del local");return;}
+  if(!d.establecimientos)d.establecimientos=[];
+  d.establecimientos.push({nm:nm,dir:dir,obs:""});
+  if(nmEl)nmEl.value="";if(dirEl)dirEl.value="";
+  renderDirsEditar(ruc);
+}
+function eliminarDirEditar(ruc,i){
+  var d=DISTRIBUIDORES.find(function(x){return x.ruc===ruc;});
+  if(!d||!d.establecimientos)return;
+  d.establecimientos.splice(i,1);
+  renderDirsEditar(ruc);
 }
 
 function guardarEditarDist(ruc){
@@ -2007,6 +2300,8 @@ function guardarEditarDist(ruc){
   if(!d)return;
   d.razon=document.getElementById("ed-razon").value.trim()||d.razon;
   d.empresa=document.getElementById("ed-empresa").value.trim()||undefined;
+  var encEl=document.getElementById("ed-encargado");
+  if(encEl)d.encargado=encEl.value.trim();
   d.tel=document.getElementById("ed-tel").value.trim();
   d.correo=document.getElementById("ed-correo").value.trim();
   d.pass=document.getElementById("ed-pass").value.trim()||d.pass;
@@ -2099,6 +2394,7 @@ function buscarSRI(){
 function guardarNuevoDist(){
   var r=document.getElementById("nd-razon").value.trim();
   var emp=document.getElementById("nd-empresa").value.trim();
+  var enc=document.getElementById("nd-encargado")?document.getElementById("nd-encargado").value.trim():"";
   var tipoDoc=document.getElementById("nd-tipodoc")?document.getElementById("nd-tipodoc").value:"ruc";
   var ruc=document.getElementById("nd-ruc").value.trim();
   var tel=document.getElementById("nd-tel").value.trim();
@@ -2116,13 +2412,14 @@ function guardarNuevoDist(){
   if(existe){toast("⚠️ Ya existe un distribuidor con ese documento");return;}
   var nd={ruc:ruc,tipoDoc:tipoDoc,razon:r,pass:pw,tel:tel,correo:co,entrega:{habilitada:ent,montoMin:min},sinDescVol:sinVol,_nuevo:true};
   if(emp)nd.empresa=emp;
+  if(enc)nd.encargado=enc;
   if(dir)nd.establecimientos=[{nm:"Local principal",dir:dir,obs:""}];
   DISTRIBUIDORES.push(nd);
   guardarDistribuidores();
   cerrarModal("modal-nuevo-dist");
   renderAdmDist();
   toast("✅ "+r+" registrado");
-  ["nd-razon","nd-empresa","nd-ruc","nd-tel","nd-correo","nd-pass","nd-dir"].forEach(function(x){document.getElementById(x).value="";});
+  ["nd-razon","nd-empresa","nd-encargado","nd-ruc","nd-tel","nd-correo","nd-pass","nd-dir"].forEach(function(x){var el=document.getElementById(x);if(el)el.value="";});
   if(document.getElementById("nd-tipodoc"))document.getElementById("nd-tipodoc").value="ruc";
   if(document.getElementById("nd-sinvol"))document.getElementById("nd-sinvol").checked=false;
 }
@@ -2325,8 +2622,10 @@ function exportarExcel(){
 function renderTop5Distribuidores(){
   var montosDist={};
   PEDIDOS.filter(function(p){return!p.esCanje&&(p.estado==="entregado"||p.estado==="finalizado");}).forEach(function(p){
-    if(!montosDist[p.ruc])montosDist[p.ruc]={ruc:p.ruc,razon:p.razon,total:0};
+    if(!montosDist[p.ruc])montosDist[p.ruc]={ruc:p.ruc,razon:p.razon,total:0,utilidad:0};
     montosDist[p.ruc].total+=(p.subtotal||0);
+    var costoTotal=(p.items||[]).reduce(function(cs,it){return cs+getCostoProducto(it.id)*(it.cant||0);},0);
+    montosDist[p.ruc].utilidad+=(p.subtotal||0)-costoTotal;
   });
   var top5=Object.values(montosDist).sort(function(a,b){return b.total-a.total;}).slice(0,5);
   if(!top5.length)return'';
@@ -2337,7 +2636,7 @@ function renderTop5Distribuidores(){
       return '<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--g2)">'+
         '<div><span style="font-weight:700;color:var(--azul);margin-right:8px">#'+(i+1)+'</span>'+
         '<span style="font-size:13px">'+(dist.empresa||d.razon)+'</span></div>'+
-        '<span style="font-weight:700;font-size:13px">'+fmt$(d.total)+'</span>'+
+        '<span style="font-weight:700;font-size:12px;text-align:right">'+fmt$(d.total)+' subtotal<br><span style="color:var(--verde);font-weight:600">utilidad: '+fmt$(d.utilidad)+'</span></span>'+
       '</div>';
     }).join("")+
   '</div>';
@@ -2429,6 +2728,10 @@ function renderAdmRecompensas(){
           '<div>'+
             '<div style="font-weight:700">'+r.nm+'</div>'+
             '<div style="font-size:12px;color:var(--azul);font-weight:600">'+fmtPts(r.pts)+' puntos</div>'+
+            '<div style="display:flex;align-items:center;gap:4px;margin-top:4px">'+
+              '<span style="font-size:11px;color:var(--g3)">Costo real $</span>'+
+              '<input type="number" step="0.01" min="0" value="'+(r.costoReal!=null?r.costoReal:"")+'" onchange="setCostoRealRecompensa('+i+',this.value)" style="width:80px;padding:5px 8px;border:1.5px solid var(--azulc);border-radius:8px;font-size:13px;text-align:center;background:var(--azulc)">'+
+            '</div>'+
             (r.agotado?'<span style="background:#e74c3c;color:#fff;font-size:10px;padding:2px 8px;border-radius:4px;font-weight:600">AGOTADO</span>':'<span style="background:var(--verdec);color:var(--verde);font-size:10px;padding:2px 8px;border-radius:4px;font-weight:600">Disponible</span>')+
           '</div>'+
         '</div>'+
@@ -2497,6 +2800,15 @@ function guardarEditarRecompensa(idx){
   r.ico=ico; r.nm=nm; r.pts=pts;
   guardarRewards(); cerrarModal("modal-rw-edit"); renderAdmRecompensas();
   toast("✅ Recompensa actualizada");
+}
+
+function setCostoRealRecompensa(idx,val){
+  var r=REWARDS[idx];
+  if(!r)return;
+  var n=parseFloat(val);
+  r.costoReal=isNaN(n)?0:n;
+  guardarRewards();
+  toast("✅ Costo real actualizado");
 }
 
 function toggleAgotadoRecompensa(idx){
@@ -2810,6 +3122,9 @@ window.addEventListener("load",function(){
     if(sp){sp.classList.add("hide");setTimeout(function(){sp.style.display="none";},600);}
   },1500);
   cargarDistribuidoresExtra();
+  // Mostrar/ocultar credenciales demo según MODO_DEMO
+  var demoBox=document.getElementById("login-demo-box");
+  if(demoBox)demoBox.style.display=(typeof MODO_DEMO!=="undefined"&&MODO_DEMO)?"block":"none";
   try{
     var s=JSON.parse(localStorage.getItem("pyro_sesion")||"null");
     if(s&&s.ruc&&s.pass){loginConCredenciales(s.ruc,s.pass);}
