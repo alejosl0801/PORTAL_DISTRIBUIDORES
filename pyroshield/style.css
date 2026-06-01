@@ -108,7 +108,7 @@ body{font-family:'Barlow',sans-serif;background:var(--g1);color:var(--negro);min
 .prod{background:var(--blanco);border-radius:var(--rad);border:1.5px solid var(--g2);margin-bottom:9px;overflow:hidden;box-shadow:var(--som);display:flex;align-items:stretch}
 .prod.ago{opacity:.55}
 .prod-img{width:80px;flex-shrink:0;background:var(--g1);display:flex;align-items:center;justify-content:center;overflow:hidden}
-.prod-img img{width:100%;height:100%;object-fit:cover}
+.prod-img img{width:100%;height:100%;object-fit:contain;background:#111}
 .prod-img .ph{font-size:30px;opacity:.3}
 .prod-info{flex:1;padding:11px 12px;min-width:0}
 .prod-nm{font-size:13px;font-weight:700;margin-bottom:2px;line-height:1.15}

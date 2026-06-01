@@ -57,6 +57,7 @@
       <div class="hero">
         <div class="hero-saludo">Bienvenido de vuelta,</div>
         <div class="hero-nombre" id="hero-nombre">—</div>
+        <div id="hero-empresa" style="display:none;font-size:14px;color:rgba(255,255,255,0.7);margin-top:-6px;margin-bottom:4px"></div>
         <div class="hero-frase" id="hero-frase"></div>
         <div class="hero-pts-box">
           <div><div class="l">Tus puntos confirmados</div><div class="v" id="hero-pts">0</div></div>
@@ -135,9 +136,20 @@
   </nav>
 </div>
 
-<div class="cart-bar" id="cart-bar" style="display:none" onclick="scrollToConfirm()">
-  <span class="info" id="cart-bar-info"></span>
-  <span class="cta">Confirmar →</span>
+
+<!-- ══ IMPRESIÓN ══ -->
+<div id="s-impresion" class="screen" style="display:none">
+  <div class="topbar">
+    <div class="topbar-brand">
+      <img src="img/logo.jpg" alt="Logo">
+      <span class="topbar-name">PYROSHIELD</span>
+    </div>
+    <button class="btn-logout" onclick="logout()">Salir</button>
+  </div>
+  <div class="content" style="padding-top:12px">
+    <div class="sec-titulo">📋 Impresión de documentos</div>
+    <div id="impresion-list"></div>
+  </div>
 </div>
 
 <!-- ══ ADMIN ══ -->

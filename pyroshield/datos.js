@@ -93,7 +93,7 @@ function promoDelProducto(pid){
 // ⚠️ POR CONFIRMAR: email "efreinreyesv539@gmail.com" → ¿posible typo de "efrain"?
 var DISTRIBUIDORES = [
   {ruc:"ADMIN",pass:"d0f0c1955aa832124e11c72a66f97da8cca523d3a1000e797df6f61586797f7d",razon:"Administrador PyroShield",esAdmin:true},
-  {ruc:"0906872742001",pass:"jorge123",razon:"AVILES BRIONES JORGE ENRIQUE",empresa:"Sumiseg",tel:"0993704934",correo:"docs.sumiseg@outlook.com",
+  {ruc:"0906872742001",pass:"jorge123",razon:"AVILES BRIONES JORGE ENRIQUE",empresa:"Sumiseg",encargado:"Jorge",tel:"0993704934",correo:"docs.sumiseg@outlook.com",
    entrega:{habilitada:true,montoMin:30},
    establecimientos:[{nm:"Local principal",dir:"AV. QUITO #1810 Y AYACUCHO",obs:""}],
    preciosEsp:{
@@ -142,6 +142,7 @@ var DISTRIBUIDORES = [
   {ruc:"909599599001",pass:"dist123",razon:"DELGADO INSUASTI WASHINGTON BERNARDO",tel:"",correo:"marberd29@gmail.com",entrega:{habilitada:false,montoMin:30},establecimientos:[]},
   {ruc:"927628149001",pass:"dist123",razon:"MENDOZA MUÑOZ MARY ARIANA",empresa:"Segurimen",tel:"0992415104",correo:"segurimen@hotmail.com",entrega:{habilitada:false,montoMin:30},establecimientos:[]},
   {ruc:"905294708001",pass:"dist123",razon:"JURADO FIERRO CESAR VICTOR JULIO",tel:"",correo:"ventasyrecargasjurado@hotmail.com",entrega:{habilitada:false,montoMin:30},establecimientos:[]},
-  {ruc:"953672144001",pass:"dist123",razon:"PLÚAS VITERI ALLISSON THAIZ",tel:"",correo:"alisonpluas@gmail.com",entrega:{habilitada:false,montoMin:30},establecimientos:[]}
+  {ruc:"953672144001",pass:"dist123",razon:"PLÚAS VITERI ALLISSON THAIZ",tel:"",correo:"alisonpluas@gmail.com",entrega:{habilitada:false,montoMin:30},establecimientos:[]},
+  {ruc:"FABIOLA",pass:"fabiola123",razon:"PyroShield Impresión",rol:"impresion",esAdmin:false}
 ];
 

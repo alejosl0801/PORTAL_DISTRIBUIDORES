@@ -15,48 +15,48 @@ var SUB_ICOS = {
 
 var PRODUCTOS = [
   // EXTINTORES PQS
-  {id:"VENT10PQS",nm:"Extintor 10 LBS PQS",cat:"extintores",sub:"PQS",pv:12.89,pb:11.88,costo:9.02,stock:874,ago:false,img:"VENT10PQS",descVol:[[10,1],[20,2],[30,3],[40,5],[60,7]]},
-  {id:"VENT20PQS",nm:"Extintor 20 LBS PQS",cat:"extintores",sub:"PQS",pv:21.35,pb:20.15,costo:15.03,stock:0,ago:true,img:"VENT20PQS",descVol:[[10,1],[20,2],[30,3],[40,5],[50,7]]},
-  {id:"VENT50PQS",nm:"Extintor 50 LBS PQS",cat:"extintores",sub:"PQS",pv:169.05,pb:132.31,costo:90.17,stock:7,ago:false,img:"VENT50PQS",descVol:[[2,1],[3,2],[5,3],[8,5],[12,6]]},
-  {id:"VENT100PQS",nm:"Extintor 100 LBS PQS",cat:"extintores",sub:"PQS",pv:216.05,pb:168.88,costo:120.22,stock:26,ago:false,img:"VENT100PQS",descVol:[[2,1],[3,2],[5,3],[8,5],[10,6]]},
-  {id:"VENT150PQS",nm:"Extintor 150 LBS PQS",cat:"extintores",sub:"PQS",pv:280.25,pb:217.99,costo:153.81,stock:12,ago:false,img:"VENT150PQS",descVol:[[2,1],[3,2],[4,3],[6,5],[8,6]]},
+  {id:"VENT10PQS",nm:"Extintor 10 LBS PQS",cat:"extintores",sub:"PQS",pv:12.89,pb:11.88,costo:9.02,stock:874,ago:false,img:"VENT10PQS",descVol:[[10,1],[20,2],[30,3],[40,5],[60,7]],codigoAzur:"VENT10pqs"},
+  {id:"VENT20PQS",nm:"Extintor 20 LBS PQS",cat:"extintores",sub:"PQS",pv:21.35,pb:20.15,costo:15.03,stock:0,ago:true,img:"VENT20PQS",descVol:[[10,1],[20,2],[30,3],[40,5],[50,7]],codigoAzur:"VENT20PQS"},
+  {id:"VENT50PQS",nm:"Extintor 50 LBS PQS",cat:"extintores",sub:"PQS",pv:169.05,pb:132.31,costo:90.17,stock:7,ago:false,img:"VENT50PQS",descVol:[[2,1],[3,2],[5,3],[8,5],[12,6]],codigoAzur:"VENT50PQS"},
+  {id:"VENT100PQS",nm:"Extintor 100 LBS PQS",cat:"extintores",sub:"PQS",pv:216.05,pb:168.88,costo:120.22,stock:26,ago:false,img:"VENT100PQS",descVol:[[2,1],[3,2],[5,3],[8,5],[10,6]],codigoAzur:"VENT100PQS"},
+  {id:"VENT150PQS",nm:"Extintor 150 LBS PQS",cat:"extintores",sub:"PQS",pv:280.25,pb:217.99,costo:153.81,stock:12,ago:false,img:"VENT150PQS",descVol:[[2,1],[3,2],[4,3],[6,5],[8,6]],codigoAzur:"VENT150PQS"},
   // EXTINTORES CO2
-  {id:"VENT5CO2",nm:"Extintor 5 LBS CO2",cat:"extintores",sub:"CO2",pv:26.70,pb:22.40,costo:15.03,stock:59,ago:false,img:"VENT5CO2",descVol:[[5,1],[8,2],[12,3],[15,5],[20,6]]},
-  {id:"VENT10CO2",nm:"Extintor 10 LBS CO2",cat:"extintores",sub:"CO2",pv:34.65,pb:33.85,costo:23.92,stock:0,ago:true,img:"VENT10CO2",descVol:[[3,1],[5,2],[8,3],[10,5],[15,6]]},
-  {id:"VENT20CO2C",nm:"Extintor 20 LBS CO2 + Carro",cat:"extintores",sub:"CO2",pv:106.99,pb:104.99,costo:40.99,stock:19,ago:false,img:"VENT20CO2C",descVol:[[2,1],[3,2],[4,3],[5,5],[8,6]]},
-  {id:"VENT25AQ",nm:"Extintor 2.5 Glns Agua Química",cat:"extintores",sub:"H2O",pv:63.00,pb:61.25,costo:38.25,stock:24,ago:false,img:"VENT25AQ",descVol:[[2,1],[3,2],[4,3],[5,5],[8,5]]},
+  {id:"VENT5CO2",nm:"Extintor 5 LBS CO2",cat:"extintores",sub:"CO2",pv:26.70,pb:22.40,costo:15.03,stock:59,ago:false,img:"VENT5CO2",descVol:[[5,1],[8,2],[12,3],[15,5],[20,6]],codigoAzur:"VENT5CO2"},
+  {id:"VENT10CO2",nm:"Extintor 10 LBS CO2",cat:"extintores",sub:"CO2",pv:34.65,pb:33.85,costo:23.92,stock:0,ago:true,img:"VENT10CO2",descVol:[[3,1],[5,2],[8,3],[10,5],[15,6]],codigoAzur:"VENT10CO2"},
+  {id:"VENT20CO2C",nm:"Extintor 20 LBS CO2 + Carro",cat:"extintores",sub:"CO2",pv:106.99,pb:104.99,costo:40.99,stock:19,ago:false,img:"VENT20CO2C",descVol:[[2,1],[3,2],[4,3],[5,5],[8,6]],codigoAzur:"VENT20CO2"},
+  {id:"VENT25AQ",nm:"Extintor 2.5 Glns Agua Química",cat:"extintores",sub:"H2O",pv:63.00,pb:61.25,costo:38.25,stock:24,ago:false,img:"VENT25AQ",descVol:[[2,1],[3,2],[4,3],[5,5],[8,5]],codigoAzur:"VENT2.5AP"},
   // ACCESORIOS - CABEZALES
-  {id:"CABPQS1020",nm:"Cabezal PQS 10/20 LBS",cat:"accesorios",sub:"Cabezales",pv:2.95,pb:2.80,costo:1.24,stock:0,ago:true,img:null,descVol:[[20,1],[40,2],[60,3],[80,5],[120,6]]},
-  {id:"CABCO2510",nm:"Cabezal CO2 5/10 LBS",cat:"accesorios",sub:"Cabezales",pv:7.80,pb:7.00,costo:4.71,stock:222,ago:false,img:"CABCO2510",descVol:[[10,1],[20,2],[30,3],[40,5],[50,6]]},
-  {id:"CO2CABMAR",nm:"Cabezal Marítimo CO2",cat:"accesorios",sub:"Cabezales",pv:42.25,pb:38.46,costo:18.93,stock:73,ago:false,img:"CO2CABMAR",descVol:[[2,1],[3,2],[5,3],[8,5],[10,6]]},
-  {id:"CO2DISRAP",nm:"CO2 Disparo Rápido (50-100 LBS)",cat:"accesorios",sub:"Cabezales",pv:16.80,pb:13.95,costo:5.92,stock:121,ago:false,img:"CO2DISRAP",descVol:[[5,1],[10,2],[15,3],[20,5],[30,6]]},
+  {id:"CABPQS1020",nm:"Cabezal PQS 10/20 LBS",cat:"accesorios",sub:"Cabezales",pv:2.95,pb:2.80,costo:1.24,stock:0,ago:true,img:null,descVol:[[20,1],[40,2],[60,3],[80,5],[120,6]],codigoAzur:"CABPQS1020"},
+  {id:"CABCO2510",nm:"Cabezal CO2 5/10 LBS",cat:"accesorios",sub:"Cabezales",pv:7.80,pb:7.00,costo:4.71,stock:222,ago:false,img:"CABCO2510",descVol:[[10,1],[20,2],[30,3],[40,5],[50,6]],codigoAzur:"CABCO2510"},
+  {id:"CO2CABMAR",nm:"Cabezal Marítimo CO2",cat:"accesorios",sub:"Cabezales",pv:42.25,pb:38.46,costo:18.93,stock:73,ago:false,img:"CO2CABMAR",descVol:[[2,1],[3,2],[5,3],[8,5],[10,6]],codigoAzur:"CABMARITIMO"},
+  {id:"CO2DISRAP",nm:"CO2 Disparo Rápido (50-100 LBS)",cat:"accesorios",sub:"Cabezales",pv:16.80,pb:13.95,costo:5.92,stock:121,ago:false,img:"CO2DISRAP",descVol:[[5,1],[10,2],[15,3],[20,5],[30,6]],codigoAzur:"CAB50CO2AR"},
   // ACCESORIOS - MANÓMETROS
-  {id:"MANOPQS",nm:"Manómetro 195 PSI",cat:"accesorios",sub:"Manómetros",pv:0.85,pb:0.70,costo:0.36,stock:0,ago:true,img:null,descVol:[[30,1],[50,2],[100,3],[150,5],[300,6]],cantMin:10},
+  {id:"MANOPQS",nm:"Manómetro 195 PSI",cat:"accesorios",sub:"Manómetros",pv:0.85,pb:0.70,costo:0.36,stock:0,ago:true,img:null,descVol:[[30,1],[50,2],[100,3],[150,5],[300,6]],cantMin:10,codigoAzur:"MANOPQS"},
   // ACCESORIOS - MANGUERAS
-  {id:"MANG10PQS",nm:"Manguera 10 PQS",cat:"accesorios",sub:"Mangueras",pv:0.90,pb:0.80,costo:0.36,stock:327,ago:false,img:null,descVol:[[30,1],[50,2],[80,3],[100,5],[150,6]]},
-  {id:"MANG20PQS",nm:"Manguera 20 PQS",cat:"accesorios",sub:"Mangueras",pv:0.90,pb:0.80,costo:0.34,stock:679,ago:false,img:null,descVol:[[30,1],[50,2],[80,3],[100,5],[150,6]]},
-  {id:"CORN5CO2",nm:"Corneta 5 CO2",cat:"accesorios",sub:"Mangueras",pv:2.80,pb:2.20,costo:0.95,stock:626,ago:false,img:null,descVol:[[10,1],[15,2],[25,3],[50,5],[80,6]]},
-  {id:"MANG10CO2",nm:"Manguera con corneta 10 CO2",cat:"accesorios",sub:"Mangueras",pv:7.20,pb:6.40,costo:2.37,stock:588,ago:false,img:"MANG10CO2",descVol:[[10,1],[20,2],[30,3],[40,5],[60,6]]},
+  {id:"MANG10PQS",nm:"Manguera 10 PQS",cat:"accesorios",sub:"Mangueras",pv:0.90,pb:0.80,costo:0.36,stock:327,ago:false,img:null,descVol:[[30,1],[50,2],[80,3],[100,5],[150,6]],codigoAzur:"MANGPQS10"},
+  {id:"MANG20PQS",nm:"Manguera 20 PQS",cat:"accesorios",sub:"Mangueras",pv:0.90,pb:0.80,costo:0.34,stock:679,ago:false,img:null,descVol:[[30,1],[50,2],[80,3],[100,5],[150,6]],codigoAzur:"MANGPQS20"},
+  {id:"CORN5CO2",nm:"Corneta 5 CO2",cat:"accesorios",sub:"Mangueras",pv:2.80,pb:2.20,costo:0.95,stock:626,ago:false,img:null,descVol:[[10,1],[15,2],[25,3],[50,5],[80,6]],codigoAzur:"CORN5CO2"},
+  {id:"MANG10CO2",nm:"Manguera con corneta 10 CO2",cat:"accesorios",sub:"Mangueras",pv:7.20,pb:6.40,costo:2.37,stock:588,ago:false,img:"MANG10CO2",descVol:[[10,1],[20,2],[30,3],[40,5],[60,6]],codigoAzur:"CORN10CO2"},
   // ACCESORIOS - SOPORTES
-  {id:"SOPCO2R",nm:"Soporte CO2 Rojo",cat:"accesorios",sub:"Soportes",pv:1.20,pb:1.15,costo:0.41,stock:352,ago:false,img:null,descVol:[[50,1],[100,2],[150,3],[200,5],[400,6]]},
-  {id:"SOPPQS10",nm:"Soporte PQS 10",cat:"accesorios",sub:"Soportes",pv:0.98,pb:0.85,costo:0.25,stock:440,ago:false,img:null,descVol:[[50,1],[100,2],[150,3],[200,5],[400,6]]},
-  {id:"SOPPQS20",nm:"Soporte PQS 20",cat:"accesorios",sub:"Soportes",pv:0.98,pb:0.85,costo:0.28,stock:506,ago:false,img:null,descVol:[[50,1],[100,2],[150,3],[200,5],[400,6]]},
+  {id:"SOPCO2R",nm:"Soporte CO2 Rojo",cat:"accesorios",sub:"Soportes",pv:1.20,pb:1.15,costo:0.41,stock:352,ago:false,img:null,descVol:[[50,1],[100,2],[150,3],[200,5],[400,6]],codigoAzur:"GANCO2"},
+  {id:"SOPPQS10",nm:"Soporte PQS 10",cat:"accesorios",sub:"Soportes",pv:0.98,pb:0.85,costo:0.25,stock:440,ago:false,img:null,descVol:[[50,1],[100,2],[150,3],[200,5],[400,6]],codigoAzur:"GANCPQS10"},
+  {id:"SOPPQS20",nm:"Soporte PQS 20",cat:"accesorios",sub:"Soportes",pv:0.98,pb:0.85,costo:0.28,stock:506,ago:false,img:null,descVol:[[50,1],[100,2],[150,3],[200,5],[400,6]],codigoAzur:"GANCPQS20"},
   // ACCESORIOS - OTROS
-  {id:"ABRPQS",nm:"Abrazaderas Plásticas",cat:"accesorios",sub:"Otros",pv:0.26,pb:0.24,costo:0.12,stock:2619,ago:false,img:null,descVol:[[100,1],[200,2],[300,3],[500,5],[1000,6]]},
-  {id:"SEGPLAM",nm:"Seguros Plásticos Amarillo",cat:"accesorios",sub:"Otros",pv:0.08,pb:0.06,costo:0.03,stock:14767,ago:false,img:null,descVol:[[200,1],[500,2],[800,3],[1000,5],[2000,6]],cantMin:200},
+  {id:"ABRPQS",nm:"Abrazaderas Plásticas",cat:"accesorios",sub:"Otros",pv:0.26,pb:0.24,costo:0.12,stock:2619,ago:false,img:null,descVol:[[100,1],[200,2],[300,3],[500,5],[1000,6]],codigoAzur:"ABRPQS"},
+  {id:"SEGPLAM",nm:"Seguros Plásticos Amarillo",cat:"accesorios",sub:"Otros",pv:0.08,pb:0.06,costo:0.03,stock:14767,ago:false,img:null,descVol:[[200,1],[500,2],[800,3],[1000,5],[2000,6]],cantMin:200,codigoAzur:"SEGPLAST01"},
   // MANGUERAS HID
-  {id:"MANG15M",nm:"Manguera 15M doble chaqueta 1½\"",cat:"mangueras_hid",sub:"Mangueras",pv:38.61,pb:36.98,costo:29.93,stock:162,ago:false,img:"MANG15M",descVol:[[3,1],[5,2],[8,3]]},
-  {id:"MANG30M",nm:"Manguera 30M doble chaqueta 1½\"",cat:"mangueras_hid",sub:"Mangueras",pv:69.10,pb:64.28,costo:46.14,stock:99,ago:false,img:"MANG30M",descVol:[[3,1],[5,2],[8,3],[10,4],[15,5]]},
+  {id:"MANG15M",nm:"Manguera 15M doble chaqueta 1½\"",cat:"mangueras_hid",sub:"Mangueras",pv:38.61,pb:36.98,costo:29.93,stock:162,ago:false,img:"MANG15M",descVol:[[3,1],[5,2],[8,3]],codigoAzur:"MANH15C001"},
+  {id:"MANG30M",nm:"Manguera 30M doble chaqueta 1½\"",cat:"mangueras_hid",sub:"Mangueras",pv:69.10,pb:64.28,costo:46.14,stock:99,ago:false,img:"MANG30M",descVol:[[3,1],[5,2],[8,3],[10,4],[15,5]],codigoAzur:"MANH30C001"},
   // GABINETES - VÁLVULAS
-  {id:"ANG112",nm:"Angular 1½\" 300 lbs bronce",cat:"gabinetes",sub:"Válvulas",pv:33.83,pb:31.48,costo:23.19,stock:149,ago:false,img:"ANG112",descVol:[[3,1],[5,2],[8,3],[10,4],[15,5]]},
-  {id:"ANG212",nm:"Angular 2½\" 300 lbs bronce",cat:"gabinetes",sub:"Válvulas",pv:67.11,pb:61.26,costo:46.85,stock:76,ago:false,img:"ANG212",descVol:[[3,1],[5,2],[8,3],[10,4]]},
+  {id:"ANG112",nm:"Angular 1½\" 300 lbs bronce",cat:"gabinetes",sub:"Válvulas",pv:33.83,pb:31.48,costo:23.19,stock:149,ago:false,img:"ANG112",descVol:[[3,1],[5,2],[8,3],[10,4],[15,5]],codigoAzur:"VALVANG001"},
+  {id:"ANG212",nm:"Angular 2½\" 300 lbs bronce",cat:"gabinetes",sub:"Válvulas",pv:67.11,pb:61.26,costo:46.85,stock:76,ago:false,img:"ANG212",descVol:[[3,1],[5,2],[8,3],[10,4]],codigoAzur:"VALVANG002"},
   // GABINETES - HIDRANTES
-  {id:"PIT112",nm:"Pitón 1½\" bronce",cat:"gabinetes",sub:"Hidrantes",pv:19.80,pb:17.80,costo:14.91,stock:168,ago:false,img:"PIT112",descVol:null},
-  {id:"NIP112",nm:"Niple 1½\" bronce",cat:"gabinetes",sub:"Hidrantes",pv:7.68,pb:6.88,costo:5.68,stock:292,ago:false,img:"NIP112",descVol:[[5,1],[10,2]]},
+  {id:"PIT112",nm:"Pitón 1½\" bronce",cat:"gabinetes",sub:"Hidrantes",pv:19.80,pb:17.80,costo:14.91,stock:168,ago:false,img:"PIT112",descVol:null,codigoAzur:"HID001"},
+  {id:"NIP112",nm:"Niple 1½\" bronce",cat:"gabinetes",sub:"Hidrantes",pv:7.68,pb:6.88,costo:5.68,stock:292,ago:false,img:"NIP112",descVol:[[5,1],[10,2]],codigoAzur:"HID002"},
   // GABINETES - OTROS
-  {id:"BRAZOPOR",nm:"Brazo Portamanguera",cat:"gabinetes",sub:"Otros",pv:12.91,pb:11.71,costo:7.10,stock:97,ago:false,img:"BRAZOPOR",descVol:[[3,1],[5,2],[8,3],[10,4],[15,5]]},
-  {id:"HACHA",nm:"Hacha Reforzada",cat:"gabinetes",sub:"Otros",pv:12.40,pb:11.78,costo:9.23,stock:70,ago:false,img:"HACHA",descVol:[[3,1],[5,2],[8,3],[10,4]]},
-  {id:"SPANNER",nm:"Llave Spanner",cat:"gabinetes",sub:"Otros",pv:6.98,pb:5.98,costo:4.50,stock:95,ago:false,img:"SPANNER",descVol:[[5,1],[10,2],[15,3],[20,4],[30,5]]}
+  {id:"BRAZOPOR",nm:"Brazo Portamanguera",cat:"gabinetes",sub:"Otros",pv:12.91,pb:11.71,costo:7.10,stock:97,ago:false,img:"BRAZOPOR",descVol:[[3,1],[5,2],[8,3],[10,4],[15,5]],codigoAzur:"PORTMAN"},
+  {id:"HACHA",nm:"Hacha Reforzada",cat:"gabinetes",sub:"Otros",pv:12.40,pb:11.78,costo:9.23,stock:70,ago:false,img:"HACHA",descVol:[[3,1],[5,2],[8,3],[10,4]],codigoAzur:"HACHA001"},
+  {id:"SPANNER",nm:"Llave Spanner",cat:"gabinetes",sub:"Otros",pv:6.98,pb:5.98,costo:4.50,stock:95,ago:false,img:"SPANNER",descVol:[[5,1],[10,2],[15,3],[20,4],[30,5]],codigoAzur:"SPANNER001"}
 ];
 
 // ════════════════════ ESTADO GLOBAL ════════════════════
@@ -236,6 +236,7 @@ function loginConCredenciales(ruc,pw){
   if(!d)return false;
   USER=d; PEDIDOS=cargarPedidos(); cargarStock();
   if(d.esAdmin){mostrar("s-admin");renderAdmin();}
+  else if(d.rol==="impresion"){mostrar("s-impresion");renderImpresion();}
   else{
     CARRITO=cargarCarrito();
     mostrar("s-main");
@@ -346,8 +347,6 @@ function irTab(t){
   if(t==="carrito")renderCarrito();
   if(t==="historial")renderHistorial();
   if(t==="recompensas")renderRecompensas();
-  var cb=document.getElementById("cart-bar");
-  if(cb)cb.style.display=(t==="carrito"&&CARRITO.length>0)?"flex":"none";
   document.querySelector("#s-main .content").scrollTo(0,0);
 }
 
@@ -381,8 +380,14 @@ function renderInicio(){
   var mp=misPedidos();
   var entregados=mp.filter(function(p){return p.estado==="entregado"||p.estado==="finalizado";});
   var pend=mp.filter(function(p){return p.estado==="pendiente"||p.estado==="en_proceso"||p.estado==="autorizado"||p.estado==="facturado";});
-  var nm=USER.empresa||USER.razon.split(" ").slice(0,2).join(" ");
+  var nm=USER.encargado||USER.empresa||USER.razon.split(" ").slice(0,2).join(" ");
   document.getElementById("hero-nombre").textContent=nm;
+  var heroNombreEl=document.getElementById("hero-nombre");
+  if(heroNombreEl){heroNombreEl.style.fontSize="32px";}
+  if(USER.encargado){
+    var subEl=document.getElementById("hero-empresa");
+    if(subEl){subEl.textContent=USER.empresa||USER.razon;subEl.style.display="block";}
+  }
   var fe=document.getElementById("hero-frase");
   if(fe&&!fe.textContent){fe.textContent=FRASES_MOTIVACIONALES[Math.floor(Math.random()*FRASES_MOTIVACIONALES.length)];}
   document.getElementById("hero-pts").textContent=fmtPts(saldoPuntos());
@@ -638,20 +643,6 @@ function actualizarBadge(){
   var tot=CARRITO.reduce(function(s,i){return s+i.cant;},0);
   var cb=document.getElementById("cbadge");
   if(cb){cb.style.display=tot>0?"flex":"none";cb.textContent=tot>9?"9+":tot;}
-  var bar=document.getElementById("cart-bar");
-  var barInfo=document.getElementById("cart-bar-info");
-  if(bar&&barInfo){
-    if(tot>0&&document.getElementById("tab-carrito").classList.contains("active")){
-      var tot$=CARRITO.reduce(function(s,i){var p=PRODUCTOS.find(function(x){return x.id===i.id;});var res=precioConVolumen(p,i.cant);return s+res.precio*i.cant;},0);
-      barInfo.textContent=tot+" productos · "+fmt$(tot$*(1+IVA));
-      bar.style.display="flex";
-    } else {bar.style.display="none";}
-  }
-}
-
-function scrollToConfirm(){
-  var el=document.getElementById("confirmar-pedido");
-  if(el)el.scrollIntoView({behavior:"smooth"});
 }
 
 // ════════════════════ CARRITO ════════════════════
@@ -982,7 +973,7 @@ function confirmarPedido(){
       headers:{"Content-Type":"text/plain;charset=utf-8"},
       body:JSON.stringify(payload)
     }).catch(function(){
-      toast("⚠️ Pedido guardado localmente. No se pudo sincronizar con la nube.");
+      toast("Sync pendiente (sin conexión)");
     });
   })();
   items.forEach(function(it){
@@ -1150,9 +1141,73 @@ function verDetallePed(pid){
     (p.puntos?'<div style="margin-top:8px;font-size:13px;color:#B8860B;font-weight:700">🏆 '+fmtPts(p.puntos)+' puntos '+(p.estado==="entregado"||p.estado==="finalizado"?"acreditados":"pendientes de entrega")+'</div>':'')+
     (p.calificacion?'<div style="margin-top:8px;font-size:13px">Calificación: '+"⭐".repeat(p.calificacion.estrellas)+'<br><i>'+(p.calificacion.comentario||"")+'</i></div>':'')+
     ((!p.esCanje&&p.items&&p.items.length)?'<button class="btn btn-p btn-full" style="margin-top:16px" onclick="generarProforma(\''+p.id+'\')">📄 Descargar Proforma PDF</button>':'')+
+    (p.azurFactura?'<button class="btn btn-s btn-full" style="margin-top:10px;background:var(--verdec);color:var(--verde);border-color:var(--verde)" onclick="descargarFacturaPDF(\''+p.id+'\')">📄 Descargar Factura PDF</button>':
+     (p.estado==="finalizado"?'<button class="btn btn-s btn-full" style="margin-top:10px" disabled>🧾 Pendiente de facturar</button>':''))+
     '<button class="btn btn-s btn-full" style="margin-top:10px" onclick="cerrarModal(\'modal-pedido-det\')">Cerrar</button>';
   document.getElementById("modal-pedido-det-c").innerHTML=html;
   abrir("modal-pedido-det");
+}
+
+function descargarFacturaPDF(pid){
+  var p=PEDIDOS.find(function(x){return x.id===pid;});
+  if(!p)return;
+  var fecha=new Date(p.fechaISO||p.fecha).toLocaleDateString("es-EC");
+  var itemsHtml=(p.items||[]).map(function(it,i){
+    return '<tr>'+
+      '<td style="text-align:center">'+(i+1)+'</td>'+
+      '<td>'+it.nm+'</td>'+
+      '<td style="text-align:center">'+it.cant+'</td>'+
+      '<td style="text-align:right">'+fmt$(it.pr)+'</td>'+
+      '<td style="text-align:right">'+fmt$(it.pr*it.cant)+'</td>'+
+    '</tr>';
+  }).join("");
+  var win=window.open("","_blank","width=800,height=900");
+  win.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Factura #'+p.id+'</title>'+
+    '<style>body{font-family:Arial,sans-serif;font-size:12px;color:#111;padding:20px}'+
+    '.company{color:#C0392B;font-weight:700;font-size:16px}'+
+    '.header{display:flex;justify-content:space-between;margin-bottom:20px}'+
+    'table{width:100%;border-collapse:collapse;margin-top:12px}'+
+    'th{background:#1A1A1A;color:#fff;padding:7px 10px;text-align:left;font-size:11px}'+
+    'td{padding:7px 10px;border-bottom:1px solid #eee;font-size:11px}'+
+    'tr:nth-child(even)td{background:#f9f9f9}'+
+    '.totals{margin-top:16px;text-align:right}'+
+    '.totals table{width:280px;margin-left:auto}'+
+    '.totals td{border:none;padding:4px 8px}'+
+    '.total-final td{font-weight:700;font-size:14px;color:#C0392B;border-top:2px solid #C0392B}'+
+    '.clave{margin-top:16px;background:#f5f5f5;padding:10px;border-radius:6px;font-size:10px;word-break:break-all;color:#555}'+
+    '@media print{button{display:none}}'+
+    '</style></head><body>'+
+    '<div class="header">'+
+      '<div>'+
+        '<div class="company">PYROSHIELD</div>'+
+        '<div style="font-size:10px;color:#666">Portete #3007 y Gallegos Lara, Guayaquil</div>'+
+        '<div style="font-size:10px;color:#666">RUC: 0992220835001</div>'+
+      '</div>'+
+      '<div style="text-align:right">'+
+        '<div style="font-size:18px;font-weight:700;color:#1A6B3A">FACTURA</div>'+
+        '<div style="font-size:11px;color:#666">N° '+p.id+'</div>'+
+        '<div style="font-size:11px;color:#666">Fecha: '+fecha+'</div>'+
+      '</div>'+
+    '</div>'+
+    '<div style="background:#f5f5f5;padding:10px 14px;border-radius:8px;margin-bottom:12px">'+
+      '<div style="font-weight:700">'+p.razon+'</div>'+
+      '<div>RUC: '+p.ruc+'</div>'+
+    '</div>'+
+    '<table>'+
+      '<thead><tr><th>#</th><th>Descripción</th><th style="text-align:center">Cant.</th><th style="text-align:right">P.Unit.</th><th style="text-align:right">Total</th></tr></thead>'+
+      '<tbody>'+itemsHtml+'</tbody>'+
+    '</table>'+
+    '<div class="totals"><table>'+
+      '<tr><td>Subtotal:</td><td style="text-align:right;font-weight:700">'+fmt$(p.subtotal)+'</td></tr>'+
+      '<tr><td>IVA 15%:</td><td style="text-align:right">'+fmt$(p.iva)+'</td></tr>'+
+      '<tr class="total-final"><td>TOTAL:</td><td style="text-align:right">'+fmt$(p.total)+'</td></tr>'+
+    '</table></div>'+
+    '<div class="clave"><b>Clave de acceso SRI:</b><br>'+p.azurFactura+'</div>'+
+    '<div style="margin-top:16px;text-align:center">'+
+      '<button onclick="window.print()" style="padding:10px 24px;background:#1A6B3A;color:#fff;border:none;border-radius:8px;font-size:14px;cursor:pointer">🖨️ Imprimir / Guardar PDF</button>'+
+    '</div>'+
+    '</body></html>');
+  win.document.close();
 }
 
 // ════════════════════ CALIFICACIÓN ════════════════════
@@ -1291,8 +1346,29 @@ function renderAdmPedidos(){
     '<div class="adm-stat"><div class="v">'+canjesPend+'</div><div class="l">Canjes pendientes</div></div>'+
     '<div class="adm-stat"><div class="v">'+canjesEntregados+'</div><div class="l">Canjes entregados</div></div>';
 
-  var lista=PEDIDOS.slice().reverse();
-  document.getElementById("adm-ped-lista").innerHTML=lista.length?lista.map(function(p){
+  // Tabs de filtro para pedidos admin
+  var admFiltroActivo=window._admFiltroActivo||"pendiente";
+  var tabsDef=[
+    {v:"pendiente",l:"⏳ Pendientes"},
+    {v:"en_proceso",l:"🚚 En proceso"},
+    {v:"entregado",l:"📦 Entregados"},
+    {v:"finalizado",l:"✔️ Finalizados"},
+    {v:"cancelado",l:"✕ Cancelados"},
+    {v:"todos",l:"Todos"}
+  ];
+  var tabsHtml='<div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:6px;margin-bottom:12px;scrollbar-width:none">'+
+    tabsDef.map(function(t){
+      var isActive=admFiltroActivo===t.v;
+      return '<button style="flex-shrink:0;padding:7px 13px;border-radius:20px;border:1.5px solid '+(isActive?"var(--rojo)":"var(--g2)")+';background:'+(isActive?"var(--rojo)":"var(--blanco)")+';color:'+(isActive?"#fff":"var(--g4)")+';font-family:\'Barlow\',sans-serif;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;min-height:36px" onclick="setAdmFiltro(\''+t.v+'\')">'+t.l+'</button>';
+    }).join("")+
+  '</div>';
+
+  var lista=PEDIDOS.slice().reverse().filter(function(p){
+    if(admFiltroActivo==="todos")return true;
+    if(admFiltroActivo==="en_proceso")return["en_proceso","autorizado","entrega","facturado"].indexOf(p.estado)!==-1;
+    return p.estado===admFiltroActivo;
+  });
+  document.getElementById("adm-ped-lista").innerHTML=tabsHtml+(lista.length?lista.map(function(p){
     return '<div class="card" onclick="admVerPedido(\''+p.id+'\')" style="cursor:pointer"><div class="card-b">'+
       '<div style="display:flex;justify-content:space-between;align-items:center">'+
         '<div><div style="font-weight:700">'+(p.esCanje?"🎁 Canje":"Pedido #"+p.id)+'</div>'+
@@ -1306,7 +1382,12 @@ function renderAdmPedidos(){
       '</div>'+
       (!p.esCanje?'<div style="font-size:18px;font-weight:800;font-family:\'Barlow Condensed\',sans-serif;margin-top:6px">'+fmt$(p.total)+'</div>':'')+
     '</div></div>';
-  }).join(""):'<div class="empty"><div class="ico">📦</div><p>No hay pedidos aún.</p></div>';
+  }).join(""):'<div class="empty"><div class="ico">📦</div><p>No hay pedidos en esta categoría.</p></div>');
+}
+
+function setAdmFiltro(v){
+  window._admFiltroActivo=v;
+  renderAdmPedidos();
 }
 
 // Label de estado completo para admin (más detallado)
@@ -1361,6 +1442,7 @@ function admVerPedido(pid){
     html+='<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">'+
       '<button class="btn btn-s" style="flex:1;background:#25D366;color:#fff;border-color:#25D366" onclick="generarWA(\''+p.id+'\')">📲 WhatsApp</button>'+
       '<button class="btn btn-s" style="flex:1" onclick="generarProforma(\''+p.id+'\')">📄 Proforma</button>'+
+      '<button class="btn btn-s" style="flex:1" onclick="abrirNotaEntrega(\''+p.id+'\')">📋 Nota de entrega</button>'+
     '</div>';
     if(p.azurFactura){
       html+='<div style="margin-top:10px;background:var(--verdec);border:1.5px solid var(--verde);border-radius:10px;padding:10px 12px;font-size:12px;color:var(--verde)">✅ <b>Factura emitida en Azur</b><br><span style="font-size:10px;word-break:break-all;color:var(--g4)">Clave: '+p.azurFactura+'</span></div>';
@@ -1533,7 +1615,9 @@ function generarAzur(pid){
   var ahora=new Date();
   var fechaAzur=ahora.getFullYear()+"/"+String(ahora.getMonth()+1).padStart(2,"0")+"/"+String(ahora.getDate()).padStart(2,"0");
   var itemsAzur=(p.items||[]).map(function(it){
-    return {codigo_principal:it.id,codigo_auxiliar:null,descripcion:it.nm,tipoproducto:1,tipo_iva:4,precio_unitario:parseFloat(it.pr.toFixed(2)),cantidad:it.cant,descuento:0};
+    var prod=PRODUCTOS.find(function(x){return x.id===it.id;});
+    var codAzur=(prod&&prod.codigoAzur)?prod.codigoAzur:it.id;
+    return {codigo_principal:codAzur,codigo_auxiliar:null,descripcion:it.nm,tipoproducto:1,tipo_iva:4,precio_unitario:parseFloat(it.pr.toFixed(2)),cantidad:it.cant,descuento:0};
   });
   var pagoMap={"Efectivo":"01","Transferencia":"20","Cheque":"20","Cheque / Crédito 30 días":"20","Cheque / Crédito 60 días":"20","Cheque / Crédito 90 días":"20"};
   var codigoPago=pagoMap[p.pago]||"20";
@@ -1624,6 +1708,8 @@ function abrirEditarDist(ruc){
     '<input class="form-input" id="ed-tel" value="'+escHtml(d.tel||"")+'">'+
     '<label class="form-label">Correo</label>'+
     '<input class="form-input" id="ed-correo" value="'+escHtml(d.correo||"")+'">'+
+    '<label class="form-label">Encargado / Contacto</label>'+
+    '<input class="form-input" id="ed-encargado" value="'+escHtml(d.encargado||"")+'">'+
     '<label class="form-label">Contraseña</label>'+
     '<input class="form-input" id="ed-pass" value="'+escHtml(d.pass||"")+'">'+
     '<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">'+
@@ -1649,6 +1735,7 @@ function guardarEditarDist(ruc){
   if(!d)return;
   d.razon=document.getElementById("ed-razon").value.trim()||d.razon;
   d.empresa=document.getElementById("ed-empresa").value.trim()||undefined;
+  var enc=document.getElementById("ed-encargado");if(enc)d.encargado=enc.value.trim()||undefined;
   d.tel=document.getElementById("ed-tel").value.trim();
   d.correo=document.getElementById("ed-correo").value.trim();
   d.pass=document.getElementById("ed-pass").value.trim()||d.pass;
@@ -1943,6 +2030,86 @@ function exportarExcel(){
   document.body.appendChild(a); a.click();
   document.body.removeChild(a); URL.revokeObjectURL(url);
   toast("📥 "+filas.length+" registros exportados");
+}
+
+// ════════════════════ IMPRESIÓN (FABIOLA) ════════════════════
+function renderImpresion(){
+  var cont=document.getElementById("impresion-list");
+  if(!cont)return;
+  var lista=PEDIDOS.filter(function(p){return!p.esCanje;}).slice().reverse();
+  if(!lista.length){cont.innerHTML='<div class="empty"><div class="ico">📭</div><p>No hay pedidos aún.</p></div>';return;}
+  cont.innerHTML=lista.map(function(p){
+    return '<div class="card" style="margin-bottom:10px"><div class="card-b">'+
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">'+
+        '<div>'+
+          '<div style="font-weight:700">Pedido #'+p.id+'</div>'+
+          '<div style="font-size:12px;color:var(--g3)">'+p.razon+' · '+p.fecha+'</div>'+
+        '</div>'+
+        '<span class="est-chip '+estadoClass(p.estado)+'">'+estadoLabelAdmin(p.estado)+'</span>'+
+      '</div>'+
+      '<div style="display:flex;gap:8px;flex-wrap:wrap">'+
+        '<button class="btn btn-s btn-sm" onclick="generarProforma(\''+p.id+'\')">📄 Proforma</button>'+
+        '<button class="btn btn-s btn-sm" onclick="abrirNotaEntrega(\''+p.id+'\')">📋 Nota de entrega</button>'+
+      '</div>'+
+    '</div></div>';
+  }).join("");
+}
+
+// ════════════════════ NOTA DE ENTREGA ════════════════════
+function abrirNotaEntrega(pid){
+  var p=PEDIDOS.find(function(x){return x.id===pid;});
+  if(!p)return;
+  var dist=DISTRIBUIDORES.find(function(d){return d.ruc===p.ruc;})||{};
+  var fecha=new Date().toLocaleDateString("es-EC");
+  var itemsHtml=(p.items||[]).map(function(it,i){
+    return '<tr>'+
+      '<td>'+(i+1)+'</td>'+
+      '<td>'+it.nm+'</td>'+
+      '<td style="text-align:center">'+it.cant+'</td>'+
+      '<td style="text-align:right">'+fmt$(it.pr)+'</td>'+
+      '<td style="text-align:right">'+fmt$(it.pr*it.cant)+'</td>'+
+    '</tr>';
+  }).join("");
+  var win=window.open("","_blank","width=800,height=900");
+  win.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Nota de Entrega #'+p.id+'</title>'+
+    '<style>body{font-family:Arial,sans-serif;font-size:12px;color:#111;padding:20px}'+
+    'h1{font-size:20px;margin:0}.company{color:#C0392B;font-weight:700}'+
+    '.header{display:flex;justify-content:space-between;margin-bottom:20px}'+
+    'table{width:100%;border-collapse:collapse;margin-top:12px}'+
+    'th{background:#1A1A1A;color:#fff;padding:7px 10px;text-align:left;font-size:11px}'+
+    'td{padding:7px 10px;border-bottom:1px solid #eee;font-size:11px}'+
+    'tr:nth-child(even)td{background:#f9f9f9}'+
+    '.totals{margin-top:16px;text-align:right}.totals table{width:280px;margin-left:auto}'+
+    '.totals td{border:none;padding:4px 8px}'+
+    '.total-final td{font-weight:700;font-size:14px;color:#C0392B;border-top:2px solid #C0392B}'+
+    '.firma{margin-top:40px;display:flex;justify-content:space-between}'+
+    '.firma-box{text-align:center;width:200px}'+
+    '.firma-line{border-top:1px solid #111;margin-bottom:4px}'+
+    '@media print{button{display:none}}</style></head><body>'+
+    '<div class="header"><div><div class="company">PYROSHIELD</div>'+
+    '<div style="font-size:10px;color:#666">Portete #3007 y Gallegos Lara, Guayaquil</div>'+
+    '<div style="font-size:10px;color:#666">RUC: 0992220835001</div></div>'+
+    '<div style="text-align:right"><div style="font-size:18px;font-weight:700">NOTA DE ENTREGA</div>'+
+    '<div style="font-size:11px;color:#666">N° '+p.id+'</div>'+
+    '<div style="font-size:11px;color:#666">Fecha: '+fecha+'</div></div></div>'+
+    '<div style="background:#f5f5f5;padding:10px 14px;border-radius:8px;margin-bottom:12px">'+
+    '<div style="font-weight:700">'+p.razon+'</div>'+
+    '<div>RUC / Cédula: '+p.ruc+'</div>'+
+    (dist.tel?'<div>Tel: '+dist.tel+'</div>':'')+
+    (p.modo==="entrega"&&p.entregaInfo&&p.entregaInfo.establecimiento?'<div>Dirección: '+(p.entregaInfo.establecimiento.dir||"")+'</div>':'')+
+    '</div>'+
+    '<table><thead><tr><th>#</th><th>Descripción</th><th style="text-align:center">Cant.</th><th style="text-align:right">P.Unit.</th><th style="text-align:right">Total</th></tr></thead>'+
+    '<tbody>'+itemsHtml+'</tbody></table>'+
+    '<div class="totals"><table>'+
+    '<tr><td>Subtotal:</td><td style="text-align:right;font-weight:700">'+fmt$(p.subtotal)+'</td></tr>'+
+    '<tr><td>IVA 15%:</td><td style="text-align:right">'+fmt$(p.iva)+'</td></tr>'+
+    '<tr class="total-final"><td>TOTAL:</td><td style="text-align:right">'+fmt$(p.total)+'</td></tr>'+
+    '</table></div>'+
+    '<div class="firma"><div class="firma-box"><div style="height:40px"></div><div class="firma-line"></div><div style="font-size:11px">Entregado por</div></div>'+
+    '<div class="firma-box"><div style="height:40px"></div><div class="firma-line"></div><div style="font-size:11px">Recibido por</div></div></div>'+
+    '<div style="margin-top:16px;text-align:center"><button onclick="window.print()" style="padding:10px 24px;background:#C0392B;color:#fff;border:none;border-radius:8px;font-size:14px;cursor:pointer">🖨️ Imprimir / Guardar PDF</button></div>'+
+    '</body></html>');
+  win.document.close();
 }
 
 // ════════════════════ MODALES / UTIL ════════════════════
