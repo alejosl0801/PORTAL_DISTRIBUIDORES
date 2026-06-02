@@ -2,12 +2,347 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>PyroShield — Portal Distribuidores</title>
-<meta http-equiv="refresh" content="0; url=./pyroshield/">
-<link rel="canonical" href="./pyroshield/">
-<script>location.replace("./pyroshield/" + location.search + location.hash);</script>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&family=Barlow:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="./style.css">
 </head>
 <body>
-<p>Redirigiendo al <a href="./pyroshield/">Portal de Distribuidores</a>…</p>
+
+<!-- ══ SPLASH ══ -->
+<div id="splash" class="splash">
+  <div class="splash-inner">
+    <div class="splash-logo-wrap"><img src="img/logo.jpg" alt="PyroShield" class="splash-logo"></div>
+    <div class="splash-brand">PYROSHIELD</div>
+    <div class="splash-sub">Portal Distribuidores</div>
+    <div class="splash-loader"><span></span></div>
+  </div>
+</div>
+
+<!-- ══ LOGIN ══ -->
+<div id="s-login" class="screen active">
+  <div class="login-box">
+    <div class="login-logo">
+      <img src="img/logo.jpg" alt="PyroShield">
+      <div>
+        <div class="brand">PYROSHIELD</div>
+        <div class="sub">Portal Distribuidores</div>
+      </div>
+    </div>
+    <div class="login-title">Bienvenido</div>
+    <div class="login-sub">Ingresa con tu RUC y contraseña</div>
+    <div class="field-label">RUC / Usuario</div>
+    <input class="field-inp" id="login-user" type="text" placeholder="Tu RUC" autocomplete="username">
+    <div class="field-label">Contraseña</div>
+    <input class="field-inp" id="login-pass" type="password" placeholder="Tu contraseña" autocomplete="current-password">
+    <button class="btn-login" onclick="hacerLogin()">Ingresar</button>
+    <div class="login-err" id="login-err">RUC o contraseña incorrectos</div>
+    <div class="login-demo" id="login-demo-box" style="display:none">
+      <b>Credenciales demo</b><br>
+      ADMIN / pyro2024<br>
+      0906872742001 / jorge123<br>
+      Otros RUC / dist123
+    </div>
+  </div>
+</div>
+
+<!-- ══ PRINCIPAL DISTRIBUIDOR ══ -->
+<div id="s-main" class="screen">
+  <div class="topbar">
+    <div class="topbar-brand">
+      <img src="img/logo.jpg" alt="Logo">
+      <span class="topbar-name">PYROSHIELD</span>
+    </div>
+    <div class="topbar-r">
+      <div class="topbar-pts"><span class="v" id="topbar-pts-v">0</span><span class="l">pts</span></div>
+      <button class="btn-logout" onclick="logout()">Salir</button>
+    </div>
+  </div>
+  <div class="content">
+    <div id="tab-inicio" class="tab-panel active">
+      <div class="hero">
+        <div class="hero-saludo">Bienvenido de vuelta,</div>
+        <div class="hero-nombre" id="hero-nombre">—</div>
+        <div class="hero-frase" id="hero-frase"></div>
+        <div class="hero-pts-box">
+          <div><div class="l">Tus puntos confirmados</div><div class="v" id="hero-pts">0</div></div>
+          <div class="ico">🏆</div>
+        </div>
+        <div class="hero-stats">
+          <div class="hstat"><div class="v" id="hs-pedidos">0</div><div class="l">Entregados</div></div>
+          <div class="hstat"><div class="v" id="hs-proceso">0</div><div class="l">En proceso</div></div>
+          <div class="hstat"><div class="v" id="hs-carrito">0</div><div class="l">En carrito</div></div>
+        </div>
+      </div>
+      <div id="promos-home"></div>
+      <div class="sec-titulo">Acceso rápido</div>
+      <div class="acc-rapidas">
+        <button class="acc-btn" onclick="irTab('catalogo')"><div class="acc-ico">🛒</div><div class="acc-t">Catálogo</div><div class="acc-s">Ver productos y precios</div></button>
+        <button class="acc-btn" onclick="irTab('recompensas')"><div class="acc-ico">🏆</div><div class="acc-t">Recompensas</div><div class="acc-s">Canjea tus puntos</div></button>
+        <button class="acc-btn" onclick="irTab('historial')"><div class="acc-ico">📋</div><div class="acc-t">Historial</div><div class="acc-s">Tus pedidos anteriores</div></button>
+        <button class="acc-btn" onclick="abrirContacto()"><div class="acc-ico">💬</div><div class="acc-t">Contacto</div><div class="acc-s">Escríbenos por WhatsApp</div></button>
+      </div>
+      <div class="sec-titulo">Últimos pedidos</div>
+      <div id="ultimos-pedidos"></div>
+    </div>
+
+    <div id="tab-catalogo" class="tab-panel">
+      <div class="search-bar">
+        <span>🔍</span>
+        <input type="text" placeholder="Buscar producto..." id="cat-search" oninput="onCatSearch()">
+      </div>
+      <div id="search-recientes"></div>
+      <div class="filtros">
+        <button class="fbtn active" onclick="setFiltro('todos',this)">Todos</button>
+        <button class="fbtn" onclick="setFiltro('extintores',this)">🧯 Extintores</button>
+        <button class="fbtn" onclick="setFiltro('accesorios',this)">🔧 Accesorios</button>
+        <button class="fbtn" onclick="setFiltro('gabinetes',this)">🏗️ Gabinetes</button>
+        <button class="fbtn" onclick="setFiltro('mangueras_hid',this)">💧 Mangueras HID</button>
+        <button class="fbtn" onclick="setFiltro('favoritos',this)">❤️ Favoritos</button>
+      </div>
+      <div id="cat-toolbar" class="cat-toolbar"></div>
+      <div id="sub-filtros"></div>
+      <div id="cat-lista"></div>
+    </div>
+
+    <div id="tab-carrito" class="tab-panel">
+      <div class="sec-titulo">Mi carrito</div>
+      <div id="borradores-panel"></div>
+      <div id="cart-lista"></div>
+      <div id="cart-resumen"></div>
+    </div>
+
+    <div id="tab-historial" class="tab-panel">
+      <div class="sec-titulo">Mis pedidos</div>
+      <div class="hfiltros">
+        <button class="fbtn active" onclick="setHFiltro('todos',this)">Todos</button>
+        <button class="fbtn" onclick="setHFiltro('pendiente',this)">⏳ Pendientes</button>
+        <button class="fbtn" onclick="setHFiltro('proceso',this)">🚚 En proceso</button>
+        <button class="fbtn" onclick="setHFiltro('finalizado',this)">✅ Entregados</button>
+      </div>
+      <div id="hfechas-wrap" class="hfechas-wrap">
+        <div class="hfechas-inner">
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+            <div><label class="form-label" style="margin-bottom:2px">Desde</label><input type="date" class="form-input" id="h-desde" style="margin:0;width:auto;min-width:130px;padding:8px 10px"></div>
+            <div><label class="form-label" style="margin-bottom:2px">Hasta</label><input type="date" class="form-input" id="h-hasta" style="margin:0;width:auto;min-width:130px;padding:8px 10px"></div>
+            <div style="display:flex;gap:6px;align-self:flex-end">
+              <button class="btn btn-sm btn-p" onclick="aplicarFiltroFecha()">Aplicar</button>
+              <button class="btn btn-sm btn-s" onclick="limpiarFiltroFecha()">✕ Limpiar</button>
+            </div>
+          </div>
+        </div>
+        <button class="hfechas-toggle fbtn" onclick="toggleFechasFiltro()">📅 Filtrar por fecha</button>
+      </div>
+      <div id="hist-lista"></div>
+    </div>
+
+    <div id="tab-recompensas" class="tab-panel">
+      <div class="rec-saldo">
+        <div class="rec-v" id="rec-pts-v">0</div>
+        <div class="rec-l">puntos confirmados</div>
+        <div id="rec-pts-pend-box"></div>
+        <div class="rec-mot" id="rec-mot"></div>
+      </div>
+      <div class="sec-titulo">Canjea tus puntos</div>
+      <div id="rec-lista"></div>
+      <div id="pts-historial-wrap" style="margin-top:14px">
+        <button class="btn btn-s btn-full" onclick="togglePtsHistorial()">📊 Ver historial de puntos</button>
+        <div id="pts-historial-lista" style="display:none;margin-top:10px"></div>
+      </div>
+    </div>
+  </div>
+
+  <nav class="bottomnav">
+    <button class="bnav active" id="bnav-inicio" onclick="irTab('inicio')"><span class="ico">🏠</span>Inicio</button>
+    <button class="bnav" id="bnav-catalogo" onclick="irTab('catalogo')"><span class="ico">📦</span>Catálogo</button>
+    <button class="bnav" id="bnav-carrito" onclick="irTab('carrito')"><span class="ico">🛒</span>Carrito<span class="cbadge" id="cbadge" style="display:none">0</span></button>
+    <button class="bnav" id="bnav-historial" onclick="irTab('historial')"><span class="ico">📋</span>Historial</button>
+    <button class="bnav" id="bnav-recompensas" onclick="irTab('recompensas')"><span class="ico">🏆</span>Puntos</button>
+  </nav>
+</div>
+
+<div class="cart-bar" id="cart-bar" style="display:none" onclick="scrollToConfirm()">
+  <span class="info" id="cart-bar-info"></span>
+  <span class="cta">Confirmar →</span>
+</div>
+
+<!-- ══ ADMIN ══ -->
+<div id="s-admin" class="screen">
+  <div class="topbar">
+    <div class="topbar-brand">
+      <img src="img/logo.jpg" alt="Logo">
+      <span class="topbar-name" style="color:var(--oro)">ADMIN</span>
+    </div>
+    <button class="btn-logout" onclick="logout()">Salir</button>
+  </div>
+  <div class="adm-tabs">
+    <button class="adm-tab active" onclick="admTab('pedidos',this)">📦 Pedidos</button>
+    <button class="adm-tab" onclick="admTab('distribuidores',this)">🏢 Distribuidores</button>
+    <button class="adm-tab" onclick="admTab('stock',this)">📊 Stock</button>
+    <button class="adm-tab" onclick="admTab('recompensas',this)">🎁 Recompensas</button>
+  </div>
+  <div class="content" style="padding-top:12px">
+    <div id="adm-pedidos" class="adm-panel active">
+      <div class="adm-stats" id="adm-stats"></div>
+      <div id="adm-dashboard-extra"></div>
+      <button class="btn btn-s btn-full" id="adm-export-btn" style="margin-bottom:14px" onclick="exportarExcel()">📥 Exportar a Excel</button>
+      <div id="adm-ped-lista"></div>
+    </div>
+    <div id="adm-distribuidores" class="adm-panel">
+      <div style="display:flex;gap:8px;margin-bottom:12px">
+        <input class="form-input" id="adm-dist-search" placeholder="Buscar distribuidor..." oninput="filtrarDist()" style="margin:0;flex:1">
+        <button class="btn btn-p btn-sm" onclick="abrirNuevoDist()">+ Nuevo</button>
+      </div>
+      <div id="adm-dist-lista"></div>
+    </div>
+    <div id="adm-stock" class="adm-panel">
+      <div id="adm-stock-lista"></div>
+    </div>
+    <div id="adm-recompensas" class="adm-panel"></div>
+  </div>
+</div>
+
+<!-- TUTORIAL -->
+<div id="tutorial" class="tutorial-ov" style="display:none">
+  <div class="tutorial-card">
+    <div class="tutorial-ico" id="tut-ico"></div>
+    <div class="tutorial-t" id="tut-t"></div>
+    <div class="tutorial-d" id="tut-d"></div>
+    <div class="tutorial-dots" id="tut-dots"></div>
+    <div class="tutorial-btns">
+      <button class="tutorial-skip" onclick="cerrarTutorial()">Saltar</button>
+      <button class="tutorial-next" id="tut-next" onclick="tutNext()">Siguiente</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODALES -->
+<div class="ov" id="modal-contacto">
+  <div class="modal">
+    <div class="mhandle"></div>
+    <h3>Contacto</h3>
+    <p style="font-size:14px;color:var(--g4);margin-bottom:16px">¿Necesitas ayuda o tienes alguna consulta?</p>
+    <button class="btn btn-p btn-full" style="margin-bottom:10px" onclick="window.open('https://wa.me/593978997247','_blank')">💬 WhatsApp</button>
+    <p style="font-size:11px;color:var(--g3);text-align:center">Portete #3007 y Gallegos Lara, Guayaquil</p>
+    <button class="btn btn-s btn-full" style="margin-top:10px" onclick="cerrarModal('modal-contacto')">Cerrar</button>
+  </div>
+</div>
+
+<div class="ov" id="modal-conf"><div class="modal"><div id="modal-conf-c"></div></div></div>
+<div class="ov" id="modal-pedido-det"><div class="modal"><div id="modal-pedido-det-c"></div></div></div>
+
+<!-- MODAL EDITAR DISTRIBUIDOR -->
+<div class="ov" id="modal-editar-dist">
+  <div class="modal">
+    <div id="modal-editar-dist-c"></div>
+  </div>
+</div>
+
+<!-- MODAL PRECIOS ESPECIALES -->
+<div class="ov" id="modal-precios-esp">
+  <div class="modal" style="max-height:88vh;overflow-y:auto;">
+    <div id="modal-precios-esp-c"></div>
+  </div>
+</div>
+
+<!-- MODAL RESUMEN DISTRIBUIDOR -->
+<div class="ov" id="modal-resumen-dist">
+  <div class="modal">
+    <div id="modal-resumen-dist-c"></div>
+  </div>
+</div>
+
+<!-- MODAL NUEVO DISTRIBUIDOR -->
+<div class="ov" id="modal-nuevo-dist">
+  <div class="modal" style="max-height:88vh;overflow-y:auto;">
+    <div class="mhandle"></div>
+    <h3>Nuevo Distribuidor</h3>
+    <label class="form-label">Razón social *</label>
+    <input class="form-input" id="nd-razon" placeholder="Nombre o empresa">
+    <label class="form-label">Nombre comercial / empresa</label>
+    <input class="form-input" id="nd-empresa" placeholder="Ej: Sumiseg">
+    <label class="form-label">Nombre del encargado</label>
+    <input class="form-input" id="nd-encargado" placeholder="Ej: Jorge">
+    <label class="form-label">Tipo de documento *</label>
+    <select class="form-select" id="nd-tipodoc">
+      <option value="ruc">RUC (13 dígitos)</option>
+      <option value="cedula">Cédula (10 dígitos)</option>
+    </select>
+    <label class="form-label">Número de RUC / Cédula *</label>
+    <div style="display:flex;gap:8px;margin-bottom:12px">
+      <input class="form-input" id="nd-ruc" placeholder="0000000000001" inputmode="numeric" style="margin:0;flex:1">
+      <button class="btn btn-s btn-sm" type="button" onclick="buscarSRI()" style="white-space:nowrap;margin:0">🔍 SRI</button>
+    </div>
+    <label class="form-label">Teléfono</label>
+    <input class="form-input" id="nd-tel" placeholder="09XXXXXXXX">
+    <label class="form-label">Correo</label>
+    <input class="form-input" id="nd-correo" placeholder="correo@empresa.com">
+    <label class="form-label">Contraseña *</label>
+    <input class="form-input" id="nd-pass" placeholder="Contraseña de acceso">
+    <label class="form-label">Dirección principal</label>
+    <input class="form-input" id="nd-dir" placeholder="Dirección del local">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+      <input type="checkbox" id="nd-entrega" style="width:18px;height:18px">
+      <label for="nd-entrega" style="font-size:14px">Habilitar entrega a domicilio</label>
+    </div>
+    <label class="form-label">Monto mínimo entrega ($)</label>
+    <input class="form-input" id="nd-min" type="number" value="30">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+      <input type="checkbox" id="nd-sinvol" style="width:18px;height:18px">
+      <label for="nd-sinvol" style="font-size:14px;color:var(--rojo)">Sin descuentos por volumen</label>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px">
+      <button class="btn btn-s" onclick="cerrarModal('modal-nuevo-dist')">Cancelar</button>
+      <button class="btn btn-p" onclick="guardarNuevoDist()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL RECOMPENSA NUEVA/EDITAR -->
+<div class="ov" id="modal-rw-edit">
+  <div class="modal">
+    <div id="modal-rw-edit-c"></div>
+  </div>
+</div>
+
+<!-- MODAL CALIFICACIÓN -->
+<div class="ov" id="modal-calif">
+  <div class="modal">
+    <div class="mhandle"></div>
+    <h3>¿Cómo fue tu experiencia?</h3>
+    <p style="font-size:13px;color:var(--g3);margin-bottom:14px" id="calif-ped-id"></p>
+    <div class="stars" id="calif-stars">
+      <span class="star" onclick="setEstrella(1)">⭐</span>
+      <span class="star" onclick="setEstrella(2)">⭐</span>
+      <span class="star" onclick="setEstrella(3)">⭐</span>
+      <span class="star" onclick="setEstrella(4)">⭐</span>
+      <span class="star" onclick="setEstrella(5)">⭐</span>
+    </div>
+    <div id="calif-feedback" style="display:none">
+      <label class="form-label">¿Qué podemos mejorar?</label>
+      <textarea class="form-input" id="calif-txt" rows="3" style="resize:none"></textarea>
+    </div>
+    <div id="calif-ok-msg" style="display:none;text-align:center;font-size:14px;color:var(--verde);font-weight:600;padding:10px">¡Gracias! Nos alegra que todo haya salido perfecto 🔥</div>
+    <button class="btn btn-p btn-full" style="margin-top:8px" onclick="enviarCalif()">Enviar calificación</button>
+  </div>
+</div>
+
+<div id="offline-banner" class="offline-banner" style="display:none">📵 Sin conexión — tus cambios se guardan localmente</div>
+<button id="btn-top" class="btn-top" onclick="scrollTop()" style="display:none">↑</button>
+<div id="ptr-indicator" class="ptr-indicator" style="display:none">↓ Suelta para actualizar</div>
+<div id="img-zoom-ov" class="img-zoom-ov" onclick="cerrarZoom()" style="display:none"><img id="img-zoom-img" alt="zoom"><button class="img-zoom-close" onclick="cerrarZoom()">✕</button></div>
+<div id="toast" class="toast"></div>
+
+<!-- OVERLAY DE ÉXITO -->
+<div id="exito-ov" class="exito-ov">
+  <div class="exito-card">
+    <div class="exito-check">✓</div>
+    <div class="exito-t" id="exito-t"></div>
+    <div class="exito-s" id="exito-s"></div>
+  </div>
+</div>
+
+<script src="./datos.js"></script>
+<script src="./app.js"></script>
 </body>
 </html>

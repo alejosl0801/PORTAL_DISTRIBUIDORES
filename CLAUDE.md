@@ -13,15 +13,16 @@ No hay backend propio: toda la lógica vive en el navegador y los datos se persi
 ```
 PORTAL_DISTRIBUIDORES/
 ├── CLAUDE.md
-└── pyroshield/
-    ├── index.html   — HTML único de toda la app (login, cliente, admin, modales)
-    ├── app.js       — Toda la lógica (~1 300 líneas): productos, carrito, pedidos, admin, Azur
-    ├── datos.js     — Constantes, IMGS, PROMOS, DISTRIBUIDORES (datos en frío)
-    ├── style.css    — Estilos completos (variables CSS, dark mode, componentes)
-    └── img/         — 26 imágenes .jpg (productos + logo + promos)
+├── Code.gs          — Backend Google Apps Script (sincronización de pedidos)
+├── appsscript.json  — Manifiesto del Apps Script
+├── index.html       — HTML único de toda la app (login, cliente, admin, modales)
+├── app.js           — Toda la lógica: productos, carrito, pedidos, admin, Azur
+├── datos.js         — Constantes, IMGS, PROMOS, DISTRIBUIDORES (datos en frío)
+├── style.css        — Estilos completos (variables CSS, dark mode, componentes)
+└── img/             — imágenes .jpg (productos + logo + promos)
 ```
 
-No hay subcarpetas `js/`, `css/`, ni `assets/`. Todo suelto en `pyroshield/`. Hay un único archivo JS (`app.js`) que accede a los datos definidos en `datos.js` (cargado antes en el HTML).
+No hay subcarpetas `js/`, `css/`, ni `assets/`. Todo suelto en la raíz del repo (servido directo por GitHub Pages). Hay un único archivo JS (`app.js`) que accede a los datos definidos en `datos.js` (cargado antes en el HTML).
 
 ---
 
