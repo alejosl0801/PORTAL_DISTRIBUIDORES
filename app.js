@@ -15,48 +15,48 @@ var SUB_ICOS = {
 
 var PRODUCTOS = [
   // EXTINTORES PQS
-  {id:"VENT10PQS",nm:"Extintor 10 LBS PQS",cat:"extintores",sub:"PQS",pv:12.89,pb:11.88,costo:9.02,stock:874,ago:false,img:"VENT10PQS",descVol:[[10,1],[20,2],[30,3],[40,5],[60,7]]},
-  {id:"VENT20PQS",nm:"Extintor 20 LBS PQS",cat:"extintores",sub:"PQS",pv:21.35,pb:20.15,costo:15.03,stock:0,ago:true,img:"VENT20PQS",descVol:[[10,1],[20,2],[30,3],[40,5],[50,7]]},
-  {id:"VENT50PQS",nm:"Extintor 50 LBS PQS",cat:"extintores",sub:"PQS",pv:169.05,pb:132.31,costo:90.17,stock:7,ago:false,img:"VENT50PQS",descVol:[[2,1],[3,2],[5,3],[8,5],[12,6]]},
-  {id:"VENT100PQS",nm:"Extintor 100 LBS PQS",cat:"extintores",sub:"PQS",pv:216.05,pb:168.88,costo:120.22,stock:26,ago:false,img:"VENT100PQS",descVol:[[2,1],[3,2],[5,3],[8,5],[10,6]]},
-  {id:"VENT150PQS",nm:"Extintor 150 LBS PQS",cat:"extintores",sub:"PQS",pv:280.25,pb:217.99,costo:153.81,stock:12,ago:false,img:"VENT150PQS",descVol:[[2,1],[3,2],[4,3],[6,5],[8,6]]},
+  {id:"VENT10PQS",nm:"Extintor 10 LBS PQS",cat:"extintores",sub:"PQS",pv:12.89,pb:11.88,costo:9.02,stock:874,ago:false,img:"VENT10PQS",descVol:[[10,1],[20,2],[30,3],[40,5],[60,7]],codigoAzur:"VENT10pqs"},
+  {id:"VENT20PQS",nm:"Extintor 20 LBS PQS",cat:"extintores",sub:"PQS",pv:21.35,pb:20.15,costo:15.03,stock:0,ago:true,img:"VENT20PQS",descVol:[[10,1],[20,2],[30,3],[40,5],[50,7]],codigoAzur:"VENT20PQS"},
+  {id:"VENT50PQS",nm:"Extintor 50 LBS PQS",cat:"extintores",sub:"PQS",pv:169.05,pb:132.31,costo:90.17,stock:7,ago:false,img:"VENT50PQS",descVol:[[2,1],[3,2],[5,3],[8,5],[12,6]],codigoAzur:"VENT50PQS"},
+  {id:"VENT100PQS",nm:"Extintor 100 LBS PQS",cat:"extintores",sub:"PQS",pv:216.05,pb:168.88,costo:120.22,stock:26,ago:false,img:"VENT100PQS",descVol:[[2,1],[3,2],[5,3],[8,5],[10,6]],codigoAzur:"VENT100PQS"},
+  {id:"VENT150PQS",nm:"Extintor 150 LBS PQS",cat:"extintores",sub:"PQS",pv:280.25,pb:217.99,costo:153.81,stock:12,ago:false,img:"VENT150PQS",descVol:[[2,1],[3,2],[4,3],[6,5],[8,6]],codigoAzur:"VENT150PQS"},
   // EXTINTORES CO2
-  {id:"VENT5CO2",nm:"Extintor 5 LBS CO2",cat:"extintores",sub:"CO2",pv:26.70,pb:22.40,costo:15.03,stock:59,ago:false,img:"VENT5CO2",descVol:[[5,1],[8,2],[12,3],[15,5],[20,6]]},
-  {id:"VENT10CO2",nm:"Extintor 10 LBS CO2",cat:"extintores",sub:"CO2",pv:34.65,pb:33.85,costo:23.92,stock:0,ago:true,img:"VENT10CO2",descVol:[[3,1],[5,2],[8,3],[10,5],[15,6]]},
-  {id:"VENT20CO2C",nm:"Extintor 20 LBS CO2 + Carro",cat:"extintores",sub:"CO2",pv:106.99,pb:104.99,costo:40.99,stock:19,ago:false,img:"VENT20CO2C",descVol:[[2,1],[3,2],[4,3],[5,5],[8,6]]},
-  {id:"VENT25AQ",nm:"Extintor 2.5 Glns Agua Química",cat:"extintores",sub:"H2O",pv:63.00,pb:61.25,costo:38.25,stock:24,ago:false,img:"VENT25AQ",descVol:[[2,1],[3,2],[4,3],[5,5],[8,5]]},
+  {id:"VENT5CO2",nm:"Extintor 5 LBS CO2",cat:"extintores",sub:"CO2",pv:26.70,pb:22.40,costo:15.03,stock:59,ago:false,img:"VENT5CO2",descVol:[[5,1],[8,2],[12,3],[15,5],[20,6]],codigoAzur:"VENT5CO2"},
+  {id:"VENT10CO2",nm:"Extintor 10 LBS CO2",cat:"extintores",sub:"CO2",pv:34.65,pb:33.85,costo:23.92,stock:0,ago:true,img:"VENT10CO2",descVol:[[3,1],[5,2],[8,3],[10,5],[15,6]],codigoAzur:"VENT10CO2"},
+  {id:"VENT20CO2C",nm:"Extintor 20 LBS CO2 + Carro",cat:"extintores",sub:"CO2",pv:106.99,pb:104.99,costo:40.99,stock:19,ago:false,img:"VENT20CO2C",descVol:[[2,1],[3,2],[4,3],[5,5],[8,6]],codigoAzur:"VENT20CO2"},
+  {id:"VENT25AQ",nm:"Extintor 2.5 Glns Agua Química",cat:"extintores",sub:"H2O",pv:63.00,pb:61.25,costo:38.25,stock:24,ago:false,img:"VENT25AQ",descVol:[[2,1],[3,2],[4,3],[5,5],[8,5]],codigoAzur:"VENT2.5AP"},
   // ACCESORIOS - CABEZALES
-  {id:"CABPQS1020",nm:"Cabezal PQS 10/20 LBS",cat:"accesorios",sub:"Cabezales",pv:2.95,pb:2.80,costo:1.24,stock:0,ago:true,img:null,descVol:[[20,1],[40,2],[60,3],[80,5],[120,6]]},
-  {id:"CABCO2510",nm:"Cabezal CO2 5/10 LBS",cat:"accesorios",sub:"Cabezales",pv:7.80,pb:7.00,costo:4.71,stock:222,ago:false,img:"CABCO2510",descVol:[[10,1],[20,2],[30,3],[40,5],[50,6]]},
-  {id:"CO2CABMAR",nm:"Cabezal Marítimo CO2",cat:"accesorios",sub:"Cabezales",pv:42.25,pb:38.46,costo:18.93,stock:73,ago:false,img:"CO2CABMAR",descVol:[[2,1],[3,2],[5,3],[8,5],[10,6]]},
-  {id:"CO2DISRAP",nm:"CO2 Disparo Rápido (50-100 LBS)",cat:"accesorios",sub:"Cabezales",pv:16.80,pb:13.95,costo:5.92,stock:121,ago:false,img:"CO2DISRAP",descVol:[[5,1],[10,2],[15,3],[20,5],[30,6]]},
+  {id:"CABPQS1020",nm:"Cabezal PQS 10/20 LBS",cat:"accesorios",sub:"Cabezales",pv:2.95,pb:2.80,costo:1.24,stock:0,ago:true,img:null,descVol:[[20,1],[40,2],[60,3],[80,5],[120,6]],codigoAzur:"CABPQS1020"},
+  {id:"CABCO2510",nm:"Cabezal CO2 5/10 LBS",cat:"accesorios",sub:"Cabezales",pv:7.80,pb:7.00,costo:4.71,stock:222,ago:false,img:"CABCO2510",descVol:[[10,1],[20,2],[30,3],[40,5],[50,6]],codigoAzur:"CABCO2510"},
+  {id:"CO2CABMAR",nm:"Cabezal Marítimo CO2",cat:"accesorios",sub:"Cabezales",pv:42.25,pb:38.46,costo:18.93,stock:73,ago:false,img:"CO2CABMAR",descVol:[[2,1],[3,2],[5,3],[8,5],[10,6]],codigoAzur:"CABMARITIMO"},
+  {id:"CO2DISRAP",nm:"CO2 Disparo Rápido (50-100 LBS)",cat:"accesorios",sub:"Cabezales",pv:16.80,pb:13.95,costo:5.92,stock:121,ago:false,img:"CO2DISRAP",descVol:[[5,1],[10,2],[15,3],[20,5],[30,6]],codigoAzur:"CAB50CO2AR"},
   // ACCESORIOS - MANÓMETROS
-  {id:"MANOPQS",nm:"Manómetro 195 PSI",cat:"accesorios",sub:"Manómetros",pv:0.85,pb:0.70,costo:0.36,stock:0,ago:true,img:null,descVol:[[30,1],[50,2],[100,3],[150,5],[300,6]],cantMin:10},
+  {id:"MANOPQS",nm:"Manómetro 195 PSI",cat:"accesorios",sub:"Manómetros",pv:0.85,pb:0.70,costo:0.36,stock:0,ago:true,img:null,descVol:[[30,1],[50,2],[100,3],[150,5],[300,6]],cantMin:10,codigoAzur:"MANOPQS"},
   // ACCESORIOS - MANGUERAS
-  {id:"MANG10PQS",nm:"Manguera 10 PQS",cat:"accesorios",sub:"Mangueras",pv:0.90,pb:0.80,costo:0.36,stock:327,ago:false,img:null,descVol:[[30,1],[50,2],[80,3],[100,5],[150,6]]},
-  {id:"MANG20PQS",nm:"Manguera 20 PQS",cat:"accesorios",sub:"Mangueras",pv:0.90,pb:0.80,costo:0.34,stock:679,ago:false,img:null,descVol:[[30,1],[50,2],[80,3],[100,5],[150,6]]},
-  {id:"CORN5CO2",nm:"Corneta 5 CO2",cat:"accesorios",sub:"Mangueras",pv:2.80,pb:2.20,costo:0.95,stock:626,ago:false,img:null,descVol:[[10,1],[15,2],[25,3],[50,5],[80,6]]},
-  {id:"MANG10CO2",nm:"Manguera con corneta 10 CO2",cat:"accesorios",sub:"Mangueras",pv:7.20,pb:6.40,costo:2.37,stock:588,ago:false,img:"MANG10CO2",descVol:[[10,1],[20,2],[30,3],[40,5],[60,6]]},
+  {id:"MANG10PQS",nm:"Manguera 10 PQS",cat:"accesorios",sub:"Mangueras",pv:0.90,pb:0.80,costo:0.36,stock:327,ago:false,img:null,descVol:[[30,1],[50,2],[80,3],[100,5],[150,6]],codigoAzur:"MANGPQS10"},
+  {id:"MANG20PQS",nm:"Manguera 20 PQS",cat:"accesorios",sub:"Mangueras",pv:0.90,pb:0.80,costo:0.34,stock:679,ago:false,img:null,descVol:[[30,1],[50,2],[80,3],[100,5],[150,6]],codigoAzur:"MANGPQS20"},
+  {id:"CORN5CO2",nm:"Corneta 5 CO2",cat:"accesorios",sub:"Mangueras",pv:2.80,pb:2.20,costo:0.95,stock:626,ago:false,img:null,descVol:[[10,1],[15,2],[25,3],[50,5],[80,6]],codigoAzur:"CORN5CO2"},
+  {id:"MANG10CO2",nm:"Manguera con corneta 10 CO2",cat:"accesorios",sub:"Mangueras",pv:7.20,pb:6.40,costo:2.37,stock:588,ago:false,img:"MANG10CO2",descVol:[[10,1],[20,2],[30,3],[40,5],[60,6]],codigoAzur:"CORN10CO2"},
   // ACCESORIOS - SOPORTES
-  {id:"SOPCO2R",nm:"Soporte CO2 Rojo",cat:"accesorios",sub:"Soportes",pv:1.20,pb:1.15,costo:0.41,stock:352,ago:false,img:null,descVol:[[50,1],[100,2],[150,3],[200,5],[400,6]]},
-  {id:"SOPPQS10",nm:"Soporte PQS 10",cat:"accesorios",sub:"Soportes",pv:0.98,pb:0.85,costo:0.25,stock:440,ago:false,img:null,descVol:[[50,1],[100,2],[150,3],[200,5],[400,6]]},
-  {id:"SOPPQS20",nm:"Soporte PQS 20",cat:"accesorios",sub:"Soportes",pv:0.98,pb:0.85,costo:0.28,stock:506,ago:false,img:null,descVol:[[50,1],[100,2],[150,3],[200,5],[400,6]]},
+  {id:"SOPCO2R",nm:"Soporte CO2 Rojo",cat:"accesorios",sub:"Soportes",pv:1.20,pb:1.15,costo:0.41,stock:352,ago:false,img:null,descVol:[[50,1],[100,2],[150,3],[200,5],[400,6]],codigoAzur:"GANCO2"},
+  {id:"SOPPQS10",nm:"Soporte PQS 10",cat:"accesorios",sub:"Soportes",pv:0.98,pb:0.85,costo:0.25,stock:440,ago:false,img:null,descVol:[[50,1],[100,2],[150,3],[200,5],[400,6]],codigoAzur:"GANCPQS10"},
+  {id:"SOPPQS20",nm:"Soporte PQS 20",cat:"accesorios",sub:"Soportes",pv:0.98,pb:0.85,costo:0.28,stock:506,ago:false,img:null,descVol:[[50,1],[100,2],[150,3],[200,5],[400,6]],codigoAzur:"GANCPQS20"},
   // ACCESORIOS - OTROS
-  {id:"ABRPQS",nm:"Abrazaderas Plásticas",cat:"accesorios",sub:"Otros",pv:0.26,pb:0.24,costo:0.12,stock:2619,ago:false,img:null,descVol:[[100,1],[200,2],[300,3],[500,5],[1000,6]]},
-  {id:"SEGPLAM",nm:"Seguros Plásticos Amarillo",cat:"accesorios",sub:"Otros",pv:0.08,pb:0.06,costo:0.03,stock:14767,ago:false,img:null,descVol:[[200,1],[500,2],[800,3],[1000,5],[2000,6]],cantMin:200},
+  {id:"ABRPQS",nm:"Abrazaderas Plásticas",cat:"accesorios",sub:"Otros",pv:0.26,pb:0.24,costo:0.12,stock:2619,ago:false,img:null,descVol:[[100,1],[200,2],[300,3],[500,5],[1000,6]],codigoAzur:"ABRPQS"},
+  {id:"SEGPLAM",nm:"Seguros Plásticos Amarillo",cat:"accesorios",sub:"Otros",pv:0.08,pb:0.06,costo:0.03,stock:14767,ago:false,img:null,descVol:[[200,1],[500,2],[800,3],[1000,5],[2000,6]],cantMin:200,codigoAzur:"SEGPLAST01"},
   // MANGUERAS HID
-  {id:"MANG15M",nm:"Manguera 15M doble chaqueta 1½\"",cat:"mangueras_hid",sub:"Mangueras",pv:38.61,pb:36.98,costo:29.93,stock:162,ago:false,img:"MANG15M",descVol:[[3,1],[5,2],[8,3]]},
-  {id:"MANG30M",nm:"Manguera 30M doble chaqueta 1½\"",cat:"mangueras_hid",sub:"Mangueras",pv:69.10,pb:64.28,costo:46.14,stock:99,ago:false,img:"MANG30M",descVol:[[3,1],[5,2],[8,3],[10,4],[15,5]]},
+  {id:"MANG15M",nm:"Manguera 15M doble chaqueta 1½\"",cat:"mangueras_hid",sub:"Mangueras",pv:38.61,pb:36.98,costo:29.93,stock:162,ago:false,img:"MANG15M",descVol:[[3,1],[5,2],[8,3]],codigoAzur:"MANH15C001"},
+  {id:"MANG30M",nm:"Manguera 30M doble chaqueta 1½\"",cat:"mangueras_hid",sub:"Mangueras",pv:69.10,pb:64.28,costo:46.14,stock:99,ago:false,img:"MANG30M",descVol:[[3,1],[5,2],[8,3],[10,4],[15,5]],codigoAzur:"MANH30C001"},
   // GABINETES - VÁLVULAS
-  {id:"ANG112",nm:"Angular 1½\" 300 lbs bronce",cat:"gabinetes",sub:"Válvulas",pv:33.83,pb:31.48,costo:23.19,stock:149,ago:false,img:"ANG112",descVol:[[3,1],[5,2],[8,3],[10,4],[15,5]]},
-  {id:"ANG212",nm:"Angular 2½\" 300 lbs bronce",cat:"gabinetes",sub:"Válvulas",pv:67.11,pb:61.26,costo:46.85,stock:76,ago:false,img:"ANG212",descVol:[[3,1],[5,2],[8,3],[10,4]]},
+  {id:"ANG112",nm:"Angular 1½\" 300 lbs bronce",cat:"gabinetes",sub:"Válvulas",pv:33.83,pb:31.48,costo:23.19,stock:149,ago:false,img:"ANG112",descVol:[[3,1],[5,2],[8,3],[10,4],[15,5]],codigoAzur:"VALVANG001"},
+  {id:"ANG212",nm:"Angular 2½\" 300 lbs bronce",cat:"gabinetes",sub:"Válvulas",pv:67.11,pb:61.26,costo:46.85,stock:76,ago:false,img:"ANG212",descVol:[[3,1],[5,2],[8,3],[10,4]],codigoAzur:"VALVANG002"},
   // GABINETES - HIDRANTES
-  {id:"PIT112",nm:"Pitón 1½\" bronce",cat:"gabinetes",sub:"Hidrantes",pv:19.80,pb:17.80,costo:14.91,stock:168,ago:false,img:"PIT112",descVol:null},
-  {id:"NIP112",nm:"Niple 1½\" bronce",cat:"gabinetes",sub:"Hidrantes",pv:7.68,pb:6.88,costo:5.68,stock:292,ago:false,img:"NIP112",descVol:[[5,1],[10,2]]},
+  {id:"PIT112",nm:"Pitón 1½\" bronce",cat:"gabinetes",sub:"Hidrantes",pv:19.80,pb:17.80,costo:14.91,stock:168,ago:false,img:"PIT112",descVol:null,codigoAzur:"HID001"},
+  {id:"NIP112",nm:"Niple 1½\" bronce",cat:"gabinetes",sub:"Hidrantes",pv:7.68,pb:6.88,costo:5.68,stock:292,ago:false,img:"NIP112",descVol:[[5,1],[10,2]],codigoAzur:"HID002"},
   // GABINETES - OTROS
-  {id:"BRAZOPOR",nm:"Brazo Portamanguera",cat:"gabinetes",sub:"Otros",pv:12.91,pb:11.71,costo:7.10,stock:97,ago:false,img:"BRAZOPOR",descVol:[[3,1],[5,2],[8,3],[10,4],[15,5]]},
-  {id:"HACHA",nm:"Hacha Reforzada",cat:"gabinetes",sub:"Otros",pv:12.40,pb:11.78,costo:9.23,stock:70,ago:false,img:"HACHA",descVol:[[3,1],[5,2],[8,3],[10,4]]},
-  {id:"SPANNER",nm:"Llave Spanner",cat:"gabinetes",sub:"Otros",pv:6.98,pb:5.98,costo:4.50,stock:95,ago:false,img:"SPANNER",descVol:[[5,1],[10,2],[15,3],[20,4],[30,5]]}
+  {id:"BRAZOPOR",nm:"Brazo Portamanguera",cat:"gabinetes",sub:"Otros",pv:12.91,pb:11.71,costo:7.10,stock:97,ago:false,img:"BRAZOPOR",descVol:[[3,1],[5,2],[8,3],[10,4],[15,5]],codigoAzur:"PORTMAN"},
+  {id:"HACHA",nm:"Hacha Reforzada",cat:"gabinetes",sub:"Otros",pv:12.40,pb:11.78,costo:9.23,stock:70,ago:false,img:"HACHA",descVol:[[3,1],[5,2],[8,3],[10,4]],codigoAzur:"HACHA001"},
+  {id:"SPANNER",nm:"Llave Spanner",cat:"gabinetes",sub:"Otros",pv:6.98,pb:5.98,costo:4.50,stock:95,ago:false,img:"SPANNER",descVol:[[5,1],[10,2],[15,3],[20,4],[30,5]],codigoAzur:"SPANNER001"}
 ];
 
 // ════════════════════ ESTADO GLOBAL ════════════════════
@@ -83,6 +83,9 @@ var TUT_PASOS=[
   {ico:"🏆",t:"Puntos",d:"Cada compra te da puntos canjeables por premios reales como KFC y tarjetas de consumo."},
   {ico:"📋",t:"Historial",d:"Revisa y repite tus pedidos anteriores fácilmente."}
 ];
+
+// ════════════════════ UTILIDADES ════════════════════
+function norm(s){return(s||"").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"");}
 
 // ════════════════════ CÁLCULO DE PUNTOS ════════════════════
 function calcPuntos(precioAplicado, costo){
@@ -702,7 +705,7 @@ function renderCatalogo(){
 
   if(FILTRO==="favoritos"){
     var favProds=PRODUCTOS.filter(function(p){return FAVORITOS.indexOf(p.id)!==-1;});
-    if(q)favProds=favProds.filter(function(p){return p.nm.toLowerCase().indexOf(q)!==-1||p.id.toLowerCase().indexOf(q)!==-1;});
+    if(q)favProds=favProds.filter(function(p){return norm(p.nm).indexOf(norm(q))!==-1||norm(p.id).indexOf(norm(q))!==-1;});
     if(!favProds.length){document.getElementById("cat-lista").innerHTML='<div class="empty"><div class="ico">❤️</div><p>No tienes favoritos aún</p></div>';return;}
     html='<div class="subcat">❤️ Tus favoritos</div>';
     var wrapClass=CAT_GRID?"cat-grid-wrap":"";
@@ -721,7 +724,7 @@ function renderCatalogo(){
       pr.items.forEach(function(it){
         var p=PRODUCTOS.find(function(x){return x.id===it.id;});
         if(!p||p.ago)return;
-        if(q&&p.nm.toLowerCase().indexOf(q)===-1&&p.id.toLowerCase().indexOf(q)===-1)return;
+        if(q&&norm(p.nm).indexOf(norm(q))===-1&&norm(p.id).indexOf(norm(q))===-1)return;
         prodsEnPromo.push(p);
       });
     });
@@ -738,7 +741,7 @@ function renderCatalogo(){
       if(SUB_FILTRO&&SUB_FILTRO!==sn)return;
       var ps=PRODUCTOS.filter(function(p){
         if(p.cat!==ck||p.sub!==sn)return false;
-        if(q&&p.nm.toLowerCase().indexOf(q)===-1&&p.id.toLowerCase().indexOf(q)===-1)return false;
+        if(q&&norm(p.nm).indexOf(norm(q))===-1&&norm(p.id).indexOf(norm(q))===-1)return false;
         return true;
       });
       if(!ps.length)return;
@@ -1025,8 +1028,8 @@ function renderCarrito(){
   }).join("");
   if(omitidos.length)html='<div style="background:var(--amarc);border:1.5px solid var(--amar);border-radius:10px;padding:10px 14px;margin-bottom:10px;font-size:12px;color:#8a6600">⚠️ '+omitidos.length+' producto(s) agotado(s) fueron omitidos: '+omitidos.join(", ")+'</div>'+html;
   cont.innerHTML=html;
-  var iva=subtotal*IVA;
-  var total=subtotal+iva;
+  var iva=parseFloat((subtotal*IVA).toFixed(2));
+  var total=parseFloat((subtotal+iva).toFixed(2));
 
   // Opciones de pago con cheque unificado
   var opcionesPago=[
@@ -1128,10 +1131,17 @@ function setCantCarrito(id, val){
   var n=parseInt(val,10)||0;
   if(n<0)n=0;
   if(p.stock!=null&&n>p.stock){n=p.stock;toast("⚠️ Solo hay "+p.stock+" unidades disponibles");}
+  if(n===0){
+    CARRITO=CARRITO.filter(function(i){return i.id!==id;});
+    guardarCarrito();
+    renderCarrito();
+    actualizarBadge();
+    return;
+  }
+  var minCant=p.cantMin||1;
+  if(n<minCant){n=minCant;toast("⚠️ Cantidad mínima para "+p.nm+": "+minCant+" unidades");}
   var it=CARRITO.find(function(i){return i.id===id;});
   if(it)it.cant=n;
-  var msg=validarCantMinMsg(p,n);
-  if(msg)toast("⚠️ "+msg);
   guardarCarrito();
   renderCarrito();
   actualizarBadge();
@@ -1206,6 +1216,7 @@ function quitarItem(id){
 
 // ════════════════════ BORRADORES ════════════════════
 function guardarBorrador(){
+  if(!USER||!USER.ruc)return;
   if(!CARRITO.length){toast("⚠️ El carrito está vacío");return;}
   var borradores=JSON.parse(localStorage.getItem("pyro_borradores_"+USER.ruc)||"[]");
   if(borradores.length>=3){toast("⚠️ Máximo 3 borradores. Elimina uno primero.");return;}
@@ -1217,6 +1228,7 @@ function guardarBorrador(){
 function renderBorradores(){
   var bp=document.getElementById("borradores-panel");
   if(!bp)return;
+  if(!USER||!USER.ruc){bp.innerHTML="";return;}
   var borradores=JSON.parse(localStorage.getItem("pyro_borradores_"+USER.ruc)||"[]");
   if(!borradores.length){bp.innerHTML="";return;}
   bp.innerHTML='<div style="margin-bottom:10px"><div class="form-label">Borradores guardados</div>'+
@@ -1234,6 +1246,7 @@ function renderBorradores(){
   '</div>';
 }
 function cargarBorrador(i){
+  if(!USER||!USER.ruc)return;
   var borradores=JSON.parse(localStorage.getItem("pyro_borradores_"+USER.ruc)||"[]");
   if(!borradores[i])return;
   CARRITO=JSON.parse(JSON.stringify(borradores[i].items));
@@ -1241,6 +1254,7 @@ function cargarBorrador(i){
   toast("✏️ Borrador cargado.");
 }
 function eliminarBorrador(i){
+  if(!USER||!USER.ruc)return;
   var borradores=JSON.parse(localStorage.getItem("pyro_borradores_"+USER.ruc)||"[]");
   borradores.splice(i,1);
   localStorage.setItem("pyro_borradores_"+USER.ruc,JSON.stringify(borradores));
@@ -1249,8 +1263,10 @@ function eliminarBorrador(i){
 
 // ════════════════════ CONFIRMAR PEDIDO ════════════════════
 function confirmarPedido(){
+  var btnConf=document.getElementById("confirmar-pedido");
+  if(btnConf)btnConf.disabled=true;
   var hayItems=CARRITO.some(function(i){var p=PRODUCTOS.find(function(x){return x.id===i.id;});return p&&!p.ago&&i.cant>0;});
-  if(!hayItems){toast("⚠️ Tu carrito está vacío");return;}
+  if(!hayItems){toast("⚠️ Tu carrito está vacío");if(btnConf)btnConf.disabled=false;return;}
 
   // Validar cantidades mínimas antes de continuar
   var errMin=null;
@@ -1261,18 +1277,19 @@ function confirmarPedido(){
     var msg=validarCantMinMsg(p,it.cant);
     if(msg)errMin=msg;
   });
-  if(errMin){toast("⚠️ "+errMin);return;}
+  if(errMin){toast("⚠️ "+errMin);if(btnConf)btnConf.disabled=false;return;}
 
   var pagoSel=document.getElementById("cart-pago");
   var modoSel=document.getElementById("cart-modo");
-  if(!pagoSel||!pagoSel.value){toast("⚠️ Selecciona una forma de pago");return;}
-  if(!modoSel||!modoSel.value){toast("⚠️ Selecciona un modo de entrega");return;}
+  if(!pagoSel||!pagoSel.value){toast("⚠️ Selecciona una forma de pago");if(btnConf)btnConf.disabled=false;return;}
+  if(!modoSel||!modoSel.value){toast("⚠️ Selecciona un modo de entrega");if(btnConf)btnConf.disabled=false;return;}
 
   var modo=document.getElementById("cart-modo").value;
   // Validar monto mínimo para entrega a domicilio
   if(modo==="entrega"&&USER&&USER.entrega&&USER.entrega.montoMin){
     if(calcularSubtotalCarrito()<USER.entrega.montoMin){
       toast("⚠️ Pedido mínimo para entrega a domicilio: "+fmt$(USER.entrega.montoMin));
+      if(btnConf)btnConf.disabled=false;
       return;
     }
   }
@@ -1284,6 +1301,7 @@ function confirmarPedido(){
       var dirDir=document.getElementById("nueva-dir-dir");
       if(!nmDir||!nmDir.value.trim()||!dirDir||!dirDir.value.trim()){
         toast("⚠️ Ingresa el nombre y dirección del local de entrega");
+        if(btnConf)btnConf.disabled=false;
         return;
       }
       // Guardar nueva dirección en el distribuidor
@@ -1306,7 +1324,7 @@ function confirmarPedido(){
     subtotal+=pr*it.cant; ptsTotal+=pts;
     items.push({id:p.id,nm:p.nm,cant:it.cant,pv:p.pv,pr:pr,descPct:rv.descPct,pts:pts,costo:p.costo||0});
   });
-  var iva=subtotal*IVA, total=subtotal+iva;
+  var iva=parseFloat((subtotal*IVA).toFixed(2)), total=parseFloat((subtotal+iva).toFixed(2));
   var pid=Date.now().toString().slice(-6);
   var now=new Date();
   var entregaInfo={};
@@ -2144,7 +2162,9 @@ function generarAzur(pid){
   var ahora=new Date();
   var fechaAzur=ahora.getFullYear()+"/"+String(ahora.getMonth()+1).padStart(2,"0")+"/"+String(ahora.getDate()).padStart(2,"0");
   var itemsAzur=(p.items||[]).map(function(it){
-    return {codigo_principal:it.id,codigo_auxiliar:null,descripcion:it.nm,tipoproducto:1,tipo_iva:4,precio_unitario:parseFloat(it.pr.toFixed(2)),cantidad:it.cant,descuento:0};
+    var prod=PRODUCTOS.find(function(x){return x.id===it.id;});
+    var codAzur=(prod&&prod.codigoAzur)?prod.codigoAzur:it.id;
+    return {codigo_principal:codAzur,codigo_auxiliar:null,descripcion:it.nm,tipoproducto:1,tipo_iva:4,precio_unitario:parseFloat(it.pr.toFixed(2)),cantidad:it.cant,descuento:0};
   });
   var pagoMap={"Efectivo":"01","Transferencia":"20","Cheque":"20","Cheque / Crédito 30 días":"20","Cheque / Crédito 60 días":"20","Cheque / Crédito 90 días":"20"};
   var codigoPago=pagoMap[p.pago]||"20";
@@ -2175,9 +2195,10 @@ function tipoDocLabel(d){
 
 // ════════════════════ ADMIN DISTRIBUIDORES ════════════════════
 function renderAdmDist(){
+  if(USER&&USER.rol==="impresion")return;
   var lista=DISTRIBUIDORES.filter(function(d){return!d.esAdmin;});
   var q=(document.getElementById("adm-dist-search").value||"").toLowerCase();
-  if(q)lista=lista.filter(function(d){return d.razon.toLowerCase().indexOf(q)!==-1||d.ruc.indexOf(q)!==-1;});
+  if(q)lista=lista.filter(function(d){return norm(d.razon).indexOf(norm(q))!==-1||d.ruc.indexOf(q)!==-1;});
   document.getElementById("adm-dist-lista").innerHTML=lista.length?lista.map(function(d){
     var nped=PEDIDOS.filter(function(p){return p.ruc===d.ruc&&!p.esCanje;}).length;
     var esp=d.preciosEsp?Object.keys(d.preciosEsp).length:0;
@@ -2394,6 +2415,8 @@ function buscarSRI(){
 }
 
 function guardarNuevoDist(){
+  var btnNd=document.querySelector("#modal-nuevo-dist .btn-p");
+  if(btnNd)btnNd.disabled=true;
   var r=document.getElementById("nd-razon").value.trim();
   var emp=document.getElementById("nd-empresa").value.trim();
   var enc=document.getElementById("nd-encargado")?document.getElementById("nd-encargado").value.trim():"";
@@ -2406,12 +2429,12 @@ function guardarNuevoDist(){
   var ent=document.getElementById("nd-entrega").checked;
   var min=parseFloat(document.getElementById("nd-min").value)||30;
   var sinVol=document.getElementById("nd-sinvol")?document.getElementById("nd-sinvol").checked:false;
-  if(!r||!ruc||!pw){toast("⚠️ Completa razón social, documento y contraseña");return;}
+  if(!r||!ruc||!pw){toast("⚠️ Completa razón social, documento y contraseña");if(btnNd)btnNd.disabled=false;return;}
   var soloNum=ruc.replace(/[^0-9]/g,"");
-  if(tipoDoc==="cedula"&&soloNum.length!==10){toast("⚠️ La cédula debe tener 10 dígitos");return;}
-  if(tipoDoc==="ruc"&&soloNum.length!==13){toast("⚠️ El RUC debe tener 13 dígitos");return;}
+  if(tipoDoc==="cedula"&&soloNum.length!==10){toast("⚠️ La cédula debe tener 10 dígitos");if(btnNd)btnNd.disabled=false;return;}
+  if(tipoDoc==="ruc"&&soloNum.length!==13){toast("⚠️ El RUC debe tener 13 dígitos");if(btnNd)btnNd.disabled=false;return;}
   var existe=DISTRIBUIDORES.find(function(d){return d.ruc.toLowerCase()===ruc.toLowerCase();});
-  if(existe){toast("⚠️ Ya existe un distribuidor con ese documento");return;}
+  if(existe){toast("⚠️ Ya existe un distribuidor con ese documento");if(btnNd)btnNd.disabled=false;return;}
   var nd={ruc:ruc,tipoDoc:tipoDoc,razon:r,pass:pw,tel:tel,correo:co,entrega:{habilitada:ent,montoMin:min},sinDescVol:sinVol,_nuevo:true};
   if(emp)nd.empresa=emp;
   if(enc)nd.encargado=enc;
@@ -2431,6 +2454,7 @@ function cargarUmbrales(){try{return JSON.parse(localStorage.getItem("pyro_umbra
 function guardarUmbral(id,val){var u=cargarUmbrales();u[id]=val;try{localStorage.setItem("pyro_umbral",JSON.stringify(u));}catch(e){}}
 
 function renderAdmStock(){
+  if(USER&&USER.rol==="impresion")return;
   var cont=document.getElementById("adm-stock-lista");
   var costos=cargarCostos();
   var umbrales=cargarUmbrales();
@@ -2718,6 +2742,7 @@ function generarReporteMensual(){
 
 // ════════════════════ ADMIN RECOMPENSAS ════════════════════
 function renderAdmRecompensas(){
+  if(USER&&USER.rol==="impresion")return;
   var html='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">'+
     '<div style="font-size:15px;font-weight:700">Recompensas del programa de puntos</div>'+
     '<button class="btn btn-p btn-sm" onclick="abrirNuevaRecompensa()">+ Nueva</button>'+
@@ -2933,8 +2958,8 @@ function confirmar(html,cb){
 }
 
 // Persistencia
-function cargarCarrito(){try{return JSON.parse(localStorage.getItem("pyro_cart_"+USER.ruc)||"[]");}catch(e){return[];}}
-function guardarCarrito(){try{localStorage.setItem("pyro_cart_"+USER.ruc,JSON.stringify(CARRITO));}catch(e){avisarStorage();}}
+function cargarCarrito(){if(!USER||!USER.ruc)return[];try{return JSON.parse(localStorage.getItem("pyro_cart_"+USER.ruc)||"[]");}catch(e){return[];}}
+function guardarCarrito(){if(!USER||!USER.ruc)return;try{localStorage.setItem("pyro_cart_"+USER.ruc,JSON.stringify(CARRITO));}catch(e){avisarStorage();}}
 function cargarPedidos(){try{return JSON.parse(localStorage.getItem("pyro_pedidos")||"[]");}catch(e){return[];}}
 function guardarPedidos(){try{localStorage.setItem("pyro_pedidos",JSON.stringify(PEDIDOS));}catch(e){avisarStorage();}}
 function guardarStock(){var st={};PRODUCTOS.forEach(function(p){st[p.id]={stock:p.stock,ago:p.ago};});try{localStorage.setItem("pyro_stock",JSON.stringify(st));}catch(e){}}
