@@ -27,7 +27,7 @@
     <input class="field-inp" id="login-pass" type="password" placeholder="Tu contraseña" autocomplete="current-password">
     <button class="btn-login" onclick="hacerLogin()">Ingresar</button>
     <div class="login-err" id="login-err">RUC o contraseña incorrectos</div>
-    <div class="login-demo">Demo: RUC <b>0906872742001</b> / pass <b>jorge123</b><br>Admin: <b>ADMIN</b> / <b>pyro2024</b></div>
+    <div class="login-demo" id="login-demo-info">Demo: RUC <b>0906872742001</b> / pass <b>jorge123</b><br>Admin: <b>ADMIN</b> / <b>pyro2024</b></div>
   </div>
 </div>
 
@@ -143,8 +143,9 @@
   </div>
   <div class="adm-tabs">
     <button class="adm-tab active" onclick="admTab('pedidos',this)">📦 Pedidos</button>
-    <button class="adm-tab" onclick="admTab('distribuidores',this)">🏢 Distribuidores</button>
+    <button class="adm-tab" onclick="admTab('distribuidores',this)">🏢 Distrib.</button>
     <button class="adm-tab" onclick="admTab('stock',this)">📊 Stock</button>
+    <button class="adm-tab" onclick="admTab('herramientas',this)">⚙️ Config</button>
   </div>
   <div class="content" style="padding-top:12px">
     <div id="adm-pedidos" class="adm-panel active">
@@ -160,6 +161,18 @@
     </div>
     <div id="adm-stock" class="adm-panel">
       <div id="adm-stock-lista"></div>
+    </div>
+    <div id="adm-herramientas" class="adm-panel">
+      <div class="sec-titulo" style="margin-top:4px">Mantenimiento</div>
+      <p style="font-size:13px;color:var(--g3);margin-bottom:16px">Acciones para preparar el portal antes del lanzamiento con clientes reales.</p>
+      <div style="border:1.5px solid #e57373;border-radius:12px;padding:16px;background:#fff8f8">
+        <div style="font-weight:700;font-size:15px;color:#c62828;margin-bottom:6px">🗑️ Limpiar datos de prueba</div>
+        <p style="font-size:12px;color:var(--g4);line-height:1.5;margin-bottom:14px">
+          Borra <b>todos</b> los pedidos, canjes, carritos, borradores y regalos de bienvenida.<br>
+          <span style="color:var(--verde,#2e7d32)">✓ No afecta</span> distribuidores, contraseñas ni precios especiales.
+        </p>
+        <button class="btn btn-full" style="background:#c62828;color:#fff;border-color:#c62828;padding:13px;font-size:14px;font-weight:700" onclick="confirmarLimpiarDatos()">🗑️ Limpiar datos de prueba</button>
+      </div>
     </div>
   </div>
 </div>

@@ -1,3 +1,6 @@
+// ════════════════════ CONFIGURACIÓN ════════════════════
+var MODO_DEMO = false; // true: muestra credenciales de prueba en login | false: producción
+
 // ════════════════════ RUTAS DE IMÁGENES ════════════════════
 var IMGS = {
   "logo":"img/logo.jpg",

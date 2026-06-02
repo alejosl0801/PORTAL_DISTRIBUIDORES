@@ -1088,6 +1088,53 @@ function guardarNuevoDist(){
   if(document.getElementById("nd-tipodoc"))document.getElementById("nd-tipodoc").value="ruc";
 }
 
+// ════════════════════ HERRAMIENTAS / LIMPIEZA ════════════════════
+function confirmarLimpiarDatos(){
+  confirmar(
+    "⚠️ <b>¿Limpiar todos los datos de prueba?</b><br><br>"+
+    "Se borrarán pedidos, canjes, carritos, borradores y regalos de bienvenida de todos los distribuidores.<br><br>"+
+    "<b>Esta acción es irreversible.</b>",
+    function(){
+      var n=contarRegistrosBorrables();
+      confirmar(
+        "🔴 <b>ÚLTIMA CONFIRMACIÓN</b><br><br>"+
+        "Se eliminarán permanentemente <b>"+n+" registros</b>.<br><br>"+
+        "✓ Los distribuidores, contraseñas y precios <b>no se tocan</b>.<br><br>"+
+        "¿Confirmar limpieza definitiva?",
+        function(){
+          var borrados=ejecutarLimpiezaDatos();
+          toast("🗑️ Limpieza completada · "+borrados+" registros eliminados");
+          renderAdmPedidos();
+        }
+      );
+    }
+  );
+}
+function contarRegistrosBorrables(){
+  var n=0;
+  try{n+=JSON.parse(localStorage.getItem("pyro_pedidos")||"[]").length;}catch(e){}
+  if(localStorage.getItem("pyro_sync_pendientes"))n++;
+  for(var i=0;i<localStorage.length;i++){
+    var k=localStorage.key(i);
+    if(k&&(k.startsWith("pyro_cart_")||k.startsWith("pyro_borradores_")||k.startsWith("pyro_tut_")||k.startsWith("pyro_bienvenida_")))n++;
+  }
+  return n;
+}
+function ejecutarLimpiezaDatos(){
+  var count=0;
+  try{count+=JSON.parse(localStorage.getItem("pyro_pedidos")||"[]").length;}catch(e){}
+  localStorage.removeItem("pyro_pedidos");
+  if(localStorage.getItem("pyro_sync_pendientes")){localStorage.removeItem("pyro_sync_pendientes");count++;}
+  var toDel=[];
+  for(var i=0;i<localStorage.length;i++){
+    var k=localStorage.key(i);
+    if(k&&(k.startsWith("pyro_cart_")||k.startsWith("pyro_borradores_")||k.startsWith("pyro_tut_")||k.startsWith("pyro_bienvenida_")))toDel.push(k);
+  }
+  toDel.forEach(function(k){localStorage.removeItem(k);count++;});
+  PEDIDOS=[];
+  return count;
+}
+
 function renderAdmStock(){
   var cont=document.getElementById("adm-stock-lista");var html="";
   Object.keys(CATS).forEach(function(ck){
@@ -1215,6 +1262,9 @@ document.addEventListener("click",function(e){
 window.addEventListener("load",function(){
   cargarDistribuidoresExtra();
   cargarDistribuidoresOverrides();
+  // Ocultar credenciales demo en producción
+  var demoEl=document.getElementById("login-demo-info");
+  if(demoEl)demoEl.style.display=(typeof MODO_DEMO!=="undefined"&&MODO_DEMO)?"":"none";
   var lp=document.getElementById("login-pass"),lu=document.getElementById("login-user");
   if(lp)lp.addEventListener("keydown",function(e){if(e.key==="Enter")hacerLogin();});
   if(lu)lu.addEventListener("keydown",function(e){if(e.key==="Enter")lp.focus();});
