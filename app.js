@@ -1648,9 +1648,11 @@ function renderAdmin(){
     renderRolImpresion();
     return;
   }
+  // Admin completo: asegurar que TODAS las pestañas estén visibles
+  // (por si una sesión previa de rol "impresion" las dejó ocultas en el DOM)
+  document.querySelectorAll(".adm-tab").forEach(function(b){b.style.display="";});
   renderAdmPedidos();
 }
-
 // UI reducida para rol "impresion": lista de pedidos con filtros y botones de impresión directos
 function renderRolImpresion(){
   // Ocultar el dashboard de stats/extra y el botón exportar
