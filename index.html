@@ -9,11 +9,21 @@
 </head>
 <body>
 
+<!-- ══ SPLASH ══ -->
+<div id="splash" class="splash">
+  <div class="splash-inner">
+    <div class="splash-logo-wrap"><img src="img/logo.jpg" alt="PyroShield" class="splash-logo" onerror="this.onerror=null;this.style.display='none'"></div>
+    <div class="splash-brand">PYROSHIELD</div>
+    <div class="splash-sub">Portal Distribuidores</div>
+    <div class="splash-loader"><span></span></div>
+  </div>
+</div>
+
 <!-- ══ LOGIN ══ -->
 <div id="s-login" class="screen active">
   <div class="login-box">
     <div class="login-logo">
-      <img src="img/logo.jpg" alt="PyroShield">
+      <img src="img/logo.jpg" alt="PyroShield" onerror="this.onerror=null;this.style.display='none'">
       <div>
         <div class="brand">PYROSHIELD</div>
         <div class="sub">Portal Distribuidores</div>
@@ -22,12 +32,17 @@
     <div class="login-title">Bienvenido</div>
     <div class="login-sub">Ingresa con tu RUC y contraseña</div>
     <div class="field-label">RUC / Usuario</div>
-    <input class="field-inp" id="login-user" type="text" placeholder="Tu RUC" autocomplete="username">
+    <input class="field-inp" id="login-user" type="text" placeholder="Tu RUC" autocomplete="username" inputmode="numeric">
     <div class="field-label">Contraseña</div>
     <input class="field-inp" id="login-pass" type="password" placeholder="Tu contraseña" autocomplete="current-password">
     <button class="btn-login" onclick="hacerLogin()">Ingresar</button>
     <div class="login-err" id="login-err">RUC o contraseña incorrectos</div>
-    <div class="login-demo" id="login-demo-info">Demo: RUC <b>0906872742001</b> / pass <b>jorge123</b><br>Admin: <b>ADMIN</b> / <b>pyro2024</b></div>
+    <div class="login-demo" id="login-demo-box" style="display:none">
+      <b>Credenciales demo</b><br>
+      ADMIN / pyro2024<br>
+      0906872742001 / jorge123<br>
+      Otros RUC / dist123
+    </div>
   </div>
 </div>
 
@@ -35,7 +50,7 @@
 <div id="s-main" class="screen">
   <div class="topbar">
     <div class="topbar-brand">
-      <img src="img/logo.jpg" alt="Logo">
+      <img src="img/logo.jpg" alt="Logo" onerror="this.onerror=null;this.style.display='none'">
       <span class="topbar-name">PYROSHIELD</span>
     </div>
     <div class="topbar-r">
@@ -48,12 +63,13 @@
       <div class="hero">
         <div class="hero-saludo">Bienvenido de vuelta,</div>
         <div class="hero-nombre" id="hero-nombre">—</div>
+        <div class="hero-frase" id="hero-frase"></div>
         <div class="hero-pts-box">
-          <div><div class="l">Tus puntos</div><div class="v" id="hero-pts">0</div></div>
+          <div><div class="l">Tus puntos confirmados</div><div class="v" id="hero-pts">0</div></div>
           <div class="ico">🏆</div>
         </div>
         <div class="hero-stats">
-          <div class="hstat"><div class="v" id="hs-pedidos">0</div><div class="l">Pedidos</div></div>
+          <div class="hstat"><div class="v" id="hs-pedidos">0</div><div class="l">Entregados</div></div>
           <div class="hstat"><div class="v" id="hs-proceso">0</div><div class="l">En proceso</div></div>
           <div class="hstat"><div class="v" id="hs-carrito">0</div><div class="l">En carrito</div></div>
         </div>
@@ -77,15 +93,19 @@
     <div id="tab-catalogo" class="tab-panel">
       <div class="search-bar">
         <span>🔍</span>
-        <input type="text" placeholder="Buscar producto..." id="cat-search" oninput="renderCatalogo()">
+        <input type="text" placeholder="Buscar producto..." id="cat-search" oninput="onCatSearch()">
       </div>
+      <div id="search-recientes"></div>
       <div class="filtros">
         <button class="fbtn active" onclick="setFiltro('todos',this)">Todos</button>
         <button class="fbtn" onclick="setFiltro('extintores',this)">🧯 Extintores</button>
         <button class="fbtn" onclick="setFiltro('accesorios',this)">🔧 Accesorios</button>
         <button class="fbtn" onclick="setFiltro('gabinetes',this)">🏗️ Gabinetes</button>
-        <button class="fbtn" onclick="setFiltro('disponibles',this)">✅ Disponibles</button>
+        <button class="fbtn" onclick="setFiltro('mangueras_hid',this)">💧 Mangueras HID</button>
+        <button class="fbtn" onclick="setFiltro('favoritos',this)">❤️ Favoritos</button>
       </div>
+      <div id="cat-toolbar" class="cat-toolbar"></div>
+      <div id="sub-filtros"></div>
       <div id="cat-lista"></div>
     </div>
 
@@ -104,17 +124,35 @@
         <button class="fbtn" onclick="setHFiltro('proceso',this)">🚚 En proceso</button>
         <button class="fbtn" onclick="setHFiltro('finalizado',this)">✅ Entregados</button>
       </div>
+      <div id="hfechas-wrap" class="hfechas-wrap">
+        <div class="hfechas-inner">
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+            <div><label class="form-label" style="margin-bottom:2px">Desde</label><input type="date" class="form-input" id="h-desde" style="margin:0;width:auto;min-width:130px;padding:8px 10px"></div>
+            <div><label class="form-label" style="margin-bottom:2px">Hasta</label><input type="date" class="form-input" id="h-hasta" style="margin:0;width:auto;min-width:130px;padding:8px 10px"></div>
+            <div style="display:flex;gap:6px;align-self:flex-end">
+              <button class="btn btn-sm btn-p" onclick="aplicarFiltroFecha()">Aplicar</button>
+              <button class="btn btn-sm btn-s" onclick="limpiarFiltroFecha()">✕ Limpiar</button>
+            </div>
+          </div>
+        </div>
+        <button class="hfechas-toggle fbtn" onclick="toggleFechasFiltro()">📅 Filtrar por fecha</button>
+      </div>
       <div id="hist-lista"></div>
     </div>
 
     <div id="tab-recompensas" class="tab-panel">
       <div class="rec-saldo">
         <div class="rec-v" id="rec-pts-v">0</div>
-        <div class="rec-l">puntos acumulados</div>
+        <div class="rec-l">puntos confirmados</div>
+        <div id="rec-pts-pend-box"></div>
         <div class="rec-mot" id="rec-mot"></div>
       </div>
       <div class="sec-titulo">Canjea tus puntos</div>
       <div id="rec-lista"></div>
+      <div id="pts-historial-wrap" style="margin-top:14px">
+        <button class="btn btn-s btn-full" onclick="togglePtsHistorial()">📊 Ver historial de puntos</button>
+        <div id="pts-historial-lista" style="display:none;margin-top:10px"></div>
+      </div>
     </div>
   </div>
 
@@ -136,20 +174,23 @@
 <div id="s-admin" class="screen">
   <div class="topbar">
     <div class="topbar-brand">
-      <img src="img/logo.jpg" alt="Logo">
+      <img src="img/logo.jpg" alt="Logo" onerror="this.onerror=null;this.style.display='none'">
       <span class="topbar-name" style="color:var(--oro)">ADMIN</span>
     </div>
     <button class="btn-logout" onclick="logout()">Salir</button>
   </div>
   <div class="adm-tabs">
     <button class="adm-tab active" onclick="admTab('pedidos',this)">📦 Pedidos</button>
-    <button class="adm-tab" onclick="admTab('distribuidores',this)">🏢 Distrib.</button>
+    <button class="adm-tab" onclick="admTab('distribuidores',this)">🏢 Distribuidores</button>
     <button class="adm-tab" onclick="admTab('stock',this)">📊 Stock</button>
+    <button class="adm-tab" onclick="admTab('recompensas',this)">🎁 Recompensas</button>
     <button class="adm-tab" onclick="admTab('herramientas',this)">⚙️ Config</button>
   </div>
   <div class="content" style="padding-top:12px">
     <div id="adm-pedidos" class="adm-panel active">
       <div class="adm-stats" id="adm-stats"></div>
+      <div id="adm-dashboard-extra"></div>
+      <button class="btn btn-s btn-full" id="adm-export-btn" style="margin-bottom:14px" onclick="exportarExcel()">📥 Exportar a Excel</button>
       <div id="adm-ped-lista"></div>
     </div>
     <div id="adm-distribuidores" class="adm-panel">
@@ -162,15 +203,13 @@
     <div id="adm-stock" class="adm-panel">
       <div id="adm-stock-lista"></div>
     </div>
+    <div id="adm-recompensas" class="adm-panel"></div>
     <div id="adm-herramientas" class="adm-panel">
       <div class="sec-titulo" style="margin-top:4px">Mantenimiento</div>
       <p style="font-size:13px;color:var(--g3);margin-bottom:16px">Acciones para preparar el portal antes del lanzamiento con clientes reales.</p>
       <div style="border:1.5px solid #e57373;border-radius:12px;padding:16px;background:#fff8f8">
         <div style="font-weight:700;font-size:15px;color:#c62828;margin-bottom:6px">🗑️ Limpiar datos de prueba</div>
-        <p style="font-size:12px;color:var(--g4);line-height:1.5;margin-bottom:14px">
-          Borra <b>todos</b> los pedidos, canjes, carritos, borradores y regalos de bienvenida.<br>
-          <span style="color:var(--verde,#2e7d32)">✓ No afecta</span> distribuidores, contraseñas ni precios especiales.
-        </p>
+        <p style="font-size:12px;color:var(--g4);line-height:1.5;margin-bottom:14px">Borra <b>todos</b> los pedidos, carritos, borradores y regalos de bienvenida.<br><span style="color:#2e7d32">✓ No afecta</span> distribuidores, contraseñas ni precios especiales.</p>
         <button class="btn btn-full" style="background:#c62828;color:#fff;border-color:#c62828;padding:13px;font-size:14px;font-weight:700" onclick="confirmarLimpiarDatos()">🗑️ Limpiar datos de prueba</button>
       </div>
     </div>
@@ -202,16 +241,42 @@
     <button class="btn btn-s btn-full" style="margin-top:10px" onclick="cerrarModal('modal-contacto')">Cerrar</button>
   </div>
 </div>
+
 <div class="ov" id="modal-conf"><div class="modal"><div id="modal-conf-c"></div></div></div>
 <div class="ov" id="modal-pedido-det"><div class="modal"><div id="modal-pedido-det-c"></div></div></div>
-<div class="ov" id="modal-nuevo-dist">
+
+<!-- MODAL EDITAR DISTRIBUIDOR -->
+<div class="ov" id="modal-editar-dist">
   <div class="modal">
+    <div id="modal-editar-dist-c"></div>
+  </div>
+</div>
+
+<!-- MODAL PRECIOS ESPECIALES -->
+<div class="ov" id="modal-precios-esp">
+  <div class="modal" style="max-height:88vh;overflow-y:auto;">
+    <div id="modal-precios-esp-c"></div>
+  </div>
+</div>
+
+<!-- MODAL RESUMEN DISTRIBUIDOR -->
+<div class="ov" id="modal-resumen-dist">
+  <div class="modal">
+    <div id="modal-resumen-dist-c"></div>
+  </div>
+</div>
+
+<!-- MODAL NUEVO DISTRIBUIDOR -->
+<div class="ov" id="modal-nuevo-dist">
+  <div class="modal" style="max-height:88vh;overflow-y:auto;">
     <div class="mhandle"></div>
     <h3>Nuevo Distribuidor</h3>
     <label class="form-label">Razón social *</label>
-    <input class="form-input" id="nd-razon" placeholder="Nombre o empresa">
+    <input class="form-input" id="nd-razon" placeholder="Nombre o empresa" maxlength="80">
     <label class="form-label">Nombre comercial / empresa</label>
-    <input class="form-input" id="nd-empresa" placeholder="Ej: Sumiseg">
+    <input class="form-input" id="nd-empresa" placeholder="Ej: Sumiseg" maxlength="80">
+    <label class="form-label">Nombre del encargado</label>
+    <input class="form-input" id="nd-encargado" placeholder="Ej: Jorge" maxlength="80">
     <label class="form-label">Tipo de documento *</label>
     <select class="form-select" id="nd-tipodoc">
       <option value="ruc">RUC (13 dígitos)</option>
@@ -220,28 +285,41 @@
     <label class="form-label">Número de RUC / Cédula *</label>
     <div style="display:flex;gap:8px;margin-bottom:12px">
       <input class="form-input" id="nd-ruc" placeholder="0000000000001" inputmode="numeric" style="margin:0;flex:1">
-      <button class="btn btn-s btn-sm" type="button" onclick="buscarSRI()" style="white-space:nowrap;margin:0">🔍 Buscar SRI</button>
+      <button class="btn btn-s btn-sm" type="button" onclick="buscarSRI()" style="white-space:nowrap;margin:0">🔍 SRI</button>
     </div>
     <label class="form-label">Teléfono</label>
-    <input class="form-input" id="nd-tel" placeholder="09XXXXXXXX">
+    <input class="form-input" id="nd-tel" placeholder="09XXXXXXXX" maxlength="15">
     <label class="form-label">Correo</label>
-    <input class="form-input" id="nd-correo" placeholder="correo@empresa.com">
+    <input class="form-input" id="nd-correo" type="email" placeholder="correo@empresa.com">
     <label class="form-label">Contraseña *</label>
-    <input class="form-input" id="nd-pass" placeholder="Contraseña de acceso">
+    <input class="form-input" id="nd-pass" placeholder="Contraseña de acceso" maxlength="30">
     <label class="form-label">Dirección principal</label>
-    <input class="form-input" id="nd-dir" placeholder="Dirección del local">
+    <input class="form-input" id="nd-dir" placeholder="Dirección del local" maxlength="100">
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
       <input type="checkbox" id="nd-entrega" style="width:18px;height:18px">
       <label for="nd-entrega" style="font-size:14px">Habilitar entrega a domicilio</label>
     </div>
     <label class="form-label">Monto mínimo entrega ($)</label>
     <input class="form-input" id="nd-min" type="number" value="30">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+      <input type="checkbox" id="nd-sinvol" style="width:18px;height:18px">
+      <label for="nd-sinvol" style="font-size:14px;color:var(--rojo)">Sin descuentos por volumen</label>
+    </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px">
       <button class="btn btn-s" onclick="cerrarModal('modal-nuevo-dist')">Cancelar</button>
       <button class="btn btn-p" onclick="guardarNuevoDist()">Guardar</button>
     </div>
   </div>
 </div>
+
+<!-- MODAL RECOMPENSA NUEVA/EDITAR -->
+<div class="ov" id="modal-rw-edit">
+  <div class="modal">
+    <div id="modal-rw-edit-c"></div>
+  </div>
+</div>
+
+<!-- MODAL CALIFICACIÓN -->
 <div class="ov" id="modal-calif">
   <div class="modal">
     <div class="mhandle"></div>
@@ -263,35 +341,23 @@
   </div>
 </div>
 
-<!-- MODAL CAMBIO DE CONTRASEÑA -->
-<div class="ov" id="modal-cambio-pass">
-  <div class="modal">
-    <div class="mhandle"></div>
-    <h3 id="cp-titulo">Cambiar contraseña</h3>
-    <p style="font-size:13px;color:var(--g3);margin-bottom:16px" id="cp-desc">Elige una nueva contraseña para tu cuenta.</p>
-    <label class="form-label">Nueva contraseña</label>
-    <input class="form-input" id="cp-nueva" type="password" placeholder="Mínimo 6 caracteres" autocomplete="new-password">
-    <label class="form-label">Repetir contraseña</label>
-    <input class="form-input" id="cp-repetir" type="password" placeholder="Repite la contraseña" autocomplete="new-password">
-    <div id="cp-err" style="color:#e53935;font-size:13px;min-height:18px;margin-bottom:10px"></div>
-    <button class="btn btn-p btn-full" style="margin-bottom:8px" onclick="guardarNuevaPass()">Guardar contraseña</button>
-    <button class="btn btn-s btn-full" id="cp-cancelar" onclick="cerrarModal('modal-cambio-pass')">Cancelar</button>
-  </div>
-</div>
-
+<div id="offline-banner" class="offline-banner" style="display:none">📵 Sin conexión — tus cambios se guardan localmente</div>
+<button id="btn-top" class="btn-top" onclick="scrollTop()" style="display:none">↑</button>
+<div id="ptr-indicator" class="ptr-indicator" style="display:none">↓ Suelta para actualizar</div>
+<div id="img-zoom-ov" class="img-zoom-ov" onclick="cerrarZoom()" style="display:none"><img id="img-zoom-img" alt="zoom"><button class="img-zoom-close" onclick="cerrarZoom()">✕</button></div>
 <!-- MODAL CREDENCIALES NUEVO DISTRIBUIDOR -->
 <div class="ov" id="modal-cred-nuevo">
   <div class="modal">
     <div class="mhandle"></div>
     <h3>✅ Distribuidor registrado</h3>
-    <p style="font-size:13px;color:var(--g3);margin-bottom:12px">Entrega estas credenciales al cliente por WhatsApp o llamada:</p>
-    <div style="background:var(--g1);border-radius:10px;padding:14px 16px;font-size:14px;margin-bottom:16px">
+    <p style="font-size:13px;color:var(--g3);margin-bottom:12px">Entrega estas credenciales al cliente:</p>
+    <div style="background:var(--g1);border-radius:10px;padding:14px 16px;margin-bottom:16px">
       <div style="margin-bottom:10px">
-        <div style="font-size:11px;color:var(--g3);margin-bottom:2px">Usuario (RUC / Cédula)</div>
+        <div style="font-size:11px;color:var(--g3)">Usuario (RUC / Cédula)</div>
         <div style="font-weight:700;font-size:15px;word-break:break-all" id="nd-cred-ruc"></div>
       </div>
       <div>
-        <div style="font-size:11px;color:var(--g3);margin-bottom:2px">Contraseña inicial</div>
+        <div style="font-size:11px;color:var(--g3)">Contraseña inicial</div>
         <div style="font-weight:800;font-size:22px;color:var(--azul);letter-spacing:1px" id="nd-cred-pass"></div>
       </div>
     </div>
@@ -301,6 +367,15 @@
 </div>
 
 <div id="toast" class="toast"></div>
+
+<!-- OVERLAY DE ÉXITO -->
+<div id="exito-ov" class="exito-ov">
+  <div class="exito-card">
+    <div class="exito-check">✓</div>
+    <div class="exito-t" id="exito-t"></div>
+    <div class="exito-s" id="exito-s"></div>
+  </div>
+</div>
 
 <script src="./datos.js"></script>
 <script src="./app.js"></script>

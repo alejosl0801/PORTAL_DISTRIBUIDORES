@@ -1,6 +1,3 @@
-// ════════════════════ CONFIGURACIÓN ════════════════════
-var MODO_DEMO = false; // true: muestra credenciales de prueba en login | false: producción
-
 // ════════════════════ RUTAS DE IMÁGENES ════════════════════
 var IMGS = {
   "logo":"img/logo.jpg",
@@ -31,6 +28,13 @@ var IMGS = {
   "promo_fin":"img/promo_fin.jpg"
 };
 
+// Placeholder SVG (rectángulo gris con ícono de imagen rota) para imágenes faltantes
+var IMG_PLACEHOLDER="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='120'%20height='120'%3E%3Crect%20width='120'%20height='120'%20fill='%23e0e0e0'/%3E%3Cg%20fill='none'%20stroke='%23999'%20stroke-width='3'%3E%3Crect%20x='30'%20y='35'%20width='60'%20height='48'%20rx='4'/%3E%3Ccircle%20cx='48'%20cy='52'%20r='6'/%3E%3Cpath%20d='M34%2078l20-18%2014%2012%2012-10%206%2016'/%3E%3C/g%3E%3C/svg%3E";
+
+// ════════════════════ MODO PRODUCCIÓN ════════════════════
+// Cuando es false, se ocultan las credenciales demo del login.
+var MODO_DEMO = false;
+
 // ════════════════════ CONSTANTES ════════════════════
 var IVA = 0.15;
 var PUNTOS_MAX_UNIT = 450;
@@ -39,7 +43,7 @@ var PCT_ALTO = 0.10;
 var PCT_NORMAL = 0.08;
 var PUNTOS_X_DOLAR = 100;
 var AZUR_TOKEN = "API_1851_2064_5fcfa1b47f430";
-var AZUR_API = "https://azur.com.ec/plataforma/api/v2/";
+var AZUR_API = "https://azur-proxy.alejosl0801.workers.dev/";
 
 // ════════════════════ PROMOCIONES ════════════════════
 var PROMOS = [
@@ -72,13 +76,37 @@ var PROMOS = [
   }
 ];
 
+// ════════════════════ PROMOS VIGENTES ════════════════════
+function promosVigentes(){
+  var hoy=new Date(); hoy.setHours(0,0,0,0);
+  return PROMOS.filter(function(pr){
+    if(pr.estado!=="activa")return false;
+    var fin=new Date(pr.fechaVence+"T23:59:59");
+    return fin>=hoy;
+  });
+}
+// Devuelve el item de promo SOLO si la promo está vigente (estado activa Y no vencida por fecha actual)
+function promoDelProducto(pid){
+  var vigentes=promosVigentes();
+  var ahora=new Date();
+  for(var i=0;i<vigentes.length;i++){
+    var pr=vigentes[i];
+    var fin=new Date(pr.fechaVence+"T23:59:59");
+    if(ahora>fin)continue; // promo vencida — no aplicar precio promocional
+    var it=pr.items.find(function(x){return x.id===pid;});
+    if(it)return it;
+  }
+  return null;
+}
+
 // ════════════════════ DATOS DISTRIBUIDORES ════════════════════
 // Nota: el campo "ruc" admite RUC (13 díg) o CÉDULA (10 díg) — ambos válidos para facturar.
 //   El campo "tipoDoc" indica cuál es ("ruc" o "cedula"); si falta, se detecta por longitud.
 // ⚠️ POR CONFIRMAR: email "efreinreyesv539@gmail.com" → ¿posible typo de "efrain"?
 var DISTRIBUIDORES = [
-  {ruc:"ADMIN",pass:"pyro2024",razon:"Administrador PyroShield",esAdmin:true},
-  {ruc:"0906872742001",pass:"jorge123",razon:"AVILES BRIONES JORGE ENRIQUE",empresa:"Sumiseg",tel:"0993704934",correo:"docs.sumiseg@outlook.com",
+  {ruc:"ADMIN",pass:"d0f0c1955aa832124e11c72a66f97da8cca523d3a1000e797df6f61586797f7d",razon:"Administrador PyroShield",esAdmin:true},
+  {ruc:"FABIOLA",pass:"fabiola123",razon:"Fabiola Impresiones",rol:"impresion",esAdmin:false},
+  {ruc:"0906872742001",pass:"jorge123",razon:"AVILES BRIONES JORGE ENRIQUE",empresa:"Sumiseg",encargado:"Jorge",tel:"0993704934",correo:"docs.sumiseg@outlook.com",
    entrega:{habilitada:true,montoMin:30},
    establecimientos:[{nm:"Local principal",dir:"AV. QUITO #1810 Y AYACUCHO",obs:""}],
    preciosEsp:{
