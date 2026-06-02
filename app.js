@@ -1536,7 +1536,11 @@ function verDetallePed(pid){
     (!p.esCanje?renderTrackingPedido(p.estado):'')+
     ((!p.esCanje&&p.items&&p.items.length)?
       '<button class="btn btn-p btn-full" style="margin-top:16px" onclick="generarProforma(\''+p.id+'\')">📄 Descargar Proforma PDF</button>'+
-      '<button class="btn btn-s btn-full" style="margin-top:8px" onclick="generarNotaEntrega(\''+p.id+'\')">📋 Nota de entrega</button>':'')+
+      (USER&&USER.rol==="impresion"?'<button class="btn btn-s btn-full" style="margin-top:8px" onclick="generarNotaEntrega(\''+p.id+'\')">📋 Nota de entrega</button>':'')+
+      (p.azurFactura
+        ?'<button class="btn btn-p btn-full" style="margin-top:8px;background:var(--verde)" onclick="descargarFacturaPDF(\''+p.id+'\')">🧾 Descargar Factura PDF</button>'
+        :(p.estado==="finalizado"?'<button class="btn btn-s btn-full" style="margin-top:8px;opacity:.5" disabled>🧾 Pendiente de facturar</button>':''))
+    :'')+
     '<button class="btn btn-s btn-full" style="margin-top:10px" onclick="cerrarModal(\'modal-pedido-det\')">Cerrar</button>';
   document.getElementById("modal-pedido-det-c").innerHTML=html;
   abrir("modal-pedido-det");
@@ -1552,6 +1556,49 @@ function guardarPagoCliente(pid){
   cerrarModal("modal-pedido-det");
   renderHistorial();
   toast("✅ Forma de pago actualizada");
+}
+
+// ════════════════════ FACTURA PDF CLIENTE ════════════════════
+function descargarFacturaPDF(pid){
+  var p=PEDIDOS.find(function(x){return x.id===pid;});
+  if(!p||!p.azurFactura){toast("⚠️ Esta factura aún no ha sido generada");return;}
+  var dist=p.razon||"";
+  var fecha=p.fecha||"";
+  var rows=(p.items||[]).map(function(it){
+    return '<tr><td style="padding:6px 8px;border-bottom:1px solid #eee">'+it.nm+'</td><td style="padding:6px 8px;border-bottom:1px solid #eee;text-align:center">'+it.cant+'</td><td style="padding:6px 8px;border-bottom:1px solid #eee;text-align:right">$'+it.pr.toFixed(2)+'</td><td style="padding:6px 8px;border-bottom:1px solid #eee;text-align:right">$'+(it.pr*it.cant).toFixed(2)+'</td></tr>';
+  }).join("");
+  var w=window.open("","_blank","width=800,height=700");
+  if(!w)return;
+  w.document.write('<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>Factura #'+p.id+'</title><style>'+
+    'body{font-family:Arial,sans-serif;color:#222;margin:0;padding:32px}'+
+    'h1{font-size:22px;margin:0 0 4px}'+
+    '.sub{font-size:13px;color:#666;margin-bottom:24px}'+
+    '.info{display:flex;justify-content:space-between;margin-bottom:20px;font-size:13px}'+
+    'table{width:100%;border-collapse:collapse;font-size:13px}'+
+    'thead{background:#111;color:#fff}'+
+    'thead th{padding:8px;text-align:left}'+
+    '.totales{margin-top:16px;text-align:right;font-size:13px}'+
+    '.totales .row{margin-bottom:4px}'+
+    '.totales .grand{font-size:18px;font-weight:700;color:#111;margin-top:8px}'+
+    '.clave{margin-top:28px;background:#f5f5f5;border-radius:8px;padding:14px;font-size:11px;word-break:break-all}'+
+    '@media print{button{display:none}}'+
+  '</style></head><body>'+
+  '<h1>🧾 Factura Electrónica — PyroShield</h1>'+
+  '<div class="sub">Portal Distribuidores PyroShield</div>'+
+  '<div class="info">'+
+    '<div><b>Cliente:</b> '+dist+'<br><b>RUC:</b> '+p.ruc+'</div>'+
+    '<div style="text-align:right"><b>Pedido #'+p.id+'</b><br><b>Fecha:</b> '+fecha+'<br><b>Pago:</b> '+(p.pago||"")+'</div>'+
+  '</div>'+
+  '<table><thead><tr><th>Descripción</th><th style="text-align:center">Cant.</th><th style="text-align:right">P. Unit.</th><th style="text-align:right">Total</th></tr></thead><tbody>'+rows+'</tbody></table>'+
+  '<div class="totales">'+
+    '<div class="row">Subtotal: <b>$'+p.subtotal.toFixed(2)+'</b></div>'+
+    '<div class="row">IVA 15%: <b>$'+p.iva.toFixed(2)+'</b></div>'+
+    '<div class="grand">TOTAL: $'+p.total.toFixed(2)+'</div>'+
+  '</div>'+
+  '<div class="clave"><b>Clave de Acceso SRI:</b><br>'+p.azurFactura+'</div>'+
+  '<br><button onclick="window.print()" style="background:#111;color:#fff;border:none;padding:10px 24px;border-radius:6px;cursor:pointer;font-size:14px">🖨️ Imprimir / Guardar PDF</button>'+
+  '</body></html>');
+  w.document.close();
 }
 
 // ════════════════════ CALIFICACIÓN ════════════════════
