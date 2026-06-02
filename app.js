@@ -407,7 +407,7 @@ function otorgarBienvenida(){
   if(yaTiene){try{localStorage.setItem(flag,"1");}catch(e){}return;}
   if(localStorage.getItem(flag))return;
   var now=new Date();
-  var bid="B"+now.getTime().toString().slice(-5);
+  var bid="B"+now.getTime().toString().slice(-5)+String(Math.floor(Math.random()*90+10));
   PEDIDOS.push({
     id:bid,ruc:USER.ruc,razon:USER.razon,
     fecha:now.toLocaleDateString(),fechaISO:now.toISOString(),
@@ -1368,7 +1368,7 @@ function confirmarPedido(){
     items.push({id:p.id,nm:p.nm,cant:it.cant,pv:p.pv,pr:pr,descPct:rv.descPct,pts:pts,costo:p.costo||0});
   });
   var iva=parseFloat((subtotal*IVA).toFixed(2)), total=parseFloat((subtotal+iva).toFixed(2));
-  var pid=Date.now().toString().slice(-6);
+  var pid=Date.now().toString().slice(-6)+String(Math.floor(Math.random()*90+10));
   var now=new Date();
   var entregaInfo={};
   if(modo==="entrega"){
@@ -1414,7 +1414,7 @@ function estadoLabel(e){
     entrega:"🚚 En proceso",
     entregado:"📦 Entregado",
     facturado:"🚚 En proceso",
-    finalizado:"📦 Entregado",
+    finalizado:"✔️ Finalizado",
     cancelado:"✕ Cancelado"
   };
   return m[e]||e;
@@ -1711,7 +1711,7 @@ function canjear(pts,nm){
   if(saldoPuntos()<pts){toast("⚠️ No tienes suficientes puntos confirmados");return;}
   confirmar("¿Canjear <b>"+fmtPts(pts)+" puntos</b> por <b>"+nm+"</b>?<br><small>Se coordinará con tu próximo pedido.</small>",function(){
     if(saldoPuntos()<pts){toast("⚠️ Ya no tienes suficientes puntos");renderRecompensas();return;}
-    var pid="C"+Date.now().toString().slice(-5);
+    var pid="C"+Date.now().toString().slice(-5)+String(Math.floor(Math.random()*9+1));
     PEDIDOS.push({id:pid,ruc:USER.ruc,razon:USER.razon,fecha:new Date().toLocaleDateString(),fechaISO:new Date().toISOString(),esCanje:true,canjePts:pts,canjeNm:nm,estado:"pendiente",total:0,puntos:0});
     guardarPedidos(); renderRecompensas();
     setTopbarPts(saldoPuntos());
@@ -1950,7 +1950,7 @@ function admVerPedido(pid){
           '<option value="Pago pendiente">💰 Pago pendiente</option>'+
         '</select>'+
       '</div>';
-    if(p.obsAdmin)'<div style="font-size:12px;color:var(--azul);margin-bottom:8px">Obs. actual: '+p.obsAdmin+'</div>';
+    if(p.obsAdmin)html+='<div style="font-size:12px;color:var(--azul);margin-bottom:8px">Obs. actual: '+p.obsAdmin+'</div>';
     // Editar forma de pago (si el pedido no está finalizado)
     if(p.estado!=="finalizado"){
       var opcionesPagoAdm=["Efectivo","Transferencia","Cheque / Crédito 30 días","Cheque / Crédito 60 días","Cheque / Crédito 90 días"];
@@ -2041,7 +2041,9 @@ function guardarEstadoPed(pid){
     });
     guardarStock();
   }
-  guardarPedidos(); cerrarModal("modal-pedido-det"); renderAdmPedidos();
+  guardarPedidos();
+  sincronizarEstadoSheet(p);
+  cerrarModal("modal-pedido-det"); renderAdmPedidos();
   toast("✅ Estado actualizado");
 }
 
@@ -2073,6 +2075,7 @@ function generarProforma(pid){
     '</tr>';
   }).join("");
   var win=window.open("","_blank","width=860,height=960");
+  if(!win){toast("⚠️ Permite las ventanas emergentes en tu navegador para generar la proforma.");return;}
   win.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Proforma #'+p.id+'</title>'+
     '<base href="'+baseHref+'">'+
     '<style>body{font-family:Arial,sans-serif;font-size:12px;color:#111;padding:24px;max-width:820px;margin:0 auto}'+
@@ -2161,6 +2164,7 @@ function generarNotaEntrega(pid){
     entregaDir=(p.entregaInfo.establecimiento.nm||"")+(p.entregaInfo.establecimiento.dir?" — "+p.entregaInfo.establecimiento.dir:"");
   }
   var win=window.open("","_blank","width=800,height=900");
+  if(!win){toast("⚠️ Permite las ventanas emergentes en tu navegador para generar la nota de entrega.");return;}
   win.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Nota de Entrega #'+p.id+'</title>'+
     '<base href="'+baseHref+'">'+
     '<style>body{font-family:Arial,sans-serif;font-size:12px;color:#111;padding:28px;max-width:720px;margin:0 auto}'+
@@ -2225,7 +2229,8 @@ function generarWA(pid){
   var p=PEDIDOS.find(function(x){return x.id===pid;});
   if(!p)return;
   var dist=DISTRIBUIDORES.find(function(d){return d.ruc===p.ruc;});
-  var tel=dist&&dist.tel?dist.tel.replace(/[^0-9]/g,""):"593978997247";
+  if(!dist||!dist.tel){toast("⚠️ Este distribuidor no tiene teléfono registrado. Agrégalo desde el panel de distribuidores.");return;}
+  var tel=dist.tel.replace(/[^0-9]/g,"");
   if(tel.startsWith("09"))tel="593"+tel.slice(1);
   var msg="*PyroShield — Pedido #"+p.id+"*\n\nHola "+p.razon+"!\n\n";
   if(p.items)p.items.forEach(function(it){msg+="• "+it.nm+" x"+it.cant+" — "+fmt$(it.pr*it.cant)+"\n";});
@@ -2793,6 +2798,7 @@ function generarReporteMensual(){
   var topProds=Object.values(prodCounts).sort(function(a,b){return b.subtotal-a.subtotal;}).slice(0,10);
   var baseHref=window.location.href.substring(0,window.location.href.lastIndexOf("/")+1);
   var win=window.open("","_blank","width=800,height=950");
+  if(!win){toast("⚠️ Permite las ventanas emergentes en tu navegador para generar el reporte.");return;}
   win.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Reporte Mensual '+nombreMes+'</title>'+
     '<base href="'+baseHref+'">'+
     '<style>body{font-family:Arial,sans-serif;font-size:12px;color:#111;padding:28px;max-width:720px;margin:0 auto}'+
@@ -2997,6 +3003,8 @@ function chequearPedidosNuevos(){
 // ════════════════════ SINCRONIZACIÓN GOOGLE SHEETS ════════════════════
 // NOTA para doPost en Apps Script: parsear con JSON.parse(e.postData.contents)
 var GAS_URL="https://script.google.com/macros/s/AKfycbwiIAupZxy2T33EiDHbwkLBHTw0Q2Uv98r8pc9L351b6lXwY_mOD6kI2tvfzqdIUdxG/exec";
+// Token de autenticación — debe coincidir con la propiedad PYRO_SECRET en el Apps Script
+var GAS_TOKEN="PyroShield-portal-2026";
 
 function cargarSyncPendientes(){
   try{return JSON.parse(localStorage.getItem("pyro_sync_pendientes")||"[]");}catch(e){return[];}
@@ -3008,6 +3016,7 @@ function guardarSyncPendientes(lista){
 function sincronizarConSheets(ped, silencioso){
   var payload={
     accion:"guardarPedidoPyro",
+    token:GAS_TOKEN,
     id_pedido:ped.id,
     fecha:ped.fechaISO,
     ruc_dist:ped.ruc,
@@ -3020,7 +3029,11 @@ function sincronizarConSheets(ped, silencioso){
     method:"POST",
     headers:{"Content-Type":"text/plain;charset=utf-8"},
     body:JSON.stringify(payload)
-  }).then(function(){
+  }).then(function(r){
+    if(!r.ok)throw new Error("HTTP "+r.status);
+    return r.json();
+  }).then(function(data){
+    if(data&&data.ok===false)throw new Error(data.error||"Error del servidor");
     var pend=cargarSyncPendientes();
     pend=pend.filter(function(x){return x.id!==ped.id;});
     guardarSyncPendientes(pend);
@@ -3032,6 +3045,22 @@ function sincronizarConSheets(ped, silencioso){
     }
     if(!silencioso)toast("☁️ Pendiente de sincronización (se reintentará)");
   });
+}
+
+function sincronizarEstadoSheet(ped){
+  if(!ped||!ped.id)return;
+  var payload={
+    accion:"actualizarEstadoPyro",
+    token:GAS_TOKEN,
+    id_pedido:ped.id,
+    estado:ped.estado
+  };
+  fetch(GAS_URL,{
+    method:"POST",
+    headers:{"Content-Type":"text/plain;charset=utf-8"},
+    body:JSON.stringify(payload)
+  }).then(function(r){return r.ok?r.json():null;})
+  .catch(function(){});
 }
 
 function reintentarSyncPendientes(){
