@@ -78,8 +78,9 @@
         <button class="acc-btn" onclick="abrirContacto()"><div class="acc-ico">💬</div><div class="acc-t">Contacto</div><div class="acc-s">Escríbenos por WhatsApp</div></button>
       </div>
       <div class="sec-titulo">Mi cuenta</div>
-      <div style="padding:0 0 8px">
+      <div style="padding:0 0 8px;display:grid;gap:8px">
         <button class="btn btn-s btn-full" onclick="mostrarCambioPassOpcional()">🔐 Cambiar contraseña</button>
+        <button class="btn btn-s btn-full" onclick="cambiarTema()">🌓 Tema: <span id="tema-actual-lbl">Automático</span></button>
       </div>
       <div id="cli-saldo-tag" style="display:none;background:var(--rojoc);color:var(--rojo);border:1.5px solid var(--rojo);border-radius:10px;padding:10px 12px;font-size:13px;margin-bottom:12px"></div>
       <div class="sec-titulo">🏅 Mis logros</div>

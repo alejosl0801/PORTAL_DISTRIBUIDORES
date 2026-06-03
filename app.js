@@ -3174,6 +3174,29 @@ function actualizarBannerOffline(){
   banner.style.display=navigator.onLine?"none":"block";
 }
 
+// ═══════════ TEMA CLARO / OSCURO (persistente) ═══════════
+// Estados: "auto" (sigue al sistema), "light", "dark"
+function temaGuardado(){try{return localStorage.getItem("pyro_tema")||"auto";}catch(e){return"auto";}}
+function aplicarTema(modo){
+  var html=document.documentElement;
+  if(modo==="auto"){
+    var osDark=window.matchMedia&&window.matchMedia("(prefers-color-scheme:dark)").matches;
+    html.setAttribute("data-theme",osDark?"dark":"light");
+  } else {
+    html.setAttribute("data-theme",modo);
+  }
+  try{localStorage.setItem("pyro_tema",modo);}catch(e){}
+  var lbl=document.getElementById("tema-actual-lbl");
+  if(lbl)lbl.textContent=modo==="auto"?"Automático":(modo==="dark"?"Oscuro":"Claro");
+}
+function cambiarTema(){
+  var orden=["auto","light","dark"];
+  var actual=temaGuardado();
+  var sig=orden[(orden.indexOf(actual)+1)%orden.length];
+  aplicarTema(sig);
+  toast(sig==="auto"?"🌓 Tema automático":(sig==="dark"?"🌙 Tema oscuro":"☀️ Tema claro"));
+}
+
 // ═══════════ SWIPE PARA ELIMINAR EN CARRITO ═══════════
 function activarSwipeCarrito(){
   var items=document.querySelectorAll('#cart-lista .item[data-cart-id]');
@@ -3300,6 +3323,10 @@ window.addEventListener("load",function(){
     if(sp){sp.classList.add("hide");setTimeout(function(){sp.style.display="none";},600);}
   },1500);
   cargarDistribuidoresExtra();
+  // Aplicar tema guardado (claro/oscuro/auto)
+  aplicarTema(temaGuardado());
+  // Si está en auto, reaccionar a cambios del sistema operativo
+  try{if(window.matchMedia){window.matchMedia("(prefers-color-scheme:dark)").addEventListener("change",function(){if(temaGuardado()==="auto")aplicarTema("auto");});}}catch(e){}
   // Mostrar versión del portal
   try{var vt=document.getElementById("app-version-tag");if(vt&&typeof APP_VERSION!=="undefined")vt.textContent="Portal PyroShield v"+APP_VERSION;}catch(e){}
   // Mostrar/ocultar credenciales demo según MODO_DEMO
