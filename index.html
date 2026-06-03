@@ -42,6 +42,7 @@
     <div class="field-label">Contraseña</div>
     <input class="field-inp" id="login-pass" type="password" placeholder="Tu contraseña" autocomplete="current-password">
     <button class="btn-login" onclick="hacerLogin()">Ingresar</button>
+    <button id="btn-biometria" class="btn-login" style="display:none;background:var(--g1);color:var(--g3);border:1.5px solid var(--g2);margin-top:8px" onclick="loginBiometrico()">🪪 Ingresar con huella / Face ID</button>
     <div class="login-err" id="login-err">RUC o contraseña incorrectos</div>
     <div class="login-demo" id="login-demo-box" style="display:none"></div>
   </div>
@@ -227,6 +228,11 @@
         <p style="font-size:12px;color:var(--g4);line-height:1.5;margin-bottom:14px">Borra <b>todos</b> los pedidos, carritos, borradores y regalos de bienvenida.<br><span style="color:#2e7d32">✓ No afecta</span> distribuidores, contraseñas ni precios especiales.</p>
         <button class="btn btn-full" style="background:#c62828;color:#fff;border-color:#c62828;padding:13px;font-size:14px;font-weight:700" onclick="confirmarLimpiarDatos()">🗑️ Limpiar datos de prueba</button>
       </div>
+      <div style="border:1.5px solid var(--g2);border-radius:12px;padding:16px;background:var(--g1);margin-top:16px">
+        <div style="font-weight:700;font-size:15px;margin-bottom:6px">☁️ Backup en la nube</div>
+        <p style="font-size:12px;color:var(--g4);line-height:1.5;margin-bottom:14px">Envía una copia de todos los pedidos y stock al Google Sheet de respaldo.</p>
+        <button class="btn btn-full" style="padding:13px;font-size:14px;font-weight:700" onclick="backupAutomatico(true)">☁️ Hacer backup ahora</button>
+      </div>
     </div>
   </div>
 </div>
@@ -396,6 +402,19 @@
     <div class="exito-check">✓</div>
     <div class="exito-t" id="exito-t"></div>
     <div class="exito-s" id="exito-s"></div>
+  </div>
+</div>
+
+<!-- MODAL DESCUENTOS POR VOLUMEN -->
+<div class="ov" id="modal-descvol">
+  <div class="modal">
+    <div class="mhandle"></div>
+    <h3>⚙️ Descuentos por volumen</h3>
+    <p id="descvol-prod-nm" style="font-size:13px;color:var(--g3);margin-bottom:12px"></p>
+    <div id="descvol-rows"></div>
+    <button class="btn btn-s btn-full" style="margin-bottom:8px" onclick="agregarDescVolRow()">+ Agregar tier</button>
+    <button class="btn btn-p btn-full" style="margin-bottom:8px" onclick="guardarDescVol()">Guardar</button>
+    <button class="btn btn-full" style="background:var(--g1);color:var(--g3)" onclick="cerrarModal('modal-descvol')">Cancelar</button>
   </div>
 </div>
 

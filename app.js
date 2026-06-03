@@ -249,7 +249,7 @@ function loginConCredenciales(ruc,pw){
   var d=DISTRIBUIDORES.find(function(x){return x.ruc.toLowerCase()===ruc.toLowerCase()&&passCoincide(x.pass,pw);});
   if(!d)return false;
   if(d.bloqueado&&!d.esAdmin)return false;
-  USER=d; PEDIDOS=cargarPedidos(); cargarStock();
+  USER=d; PEDIDOS=cargarPedidos(); cargarStock(); cargarDescVol();
   // Log de accesos (#25)
   try{
     var logAccesos=[];
@@ -314,6 +314,7 @@ function hacerLogin(){
   if(!USER.esAdmin&&USER.rol!=="impresion"){
     mostrarSaludoFlash();
     otorgarBienvenida();
+    _ofrecerBiometria(u,pw);
     // Flujo de primer ingreso (bienvenida + cambio de contraseña + tutorial)
     var keyPrimer="pyro_primer_ingreso_"+USER.ruc;
     if(!localStorage.getItem(keyPrimer)){
@@ -323,6 +324,7 @@ function hacerLogin(){
       if(!localStorage.getItem(key)){iniciarTutorial();}
     }
   }
+  if(USER.esAdmin){backupAutomatico(false);}
 }
 
 // ════════════════════ FLUJO PRIMER INGRESO ════════════════════
@@ -1933,6 +1935,23 @@ function renderRolImpresion(){
   }).join(""):'<div class="empty"><div class="ico">📦</div><p>No hay pedidos en esta categoría.</p></div>');
 }
 
+// ════════ #15 Historial de cambios de precio ════════
+function cargarHistPrecios(){try{return JSON.parse(localStorage.getItem("pyro_hist_precios")||"[]");}catch(e){return[];}}
+function registrarCambioPrecio(id,nm,campo,anterior,nuevo){
+  var hist=cargarHistPrecios();var ahora=new Date();
+  var f=ahora.getFullYear()+"-"+String(ahora.getMonth()+1).padStart(2,"0")+"-"+String(ahora.getDate()).padStart(2,"0");
+  var h=String(ahora.getHours()).padStart(2,"0")+":"+String(ahora.getMinutes()).padStart(2,"0");
+  hist.unshift({id:id,nm:nm,campo:campo,valorAnterior:anterior,valorNuevo:nuevo,fecha:f,hora:h});
+  if(hist.length>200)hist=hist.slice(0,200);
+  try{localStorage.setItem("pyro_hist_precios",JSON.stringify(hist));}catch(e){}
+}
+function renderHistorialPrecios(){
+  var hist=cargarHistPrecios();
+  if(!hist.length)return '<div style="font-size:12px;color:var(--g3);padding:8px">Sin cambios registrados.</div>';
+  return '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:11px"><thead><tr style="text-align:left;color:var(--g3)"><th style="padding:4px 6px">Fecha</th><th style="padding:4px 6px">Hora</th><th style="padding:4px 6px">Producto</th><th style="padding:4px 6px">Campo</th><th style="padding:4px 6px">Antes</th><th style="padding:4px 6px">Después</th></tr></thead><tbody>'+
+    hist.map(function(e){return '<tr style="border-top:1px solid var(--g2)"><td style="padding:4px 6px">'+escHtml(e.fecha)+'</td><td style="padding:4px 6px">'+escHtml(e.hora)+'</td><td style="padding:4px 6px">'+escHtml(e.nm)+' <span style="color:var(--g3)">'+escHtml(e.id)+'</span></td><td style="padding:4px 6px">'+escHtml(e.campo)+'</td><td style="padding:4px 6px;color:var(--rojo)">'+escHtml(String(e.valorAnterior))+'</td><td style="padding:4px 6px;color:var(--verde)">'+escHtml(String(e.valorNuevo))+'</td></tr>';}).join("")+'</tbody></table></div>';
+}
+
 // Cargar costos desde localStorage (editables por admin)
 function cargarCostos(){
   try{return JSON.parse(localStorage.getItem("pyro_costos")||"{}");}catch(e){return{};}
@@ -2757,6 +2776,7 @@ function renderAdmStock(){
               '<input type="number" step="0.01" min="0" value="'+costoActual+'" id="cst-'+p.id+'" style="width:80px;padding:6px 8px;border:1.5px solid var(--azulc);border-radius:8px;font-size:13px;text-align:center;background:var(--azulc)">'+
               '<button class="btn btn-sm btn-s" style="padding:7px 12px;min-height:0;color:var(--azul)" onclick="ajustarCosto(\''+p.id+'\',document.getElementById(\'cst-'+p.id+'\').value)">✓</button>'+
             '</div>'+
+            '<button class="btn btn-sm" style="padding:7px 12px;min-height:0;background:var(--g1);border:1.5px solid var(--g2);color:var(--g4);font-size:11px" onclick="abrirEditarDescVol(\''+p.id+'\')">⚙️ Desc. Vol.</button>'+
           '</div>'+
         '</div></div>';
       }).join("");
@@ -2773,10 +2793,11 @@ function ajustarCosto(id,val){
   var n=parseFloat(val);
   if(isNaN(n)||n<0){toast("⚠️ Ingresa un costo válido");return;}
   var costos=cargarCostos();
+  var p=PRODUCTOS.find(function(x){return x.id===id;});
+  var anterior=costos[id]!=null?costos[id]:(p?p.costo:0);
+  if(p&&anterior!==n)registrarCambioPrecio(id,p.nm,"Costo",fmt$(anterior),fmt$(n));
   costos[id]=n;
   guardarCostos(costos);
-  // También actualizar el producto en memoria
-  var p=PRODUCTOS.find(function(x){return x.id===id;});
   if(p)p.costo=n;
   toast("✅ Costo actualizado");
 }
@@ -3481,6 +3502,7 @@ window.addEventListener("load",function(){
   // Recordar último RUC: prellenar y enfocar la contraseña
   try{var lastRuc=localStorage.getItem("pyro_last_ruc");if(lastRuc&&lu&&!lu.value){lu.value=lastRuc;if(lp)setTimeout(function(){lp.focus();},100);}}catch(e){}
   if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js').catch(function(){});}
+  mostrarBotonBiometria();
 });
 
 // ════════ FEATURE 11/12/13/14/25/82/83/84/87 — Dashboard Admin ════════
@@ -3570,5 +3592,166 @@ function renderAdmLog(){
   cont.innerHTML='<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;min-width:300px"><thead><tr style="border-bottom:2px solid var(--g2)"><th style="font-size:11px;text-align:left;color:var(--g3);padding:6px 8px">RUC</th><th style="font-size:11px;text-align:left;color:var(--g3);padding:6px 8px">Razón social</th><th style="font-size:11px;text-align:left;color:var(--g3);padding:6px 8px">Fecha</th><th style="font-size:11px;text-align:left;color:var(--g3);padding:6px 8px">Hora</th></tr></thead><tbody>'+
     log.map(function(e){return '<tr><td style="padding:6px 8px;font-size:12px;font-weight:700">'+escHtml(e.ruc)+'</td><td style="padding:6px 8px;font-size:12px">'+escHtml(e.razon)+'</td><td style="padding:6px 8px;font-size:12px;white-space:nowrap">'+escHtml(e.fecha)+'</td><td style="padding:6px 8px;font-size:12px;white-space:nowrap">'+escHtml(e.hora)+'</td></tr>';}).join("")+
   '</tbody></table></div>';
+}
+
+/* ═══════════════════════════════════════════
+   DESCUENTOS POR VOLUMEN — editor admin
+═══════════════════════════════════════════ */
+var _descvolId=null;
+function cargarDescVol(){
+  try{
+    var dv=JSON.parse(localStorage.getItem("pyro_descvol")||"{}");
+    PRODUCTOS.forEach(function(p){if(dv[p.id])p.descVol=dv[p.id];});
+  }catch(e){}
+}
+function abrirEditarDescVol(id){
+  var p=PRODUCTOS.find(function(x){return x.id===id;});if(!p)return;
+  _descvolId=id;
+  var el=document.getElementById("descvol-prod-nm");
+  if(el)el.textContent=p.nm+" ("+id+")";
+  _renderDescVolRows(p.descVol||[]);
+  abrirModal("modal-descvol");
+}
+function _renderDescVolRows(tiers){
+  var c=document.getElementById("descvol-rows");if(!c)return;
+  if(!tiers.length){c.innerHTML='<p style="font-size:13px;color:var(--g3);text-align:center;padding:10px 0">Sin tiers. Agrega uno ▼</p>';return;}
+  c.innerHTML=tiers.map(function(t,i){
+    return '<div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">'+
+      '<div style="flex:1"><div style="font-size:10px;color:var(--g3)">Desde (unid.)</div>'+
+      '<input class="form-input" style="font-size:13px;padding:8px" type="number" min="1" id="dv-q-'+i+'" value="'+t[0]+'"></div>'+
+      '<div style="flex:1"><div style="font-size:10px;color:var(--g3)">Desc. extra %</div>'+
+      '<input class="form-input" style="font-size:13px;padding:8px" type="number" min="0" max="50" id="dv-p-'+i+'" value="'+t[1]+'"></div>'+
+      '<button onclick="quitarDescVolRow('+i+')" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--g3);padding:0 4px;margin-top:14px">✕</button>'+
+    '</div>';
+  }).join("");
+}
+function agregarDescVolRow(){
+  var p=PRODUCTOS.find(function(x){return x.id===_descvolId;});
+  var tiers=_leerDescVolRows();
+  tiers.push([tiers.length?tiers[tiers.length-1][0]+5:5,5]);
+  _renderDescVolRows(tiers);
+}
+function quitarDescVolRow(i){
+  var tiers=_leerDescVolRows();tiers.splice(i,1);_renderDescVolRows(tiers);
+}
+function _leerDescVolRows(){
+  var tiers=[];var i=0;
+  while(document.getElementById("dv-q-"+i)){
+    var q=parseInt(document.getElementById("dv-q-"+i).value)||0;
+    var p=parseFloat(document.getElementById("dv-p-"+i).value)||0;
+    tiers.push([q,p]);i++;
+  }
+  return tiers;
+}
+function guardarDescVol(){
+  if(!_descvolId)return;
+  var tiers=_leerDescVolRows();
+  tiers.sort(function(a,b){return a[0]-b[0];});
+  var dv={};try{dv=JSON.parse(localStorage.getItem("pyro_descvol")||"{}");}catch(e){}
+  dv[_descvolId]=tiers;
+  localStorage.setItem("pyro_descvol",JSON.stringify(dv));
+  var p=PRODUCTOS.find(function(x){return x.id===_descvolId;});
+  if(p)p.descVol=tiers;
+  cerrarModal("modal-descvol");
+  toast("✅ Descuentos actualizados");
+  if(document.getElementById("adm-stock")&&document.getElementById("adm-stock").classList.contains("active")){admTab("stock");}
+}
+
+/* ═══════════════════════════════════════════
+   BIOMETRÍA (WebAuthn)
+═══════════════════════════════════════════ */
+function soportaBiometria(){
+  return !!(window.PublicKeyCredential&&navigator.credentials&&navigator.credentials.create);
+}
+function mostrarBotonBiometria(){
+  var btn=document.getElementById("btn-biometria");if(!btn)return;
+  try{
+    var last=localStorage.getItem("pyro_last_ruc");
+    if(!last||!soportaBiometria()){btn.style.display="none";return;}
+    var bio=JSON.parse(localStorage.getItem("pyro_biometria_"+last)||"null");
+    btn.style.display=bio?"block":"none";
+  }catch(e){btn.style.display="none";}
+}
+function _ofrecerBiometria(ruc,pw){
+  if(!soportaBiometria())return;
+  try{
+    var bio=JSON.parse(localStorage.getItem("pyro_biometria_"+ruc)||"null");
+    if(bio)return;
+    var ya=localStorage.getItem("pyro_bio_skip_"+ruc);if(ya)return;
+    setTimeout(function(){
+      if(confirm("¿Deseas activar el acceso con huella / Face ID en este dispositivo?")){
+        registrarBiometria(ruc,pw);
+      }else{
+        localStorage.setItem("pyro_bio_skip_"+ruc,"1");
+      }
+    },1200);
+  }catch(e){}
+}
+function registrarBiometria(ruc,pw){
+  if(!soportaBiometria()){alert("Tu dispositivo no soporta autenticación biométrica.");return;}
+  var challenge=new Uint8Array(32);crypto.getRandomValues(challenge);
+  var userId=new TextEncoder().encode(ruc);
+  navigator.credentials.create({publicKey:{
+    challenge:challenge,
+    rp:{name:"Portal PyroShield"},
+    user:{id:userId,name:ruc,displayName:ruc},
+    pubKeyCredParams:[{type:"public-key",alg:-7},{type:"public-key",alg:-257}],
+    authenticatorSelection:{userVerification:"preferred"},
+    timeout:60000
+  }}).then(function(cred){
+    var data={id:cred.id,ruc:ruc,pw:pw};
+    localStorage.setItem("pyro_biometria_"+ruc,JSON.stringify(data));
+    toast("✅ Biometría activada");
+    mostrarBotonBiometria();
+  }).catch(function(e){toast("No se pudo activar la biometría: "+e.message);});
+}
+function loginBiometrico(){
+  try{
+    var last=localStorage.getItem("pyro_last_ruc");if(!last)return;
+    var bio=JSON.parse(localStorage.getItem("pyro_biometria_"+last)||"null");if(!bio)return;
+    var challenge=new Uint8Array(32);crypto.getRandomValues(challenge);
+    navigator.credentials.get({publicKey:{
+      challenge:challenge,
+      userVerification:"preferred",
+      timeout:60000,
+      allowCredentials:[{type:"public-key",id:_b64ToUint8(bio.id)}]
+    }}).then(function(){
+      document.getElementById("login-user").value=bio.ruc;
+      document.getElementById("login-pass").value=bio.pw;
+      hacerLogin();
+    }).catch(function(e){toast("Biometría fallida: "+e.message);});
+  }catch(e){toast("Error biometría: "+e);}
+}
+function _b64ToUint8(b64){
+  var bin=atob(b64.replace(/-/g,"+").replace(/_/g,"/"));
+  var arr=new Uint8Array(bin.length);
+  for(var i=0;i<bin.length;i++)arr[i]=bin.charCodeAt(i);
+  return arr;
+}
+
+/* ═══════════════════════════════════════════
+   BACKUP AUTOMÁTICO → Google Apps Script
+═══════════════════════════════════════════ */
+function backupAutomatico(forzado){
+  if(!forzado){
+    var hoy=new Date().toISOString().slice(0,10);
+    var ultimo=localStorage.getItem("pyro_ultimo_backup")||"";
+    if(ultimo===hoy)return;
+  }
+  var gasUrl=typeof GAS_URL!=="undefined"?GAS_URL:"";
+  if(!gasUrl){if(forzado)toast("⚠️ GAS_URL no configurado");return;}
+  var payload={
+    action:"backup",
+    fecha:new Date().toISOString(),
+    pedidos:PEDIDOS||[],
+    stock:(function(){var st={};PRODUCTOS.forEach(function(p){st[p.id]={stock:p.stock,ago:p.ago};});return st;})()
+  };
+  fetch(gasUrl,{method:"POST",body:JSON.stringify(payload),headers:{"Content-Type":"application/json"}})
+    .then(function(r){return r.json();})
+    .then(function(d){
+      localStorage.setItem("pyro_ultimo_backup",new Date().toISOString().slice(0,10));
+      if(forzado)toast("☁️ Backup enviado: "+new Date().toLocaleString());
+    })
+    .catch(function(e){if(forzado)toast("⚠️ Backup falló: "+e.message);});
 }
 
