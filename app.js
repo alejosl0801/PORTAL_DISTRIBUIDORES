@@ -1058,7 +1058,7 @@ function renderCarrito(){
       descLineas+='<div class="desc-total-linea">💰 Ahorras '+fmt$(totalDesc)+' en este item</div>';
     }
     var stockWarn=(p.stock<=20&&p.stock>0)?'<div class="stock-warn">⚠️ Quedan pocas unidades ('+p.stock+')</div>':"";
-    return '<div class="item">'+
+    return '<div class="item" data-cart-id="'+it.id+'">'+
       '<div class="item-i">'+
         '<div class="item-nm">'+p.nm+'</div>'+
         '<div class="item-pr">'+
@@ -1082,6 +1082,7 @@ function renderCarrito(){
   }).join("");
   if(omitidos.length)html='<div style="background:var(--amarc);border:1.5px solid var(--amar);border-radius:10px;padding:10px 14px;margin-bottom:10px;font-size:12px;color:#8a6600">⚠️ '+omitidos.length+' producto(s) agotado(s) fueron omitidos: '+omitidos.join(", ")+'</div>'+html;
   cont.innerHTML=html;
+  activarSwipeCarrito();
   var iva=parseFloat((subtotal*IVA).toFixed(2));
   var total=parseFloat((subtotal+iva).toFixed(2));
 
@@ -3171,6 +3172,38 @@ function actualizarBannerOffline(){
   var banner=document.getElementById("offline-banner");
   if(!banner)return;
   banner.style.display=navigator.onLine?"none":"block";
+}
+
+// ═══════════ SWIPE PARA ELIMINAR EN CARRITO ═══════════
+function activarSwipeCarrito(){
+  var items=document.querySelectorAll('#cart-lista .item[data-cart-id]');
+  items.forEach(function(el){
+    var startX=0,startY=0,curX=0,dragging=false;
+    el.style.transition="transform .2s ease";
+    el.addEventListener("touchstart",function(e){
+      startX=e.touches[0].clientX;startY=e.touches[0].clientY;dragging=false;el.style.transition="none";
+    },{passive:true});
+    el.addEventListener("touchmove",function(e){
+      curX=e.touches[0].clientX;
+      var dx=curX-startX,dy=e.touches[0].clientY-startY;
+      if(Math.abs(dx)>Math.abs(dy)&&dx<0){
+        dragging=true;
+        el.style.transform="translateX("+Math.max(dx,-120)+"px)";
+        el.style.background=dx<-60?"var(--rojoc)":"";
+      }
+    },{passive:true});
+    el.addEventListener("touchend",function(){
+      el.style.transition="transform .2s ease";
+      var dx=curX-startX;
+      if(dragging&&dx<-80){
+        el.style.transform="translateX(-100%)";
+        var id=el.getAttribute("data-cart-id");
+        setTimeout(function(){quitarItem(id);},150);
+      } else {
+        el.style.transform="";el.style.background="";
+      }
+    });
+  });
 }
 
 // ═══════════ BOTÓN VOLVER ARRIBA ═══════════
