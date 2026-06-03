@@ -86,6 +86,8 @@ var TUT_PASOS=[
 
 // ════════════════════ UTILIDADES ════════════════════
 function norm(s){return(s||"").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"");}
+// Coincidencia de búsqueda: por nombre, ID interno o código Azur del producto
+function coincideBusqueda(p,q){if(!q)return true;var n=norm(q);return norm(p.nm).indexOf(n)!==-1||norm(p.id).indexOf(n)!==-1||norm(p.codigoAzur||"").indexOf(n)!==-1;}
 
 // ════════════════════ CÁLCULO DE PUNTOS ════════════════════
 function calcPuntos(precioAplicado, costo){
@@ -286,6 +288,15 @@ function hacerLogin(){
   var err=document.getElementById("login-err");
   err.style.display="none";
   if(!loginConCredenciales(u,pw)){err.style.display="block";return;}
+  // Modo mantenimiento: solo ADMIN puede entrar
+  if(typeof MODO_MANTENIMIENTO!=="undefined"&&MODO_MANTENIMIENTO&&!USER.esAdmin){
+    USER=null;
+    err.textContent=(typeof MANTENIMIENTO_MSG!=="undefined"?MANTENIMIENTO_MSG:"Portal en mantenimiento");
+    err.style.display="block";
+    return;
+  }
+  // Recordar último RUC usado (no la contraseña)
+  try{localStorage.setItem("pyro_last_ruc",u);}catch(e){}
   try{localStorage.setItem("pyro_sesion",JSON.stringify({ruc:u,pass:pw}));}catch(e){}
   if(!USER.esAdmin&&USER.rol!=="impresion"){
     mostrarSaludoFlash();
@@ -705,7 +716,7 @@ function renderCatalogo(){
 
   if(FILTRO==="favoritos"){
     var favProds=PRODUCTOS.filter(function(p){return FAVORITOS.indexOf(p.id)!==-1;});
-    if(q)favProds=favProds.filter(function(p){return norm(p.nm).indexOf(norm(q))!==-1||norm(p.id).indexOf(norm(q))!==-1;});
+    if(q)favProds=favProds.filter(function(p){return coincideBusqueda(p,q);});
     if(!favProds.length){document.getElementById("cat-lista").innerHTML='<div class="empty"><div class="ico">❤️</div><p>No tienes favoritos aún</p></div>';return;}
     html='<div class="subcat">❤️ Tus favoritos</div>';
     var wrapClass=CAT_GRID?"cat-grid-wrap":"";
@@ -724,7 +735,7 @@ function renderCatalogo(){
       pr.items.forEach(function(it){
         var p=PRODUCTOS.find(function(x){return x.id===it.id;});
         if(!p||p.ago)return;
-        if(q&&norm(p.nm).indexOf(norm(q))===-1&&norm(p.id).indexOf(norm(q))===-1)return;
+        if(q&&!coincideBusqueda(p,q))return;
         prodsEnPromo.push(p);
       });
     });
@@ -741,7 +752,7 @@ function renderCatalogo(){
       if(SUB_FILTRO&&SUB_FILTRO!==sn)return;
       var ps=PRODUCTOS.filter(function(p){
         if(p.cat!==ck||p.sub!==sn)return false;
-        if(q&&norm(p.nm).indexOf(norm(q))===-1&&norm(p.id).indexOf(norm(q))===-1)return false;
+        if(q&&!coincideBusqueda(p,q))return false;
         return true;
       });
       if(!ps.length)return;
@@ -3199,6 +3210,8 @@ window.addEventListener("load",function(){
     if(sp){sp.classList.add("hide");setTimeout(function(){sp.style.display="none";},600);}
   },1500);
   cargarDistribuidoresExtra();
+  // Mostrar versión del portal
+  try{var vt=document.getElementById("app-version-tag");if(vt&&typeof APP_VERSION!=="undefined")vt.textContent="Portal PyroShield v"+APP_VERSION;}catch(e){}
   // Mostrar/ocultar credenciales demo según MODO_DEMO
   var demoBox=document.getElementById("login-demo-box");
   if(demoBox)demoBox.style.display=(typeof MODO_DEMO!=="undefined"&&MODO_DEMO)?"block":"none";
@@ -3209,4 +3222,6 @@ window.addEventListener("load",function(){
   var lp=document.getElementById("login-pass"),lu=document.getElementById("login-user");
   if(lp)lp.addEventListener("keydown",function(e){if(e.key==="Enter")hacerLogin();});
   if(lu)lu.addEventListener("keydown",function(e){if(e.key==="Enter")lp.focus();});
+  // Recordar último RUC: prellenar y enfocar la contraseña
+  try{var lastRuc=localStorage.getItem("pyro_last_ruc");if(lastRuc&&lu&&!lu.value){lu.value=lastRuc;if(lp)setTimeout(function(){lp.focus();},100);}}catch(e){}
 });

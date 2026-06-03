@@ -34,6 +34,11 @@ var IMG_PLACEHOLDER="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/s
 // ════════════════════ MODO PRODUCCIÓN ════════════════════
 // Cuando es false, se ocultan las credenciales demo del login.
 var MODO_DEMO = false;
+// Versión del portal (visible en perfil del cliente y admin)
+var APP_VERSION = "1.0.0";
+// Modo mantenimiento: si es true, nadie puede iniciar sesión (excepto ADMIN)
+var MODO_MANTENIMIENTO = false;
+var MANTENIMIENTO_MSG = "Estamos realizando mejoras. Volvemos en unos minutos. 🔧";
 
 // ════════════════════ CONSTANTES ════════════════════
 var IVA = 0.15;
