@@ -78,10 +78,11 @@ var FRASES_MOTIVACIONALES=[
 ];
 var TUT_PASO=0;
 var TUT_PASOS=[
-  {ico:"🧯",t:"Catálogo",d:"Encuentra todos nuestros productos con precios exclusivos para ti."},
-  {ico:"🛒",t:"Pedidos",d:"Arma tu pedido y nosotros coordinamos la entrega hasta tu local."},
-  {ico:"🏆",t:"Puntos",d:"Cada compra te da puntos canjeables por premios reales como KFC y tarjetas de consumo."},
-  {ico:"📋",t:"Historial",d:"Revisa y repite tus pedidos anteriores fácilmente."}
+  {ico:"🧯",t:"Bienvenido al Portal PyroShield",d:"Tu plataforma exclusiva para distribuidores. Aquí puedes ver precios especiales, hacer pedidos y gestionar todo tu negocio en un solo lugar."},
+  {ico:"🛒",t:"Catálogo y pedidos",d:"Explora el catálogo, agrega productos al carrito y confirma tu pedido en minutos. Coordinamos la entrega directo a tu local."},
+  {ico:"📦",t:"Descuentos por volumen",d:"¡Compra más, paga menos! Al agregar más unidades se activan descuentos automáticos. Verás el precio actualizado en tiempo real en el carrito."},
+  {ico:"🏆",t:"Sistema de puntos",d:"Cada pedido confirmado te suma puntos según la ganancia generada. Acumúlalos y canjéalos por premios reales: tarjetas de consumo, KFC y más."},
+  {ico:"📋",t:"Historial y borradores",d:"Consulta todos tus pedidos anteriores, repite los que más te gustan con un clic y guarda borradores para continuar más tarde sin perder nada."}
 ];
 
 // ════════════════════ UTILIDADES ════════════════════
@@ -3341,4 +3342,5 @@ window.addEventListener("load",function(){
   if(lu)lu.addEventListener("keydown",function(e){if(e.key==="Enter")lp.focus();});
   // Recordar último RUC: prellenar y enfocar la contraseña
   try{var lastRuc=localStorage.getItem("pyro_last_ruc");if(lastRuc&&lu&&!lu.value){lu.value=lastRuc;if(lp)setTimeout(function(){lp.focus();},100);}}catch(e){}
+  if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js').catch(function(){});}
 });
