@@ -32,7 +32,7 @@
     <div class="login-title">Bienvenido</div>
     <div class="login-sub">Ingresa con tu RUC y contraseña</div>
     <div class="field-label">RUC / Usuario</div>
-    <input class="field-inp" id="login-user" type="text" placeholder="Tu RUC" autocomplete="username" inputmode="numeric">
+    <input class="field-inp" id="login-user" type="text" placeholder="Tu RUC" autocomplete="username" inputmode="numeric" maxlength="13">
     <div class="field-label">Contraseña</div>
     <input class="field-inp" id="login-pass" type="password" placeholder="Tu contraseña" autocomplete="current-password">
     <button class="btn-login" onclick="hacerLogin()">Ingresar</button>
@@ -333,6 +333,7 @@
     </div>
     <div id="calif-ok-msg" style="display:none;text-align:center;font-size:14px;color:var(--verde);font-weight:600;padding:10px">¡Gracias! Nos alegra que todo haya salido perfecto 🔥</div>
     <button class="btn btn-p btn-full" style="margin-top:8px" onclick="enviarCalif()">Enviar calificación</button>
+    <button class="btn btn-s btn-full" style="margin-top:6px" onclick="cerrarModal('modal-calif')">Cancelar</button>
   </div>
 </div>
 

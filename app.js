@@ -289,12 +289,14 @@ function loginConCredenciales(ruc,pw){
   return true;
 }
 function hacerLogin(){
+  var btn=document.querySelector(".btn-login");
+  if(btn){if(btn.disabled)return;btn.disabled=true;}
   var u=document.getElementById("login-user").value.trim();
   var pw=document.getElementById("login-pass").value.trim();
   var err=document.getElementById("login-err");
   err.style.display="none";
-  if(!loginConCredenciales(u,pw)){err.style.display="block";return;}
-  try{localStorage.setItem("pyro_sesion",JSON.stringify({ruc:u,pass:pw}));}catch(e){}
+  if(!loginConCredenciales(u,pw)){err.style.display="block";if(btn)btn.disabled=false;return;}
+  try{localStorage.setItem("pyro_sesion",JSON.stringify({ruc:u}));}catch(e){}
   if(!USER.esAdmin&&USER.rol!=="impresion"){
     mostrarSaludoFlash();
     otorgarBienvenida();
@@ -433,6 +435,7 @@ function mostrarOverlayBienvenida(){
   document.body.appendChild(ov);
 }
 function logout(){
+  try{if(USER&&USER.ruc)localStorage.removeItem("pyro_busquedas_"+USER.ruc);}catch(e){}
   USER=null;CARRITO=[];
   try{localStorage.removeItem("pyro_sesion");}catch(e){}
   mostrar("s-login");
@@ -694,8 +697,9 @@ function onCatSearch(){
     var q=(searchEl.value||"").trim();
     if(q.length>1){
       var busqs=[];
-      try{busqs=JSON.parse(localStorage.getItem("pyro_busquedas")||"[]");}catch(e){}
-      if(busqs.indexOf(q)===-1){busqs.unshift(q);busqs=busqs.slice(0,5);try{localStorage.setItem("pyro_busquedas",JSON.stringify(busqs));}catch(e){}}
+      var bKey="pyro_busquedas_"+(USER&&USER.ruc||"");
+      try{busqs=JSON.parse(localStorage.getItem(bKey)||"[]");}catch(e){}
+      if(busqs.indexOf(q)===-1){busqs.unshift(q);busqs=busqs.slice(0,5);try{localStorage.setItem(bKey,JSON.stringify(busqs));}catch(e){}}
     }
     renderSearchRecientes();
     renderCatalogo();
@@ -709,7 +713,7 @@ function renderSearchRecientes(){
   var q=(searchEl&&searchEl.value||"").trim();
   if(q){el.innerHTML="";return;}
   var busqs=[];
-  try{busqs=JSON.parse(localStorage.getItem("pyro_busquedas")||"[]");}catch(e){}
+  try{busqs=JSON.parse(localStorage.getItem("pyro_busquedas_"+(USER&&USER.ruc||""))||"[]");}catch(e){}
   if(!busqs.length){el.innerHTML="";return;}
   el.innerHTML='<div class="busq-recientes">'+
     '<span style="font-size:10px;color:var(--g3);font-weight:600;letter-spacing:.5px;text-transform:uppercase;margin-right:4px">Recientes:</span>'+
@@ -815,7 +819,7 @@ function renderProdCard(p){
 
   // Indicador próximo descuento
   var proxDescHtml="";
-  if(p.descVol&&!USER.sinDescVol&&cantActual>0){
+  if(p.descVol&&USER&&!USER.sinDescVol&&cantActual>0){
     var sig=siguienteNivel(p,cantActual);
     if(sig&&sig.falta<=20){
       var ahorroAdicional=sig.pct;
@@ -1252,9 +1256,10 @@ function cambiarCant(id,d){
   guardarCarrito(); renderCarrito(); actualizarBadge();
 }
 function quitarItem(id){
+  var p=PRODUCTOS.find(function(x){return x.id===id;});
   CARRITO=CARRITO.filter(function(i){return i.id!==id;});
   guardarCarrito(); renderCarrito(); actualizarBadge();
-  toast("🗑 Producto eliminado");
+  toast("🗑 "+(p?p.nm:"Producto")+" eliminado");
 }
 
 // ════════════════════ BORRADORES ════════════════════
@@ -1276,7 +1281,7 @@ function renderBorradores(){
   if(!borradores.length){bp.innerHTML="";return;}
   bp.innerHTML='<div style="margin-bottom:10px"><div class="form-label">Borradores guardados</div>'+
     borradores.map(function(b,i){
-      var d=new Date(b.ts);
+      var d=new Date(b.ts||0);
       var label=b.nombre==="Autoguardado"?"💾 Autoguardado":"Borrador "+(i+1);
       return '<div class="borrador-item">'+
         '<span style="font-size:12px">'+label+' — '+d.toLocaleDateString()+'</span>'+
@@ -2303,7 +2308,7 @@ function renderAdmDist(){
           '<div style="font-weight:700;font-size:15px">'+d.razon+'</div>'+
           (d.empresa?'<div style="font-size:12px;color:var(--azul);font-weight:600">'+d.empresa+'</div>':'')+
           '<div style="font-size:12px;color:var(--g3);margin-top:3px">'+tipoDocLabel(d)+': '+d.ruc+(d.tel?' · Tel: '+d.tel:'')+'</div>'+
-          '<div style="font-size:11px;color:var(--g3);display:flex;align-items:center;gap:6px;flex-wrap:wrap">Pass: <span style="font-family:monospace;background:var(--g1);padding:1px 6px;border-radius:4px">'+d.pass+'</span>'+(d.requiereCambioPass?'<span style="font-size:10px;color:#e69900">· Sin cambiar</span>':'')+'<button class="btn btn-sm btn-s" style="font-size:10px;padding:2px 7px" onclick="copiarCredenciales(\''+d.ruc.replace(/'/g,'')+'\')">📋 Copiar</button></div>'+
+          '<div style="font-size:11px;color:var(--g3);display:flex;align-items:center;gap:6px;flex-wrap:wrap">Pass: <span style="font-family:monospace;background:var(--g1);padding:1px 6px;border-radius:4px">•••••••</span>'+(d.requiereCambioPass?'<span style="font-size:10px;color:#e69900">· Sin cambiar</span>':'')+'<button class="btn btn-sm btn-s" style="font-size:10px;padding:2px 7px" onclick="copiarCredenciales(\''+d.ruc.replace(/'/g,'')+'\')">📋 Copiar</button></div>'+
         '</div>'+
         '<div style="display:flex;gap:6px">'+
           '<button class="btn btn-sm btn-s" onclick="abrirEditarDist(\''+d.ruc+'\')">✏️</button>'+
@@ -2358,7 +2363,7 @@ function abrirEditarDist(ruc){
     '<label class="form-label">Correo</label>'+
     '<input class="form-input" id="ed-correo" value="'+escHtml(d.correo||"")+'">'+
     '<label class="form-label">Contraseña</label>'+
-    '<input class="form-input" id="ed-pass" type="text" value="'+escHtml(d.pass||"")+'">'+
+    '<input class="form-input" id="ed-pass" type="password" value="'+escHtml(d.pass||"")+'">'+
     '<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">'+
       '<input type="checkbox" id="ed-entrega" '+(d.entrega&&d.entrega.habilitada?"checked":"")+' style="width:18px;height:18px">'+
       '<label for="ed-entrega" style="font-size:14px">Entrega a domicilio habilitada</label>'+
@@ -3380,7 +3385,7 @@ window.addEventListener("load",function(){
   if(demoBox)demoBox.style.display=(typeof MODO_DEMO!=="undefined"&&MODO_DEMO)?"block":"none";
   try{
     var s=JSON.parse(localStorage.getItem("pyro_sesion")||"null");
-    if(s&&s.ruc&&s.pass){loginConCredenciales(s.ruc,s.pass);}
+    if(s&&s.ruc){var lu=document.getElementById("login-user");if(lu)lu.value=s.ruc;}
   }catch(e){}
   var lp=document.getElementById("login-pass"),lu=document.getElementById("login-user");
   if(lp)lp.addEventListener("keydown",function(e){if(e.key==="Enter")hacerLogin();});
