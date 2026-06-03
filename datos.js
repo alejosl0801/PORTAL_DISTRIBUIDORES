@@ -50,7 +50,7 @@ var PROMOS = [
   {
     id: "p3", estado: "activa",
     titulo: "Promo de la Semana",
-    fechaVence: "2026-06-06",
+    fechaVence: "2026-12-31",
     items: [
       {id:"CABCO2510", nm:"Cabezal CO2 5/10 LB", pv:7.80, pp:6.40, ahorro:1.40},
       {id:"MANG10CO2", nm:"Manguera CO2 10 LB", pv:7.20, pp:5.90, ahorro:1.30}
