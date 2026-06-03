@@ -296,10 +296,6 @@ body{font-family:'Barlow',sans-serif;background:var(--g1);color:var(--negro);min
   padding:6px 14px;border-radius:20px;margin-top:6px;display:inline-block;
 }
 
-/* ADMIN — 6 STATS EN GRILLA */
-.adm-stats {
-  display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;
-}
 
 /* MODAL EDITAR DISTRIBUIDOR */
 #modal-editar-dist .modal,

@@ -241,14 +241,6 @@ function passCoincide(stored,pw){
   if(/^[a-f0-9]{64}$/i.test(stored))return sha256(pw)===stored.toLowerCase();
   return false;
 }
-// Genera contraseña tipo Pyro-XXXX (4-5 chars, sin chars confusos 0/O/1/l/I)
-function generarPassAleatoria(){
-  var chars="abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-  var r="Pyro-",len=4+Math.floor(Math.random()*2);
-  for(var i=0;i<len;i++)r+=chars.charAt(Math.floor(Math.random()*chars.length));
-  return r;
-}
-
 function loginConCredenciales(ruc,pw){
   var d=DISTRIBUIDORES.find(function(x){return x.ruc.toLowerCase()===ruc.toLowerCase()&&passCoincide(x.pass,pw);});
   if(!d)return false;
@@ -337,28 +329,22 @@ function primerIngresoPaso1(){
   );
 }
 function primerIngresoPaso2(){
-  var obligatorio=USER&&USER.requiereCambioPass;
   _primerIngresoOv(
-    '<div style="font-size:21px;font-weight:800;margin-bottom:10px">🔐 Crea tu contraseña</div>'+
-    '<div style="font-size:13px;color:var(--g4);margin-bottom:16px;line-height:1.5">'+
-    (obligatorio?'Por seguridad <b>debes elegir una contraseña propia</b> antes de continuar.':'Tu contraseña es temporal. Te recomendamos cambiarla.')+
-    '</div>'+
-    '<input class="form-input" id="pi-pass1" type="password" placeholder="Nueva contraseña (mín. 6 caracteres)" autocomplete="new-password">'+
-    '<input class="form-input" id="pi-pass2" type="password" placeholder="Repetir contraseña" autocomplete="new-password">'+
-    '<div id="pi-pass-err" style="color:#e53935;font-size:12px;min-height:16px;margin-bottom:4px;text-align:left"></div>'+
+    '<div style="font-size:21px;font-weight:800;margin-bottom:10px">Cambia tu contraseña</div>'+
+    '<div style="font-size:13px;color:var(--g4);margin-bottom:16px;line-height:1.5">Tu contraseña actual es temporal. Te recomendamos cambiarla por una segura.</div>'+
+    '<input class="form-input" id="pi-pass1" type="password" placeholder="Nueva contraseña">'+
+    '<input class="form-input" id="pi-pass2" type="password" placeholder="Repetir contraseña">'+
     '<button class="btn btn-p btn-full" style="margin-top:4px" onclick="primerIngresoGuardarPass()">Guardar contraseña</button>'+
-    (obligatorio?'':'<button class="btn btn-s btn-full" style="margin-top:8px" onclick="primerIngresoPaso3()">Omitir por ahora</button>')
+    '<button class="btn btn-s btn-full" style="margin-top:8px" onclick="primerIngresoPaso3()">Omitir por ahora</button>'
   );
 }
 function primerIngresoGuardarPass(){
   var p1=document.getElementById("pi-pass1"),p2=document.getElementById("pi-pass2");
-  var errEl=document.getElementById("pi-pass-err");
-  var v1=p1?p1.value.trim():"",v2=p2?p2.value.trim():"";
-  if(errEl)errEl.textContent="";
-  if(v1.length<6){if(errEl)errEl.textContent="Mínimo 6 caracteres.";return;}
-  if(v1===USER.pass){if(errEl)errEl.textContent="Debe ser diferente a la contraseña actual.";return;}
-  if(v1!==v2){if(errEl)errEl.textContent="Las contraseñas no coinciden.";return;}
-  guardarCambioPass(USER.ruc,v1);
+  var v1=p1?p1.value:"",v2=p2?p2.value:"";
+  if(v1.length<6){toast("⚠️ La contraseña debe tener al menos 6 caracteres");return;}
+  if(v1!==v2){toast("⚠️ Las contraseñas no coinciden");return;}
+  USER.pass=v1;
+  guardarDistribuidores();
   try{localStorage.setItem("pyro_sesion",JSON.stringify({ruc:USER.ruc,pass:v1}));}catch(e){}
   toast("✅ Contraseña actualizada");
   primerIngresoPaso3();
@@ -367,35 +353,6 @@ function primerIngresoPaso3(){
   _cerrarPrimerIngresoOv();
   try{localStorage.setItem("pyro_primer_ingreso_"+USER.ruc,"1");}catch(e){}
   iniciarTutorial();
-}
-
-// Cambio de contraseña voluntario (desde portal del distribuidor)
-function mostrarCambioPassOpcional(){
-  var ov=document.createElement("div");
-  ov.id="cambio-pass-ov";
-  ov.style.cssText="position:fixed;inset:0;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;z-index:9998;padding:20px";
-  ov.innerHTML='<div style="background:var(--blanco,#fff);border-radius:22px;padding:28px 24px;max-width:340px;width:100%;text-align:center;box-shadow:0 12px 50px rgba(0,0,0,.45)">'+
-    '<div style="font-size:21px;font-weight:800;margin-bottom:10px">🔐 Cambiar contraseña</div>'+
-    '<input class="form-input" id="cpopt-p1" type="password" placeholder="Nueva contraseña (mín. 6 caracteres)" autocomplete="new-password" style="text-align:left">'+
-    '<input class="form-input" id="cpopt-p2" type="password" placeholder="Repetir contraseña" autocomplete="new-password" style="text-align:left">'+
-    '<div id="cpopt-err" style="color:#e53935;font-size:12px;min-height:16px;margin-bottom:6px;text-align:left"></div>'+
-    '<button class="btn btn-p btn-full" onclick="cambiarPassOpcionalGuardar()">Guardar contraseña</button>'+
-    '<button class="btn btn-s btn-full" style="margin-top:8px" onclick="document.getElementById(\'cambio-pass-ov\').remove()">Cancelar</button>'+
-  '</div>';
-  document.body.appendChild(ov);
-}
-function cambiarPassOpcionalGuardar(){
-  var p1=document.getElementById("cpopt-p1"),p2=document.getElementById("cpopt-p2");
-  var errEl=document.getElementById("cpopt-err");
-  var v1=p1?p1.value.trim():"",v2=p2?p2.value.trim():"";
-  if(errEl)errEl.textContent="";
-  if(v1.length<6){if(errEl)errEl.textContent="Mínimo 6 caracteres.";return;}
-  if(v1===USER.pass){if(errEl)errEl.textContent="Debe ser diferente a la contraseña actual.";return;}
-  if(v1!==v2){if(errEl)errEl.textContent="Las contraseñas no coinciden.";return;}
-  guardarCambioPass(USER.ruc,v1);
-  try{localStorage.setItem("pyro_sesion",JSON.stringify({ruc:USER.ruc,pass:v1}));}catch(e){}
-  var ov=document.getElementById("cambio-pass-ov");if(ov)ov.remove();
-  toast("✅ Contraseña actualizada correctamente");
 }
 
 // Otorga (una sola vez por cuenta) un canje gratis de bienvenida al primer login
@@ -407,7 +364,7 @@ function otorgarBienvenida(){
   if(yaTiene){try{localStorage.setItem(flag,"1");}catch(e){}return;}
   if(localStorage.getItem(flag))return;
   var now=new Date();
-  var bid="B"+now.getTime().toString().slice(-5)+String(Math.floor(Math.random()*90+10));
+  var bid="B"+now.getTime().toString().slice(-5);
   PEDIDOS.push({
     id:bid,ruc:USER.ruc,razon:USER.razon,
     fecha:now.toLocaleDateString(),fechaISO:now.toISOString(),
@@ -694,8 +651,8 @@ function onCatSearch(){
     var q=(searchEl.value||"").trim();
     if(q.length>1){
       var busqs=[];
-      try{busqs=JSON.parse(localStorage.getItem("pyro_busquedas")||"[]");}catch(e){}
-      if(busqs.indexOf(q)===-1){busqs.unshift(q);busqs=busqs.slice(0,5);try{localStorage.setItem("pyro_busquedas",JSON.stringify(busqs));}catch(e){}}
+      try{busqs=JSON.parse(localStorage.getItem("pyro_busquedas_"+(USER?USER.ruc:"x")+"")||"[]");}catch(e){}
+      if(busqs.indexOf(q)===-1){busqs.unshift(q);busqs=busqs.slice(0,5);try{localStorage.setItem("pyro_busquedas_"+(USER?USER.ruc:"x")+"",JSON.stringify(busqs));}catch(e){}}
     }
     renderSearchRecientes();
     renderCatalogo();
@@ -709,7 +666,7 @@ function renderSearchRecientes(){
   var q=(searchEl&&searchEl.value||"").trim();
   if(q){el.innerHTML="";return;}
   var busqs=[];
-  try{busqs=JSON.parse(localStorage.getItem("pyro_busquedas")||"[]");}catch(e){}
+  try{busqs=JSON.parse(localStorage.getItem("pyro_busquedas_"+(USER?USER.ruc:"x")+"")||"[]");}catch(e){}
   if(!busqs.length){el.innerHTML="";return;}
   el.innerHTML='<div class="busq-recientes">'+
     '<span style="font-size:10px;color:var(--g3);font-weight:600;letter-spacing:.5px;text-transform:uppercase;margin-right:4px">Recientes:</span>'+
@@ -1368,7 +1325,7 @@ function confirmarPedido(){
     items.push({id:p.id,nm:p.nm,cant:it.cant,pv:p.pv,pr:pr,descPct:rv.descPct,pts:pts,costo:p.costo||0});
   });
   var iva=parseFloat((subtotal*IVA).toFixed(2)), total=parseFloat((subtotal+iva).toFixed(2));
-  var pid=Date.now().toString().slice(-6)+String(Math.floor(Math.random()*90+10));
+  var pid="P"+Date.now()+Math.floor(Math.random()*1000);
   var now=new Date();
   var entregaInfo={};
   if(modo==="entrega"){
@@ -1414,7 +1371,7 @@ function estadoLabel(e){
     entrega:"🚚 En proceso",
     entregado:"📦 Entregado",
     facturado:"🚚 En proceso",
-    finalizado:"✔️ Finalizado",
+    finalizado:"📦 Entregado",
     cancelado:"✕ Cancelado"
   };
   return m[e]||e;
@@ -1711,7 +1668,7 @@ function canjear(pts,nm){
   if(saldoPuntos()<pts){toast("⚠️ No tienes suficientes puntos confirmados");return;}
   confirmar("¿Canjear <b>"+fmtPts(pts)+" puntos</b> por <b>"+nm+"</b>?<br><small>Se coordinará con tu próximo pedido.</small>",function(){
     if(saldoPuntos()<pts){toast("⚠️ Ya no tienes suficientes puntos");renderRecompensas();return;}
-    var pid="C"+Date.now().toString().slice(-5)+String(Math.floor(Math.random()*9+1));
+    var pid="C"+Date.now().toString().slice(-5);
     PEDIDOS.push({id:pid,ruc:USER.ruc,razon:USER.razon,fecha:new Date().toLocaleDateString(),fechaISO:new Date().toISOString(),esCanje:true,canjePts:pts,canjeNm:nm,estado:"pendiente",total:0,puntos:0});
     guardarPedidos(); renderRecompensas();
     setTopbarPts(saldoPuntos());
@@ -2041,9 +1998,7 @@ function guardarEstadoPed(pid){
     });
     guardarStock();
   }
-  guardarPedidos();
-  sincronizarEstadoSheet(p);
-  cerrarModal("modal-pedido-det"); renderAdmPedidos();
+  guardarPedidos(); cerrarModal("modal-pedido-det"); renderAdmPedidos();
   toast("✅ Estado actualizado");
 }
 
@@ -2075,7 +2030,7 @@ function generarProforma(pid){
     '</tr>';
   }).join("");
   var win=window.open("","_blank","width=860,height=960");
-  if(!win){toast("⚠️ Permite las ventanas emergentes en tu navegador para generar la proforma.");return;}
+  if(!win){toast("⚠️ Permite las ventanas emergentes para generar el PDF");return;}
   win.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Proforma #'+p.id+'</title>'+
     '<base href="'+baseHref+'">'+
     '<style>body{font-family:Arial,sans-serif;font-size:12px;color:#111;padding:24px;max-width:820px;margin:0 auto}'+
@@ -2164,7 +2119,7 @@ function generarNotaEntrega(pid){
     entregaDir=(p.entregaInfo.establecimiento.nm||"")+(p.entregaInfo.establecimiento.dir?" — "+p.entregaInfo.establecimiento.dir:"");
   }
   var win=window.open("","_blank","width=800,height=900");
-  if(!win){toast("⚠️ Permite las ventanas emergentes en tu navegador para generar la nota de entrega.");return;}
+  if(!win){toast("⚠️ Permite las ventanas emergentes para generar el PDF");return;}
   win.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Nota de Entrega #'+p.id+'</title>'+
     '<base href="'+baseHref+'">'+
     '<style>body{font-family:Arial,sans-serif;font-size:12px;color:#111;padding:28px;max-width:720px;margin:0 auto}'+
@@ -2229,8 +2184,7 @@ function generarWA(pid){
   var p=PEDIDOS.find(function(x){return x.id===pid;});
   if(!p)return;
   var dist=DISTRIBUIDORES.find(function(d){return d.ruc===p.ruc;});
-  if(!dist||!dist.tel){toast("⚠️ Este distribuidor no tiene teléfono registrado. Agrégalo desde el panel de distribuidores.");return;}
-  var tel=dist.tel.replace(/[^0-9]/g,"");
+  var tel=dist&&dist.tel?dist.tel.replace(/[^0-9]/g,""):"593978997247";
   if(tel.startsWith("09"))tel="593"+tel.slice(1);
   var msg="*PyroShield — Pedido #"+p.id+"*\n\nHola "+p.razon+"!\n\n";
   if(p.items)p.items.forEach(function(it){msg+="• "+it.nm+" x"+it.cant+" — "+fmt$(it.pr*it.cant)+"\n";});
@@ -2303,7 +2257,7 @@ function renderAdmDist(){
           '<div style="font-weight:700;font-size:15px">'+d.razon+'</div>'+
           (d.empresa?'<div style="font-size:12px;color:var(--azul);font-weight:600">'+d.empresa+'</div>':'')+
           '<div style="font-size:12px;color:var(--g3);margin-top:3px">'+tipoDocLabel(d)+': '+d.ruc+(d.tel?' · Tel: '+d.tel:'')+'</div>'+
-          '<div style="font-size:11px;color:var(--g3);display:flex;align-items:center;gap:6px;flex-wrap:wrap">Pass: <span style="font-family:monospace;background:var(--g1);padding:1px 6px;border-radius:4px">'+d.pass+'</span>'+(d.requiereCambioPass?'<span style="font-size:10px;color:#e69900">· Sin cambiar</span>':'')+'<button class="btn btn-sm btn-s" style="font-size:10px;padding:2px 7px" onclick="copiarCredenciales(\''+d.ruc.replace(/'/g,'')+'\')">📋 Copiar</button></div>'+
+          '<div style="font-size:11px;color:var(--g3)">Pass: <span style="font-family:monospace;background:var(--g1);padding:1px 6px;border-radius:4px">••••••</span></div>'+
         '</div>'+
         '<div style="display:flex;gap:6px">'+
           '<button class="btn btn-sm btn-s" onclick="abrirEditarDist(\''+d.ruc+'\')">✏️</button>'+
@@ -2325,11 +2279,7 @@ function renderAdmDist(){
 }
 
 function filtrarDist(){renderAdmDist();}
-function abrirNuevoDist(){
-  var passEl=document.getElementById("nd-pass");
-  if(passEl)passEl.value=generarPassAleatoria();
-  abrir("modal-nuevo-dist");
-}
+function abrirNuevoDist(){abrir("modal-nuevo-dist");}
 
 function eliminarDist(ruc){
   var d=DISTRIBUIDORES.find(function(x){return x.ruc===ruc;});
@@ -2358,7 +2308,7 @@ function abrirEditarDist(ruc){
     '<label class="form-label">Correo</label>'+
     '<input class="form-input" id="ed-correo" value="'+escHtml(d.correo||"")+'">'+
     '<label class="form-label">Contraseña</label>'+
-    '<input class="form-input" id="ed-pass" type="text" value="'+escHtml(d.pass||"")+'">'+
+    '<input class="form-input" id="ed-pass" type="password" value="'+escHtml(d.pass||"")+'">'+
     '<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">'+
       '<input type="checkbox" id="ed-entrega" '+(d.entrega&&d.entrega.habilitada?"checked":"")+' style="width:18px;height:18px">'+
       '<label for="ed-entrega" style="font-size:14px">Entrega a domicilio habilitada</label>'+
@@ -2534,7 +2484,7 @@ function guardarNuevoDist(){
   if(tipoDoc==="ruc"&&soloNum.length!==13){toast("⚠️ El RUC debe tener 13 dígitos");if(btnNd)btnNd.disabled=false;return;}
   var existe=DISTRIBUIDORES.find(function(d){return d.ruc.toLowerCase()===ruc.toLowerCase();});
   if(existe){toast("⚠️ Ya existe un distribuidor con ese documento");if(btnNd)btnNd.disabled=false;return;}
-  var nd={ruc:ruc,tipoDoc:tipoDoc,razon:r,pass:pw,tel:tel,correo:co,entrega:{habilitada:ent,montoMin:min},sinDescVol:sinVol,_nuevo:true,requiereCambioPass:true};
+  var nd={ruc:ruc,tipoDoc:tipoDoc,razon:r,pass:pw,tel:tel,correo:co,entrega:{habilitada:ent,montoMin:min},sinDescVol:sinVol,_nuevo:true};
   if(emp)nd.empresa=emp;
   if(enc)nd.encargado=enc;
   if(dir)nd.establecimientos=[{nm:"Local principal",dir:dir,obs:""}];
@@ -2542,13 +2492,8 @@ function guardarNuevoDist(){
   guardarDistribuidores();
   cerrarModal("modal-nuevo-dist");
   renderAdmDist();
-  // Mostrar credenciales al admin
-  var cRuc=document.getElementById("nd-cred-ruc"),cPass=document.getElementById("nd-cred-pass");
-  if(cRuc)cRuc.textContent=ruc;
-  if(cPass)cPass.textContent=pw;
-  if(cRuc&&cPass)abrir("modal-cred-nuevo");else toast("✅ "+r+" · Pass: "+pw);
-  ["nd-razon","nd-empresa","nd-encargado","nd-ruc","nd-tel","nd-correo","nd-dir"].forEach(function(x){var el=document.getElementById(x);if(el)el.value="";});
-  var passEl=document.getElementById("nd-pass");if(passEl)passEl.value=generarPassAleatoria();
+  toast("✅ "+r+" registrado");
+  ["nd-razon","nd-empresa","nd-encargado","nd-ruc","nd-tel","nd-correo","nd-pass","nd-dir"].forEach(function(x){var el=document.getElementById(x);if(el)el.value="";});
   if(document.getElementById("nd-tipodoc"))document.getElementById("nd-tipodoc").value="ruc";
   if(document.getElementById("nd-sinvol"))document.getElementById("nd-sinvol").checked=false;
 }
@@ -2798,7 +2743,7 @@ function generarReporteMensual(){
   var topProds=Object.values(prodCounts).sort(function(a,b){return b.subtotal-a.subtotal;}).slice(0,10);
   var baseHref=window.location.href.substring(0,window.location.href.lastIndexOf("/")+1);
   var win=window.open("","_blank","width=800,height=950");
-  if(!win){toast("⚠️ Permite las ventanas emergentes en tu navegador para generar el reporte.");return;}
+  if(!win){toast("⚠️ Permite las ventanas emergentes para generar el PDF");return;}
   win.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Reporte Mensual '+nombreMes+'</title>'+
     '<base href="'+baseHref+'">'+
     '<style>body{font-family:Arial,sans-serif;font-size:12px;color:#111;padding:28px;max-width:720px;margin:0 auto}'+
@@ -3003,8 +2948,6 @@ function chequearPedidosNuevos(){
 // ════════════════════ SINCRONIZACIÓN GOOGLE SHEETS ════════════════════
 // NOTA para doPost en Apps Script: parsear con JSON.parse(e.postData.contents)
 var GAS_URL="https://script.google.com/macros/s/AKfycbwiIAupZxy2T33EiDHbwkLBHTw0Q2Uv98r8pc9L351b6lXwY_mOD6kI2tvfzqdIUdxG/exec";
-// Token de autenticación — debe coincidir con la propiedad PYRO_SECRET en el Apps Script
-var GAS_TOKEN="PyroShield-portal-2026";
 
 function cargarSyncPendientes(){
   try{return JSON.parse(localStorage.getItem("pyro_sync_pendientes")||"[]");}catch(e){return[];}
@@ -3016,7 +2959,6 @@ function guardarSyncPendientes(lista){
 function sincronizarConSheets(ped, silencioso){
   var payload={
     accion:"guardarPedidoPyro",
-    token:GAS_TOKEN,
     id_pedido:ped.id,
     fecha:ped.fechaISO,
     ruc_dist:ped.ruc,
@@ -3029,11 +2971,7 @@ function sincronizarConSheets(ped, silencioso){
     method:"POST",
     headers:{"Content-Type":"text/plain;charset=utf-8"},
     body:JSON.stringify(payload)
-  }).then(function(r){
-    if(!r.ok)throw new Error("HTTP "+r.status);
-    return r.json();
-  }).then(function(data){
-    if(data&&data.ok===false)throw new Error(data.error||"Error del servidor");
+  }).then(function(){
     var pend=cargarSyncPendientes();
     pend=pend.filter(function(x){return x.id!==ped.id;});
     guardarSyncPendientes(pend);
@@ -3045,22 +2983,6 @@ function sincronizarConSheets(ped, silencioso){
     }
     if(!silencioso)toast("☁️ Pendiente de sincronización (se reintentará)");
   });
-}
-
-function sincronizarEstadoSheet(ped){
-  if(!ped||!ped.id)return;
-  var payload={
-    accion:"actualizarEstadoPyro",
-    token:GAS_TOKEN,
-    id_pedido:ped.id,
-    estado:ped.estado
-  };
-  fetch(GAS_URL,{
-    method:"POST",
-    headers:{"Content-Type":"text/plain;charset=utf-8"},
-    body:JSON.stringify(payload)
-  }).then(function(r){return r.ok?r.json():null;})
-  .catch(function(){});
 }
 
 function reintentarSyncPendientes(){
@@ -3099,103 +3021,6 @@ function guardarDistribuidores(){
     localStorage.setItem("pyro_dist_extra",JSON.stringify(todos));
   }catch(e){avisarStorage();}
 }
-// Persistencia global de cambios de contraseña para distribuidores base (no _nuevo)
-function cargarDistribuidoresOverrides(){
-  try{
-    var ovr=JSON.parse(localStorage.getItem("pyro_dist_ovr")||"{}");
-    DISTRIBUIDORES.forEach(function(d){
-      if(d._nuevo||!ovr[d.ruc])return;
-      if(ovr[d.ruc].pass!==undefined)d.pass=ovr[d.ruc].pass;
-      if(ovr[d.ruc].requiereCambioPass!==undefined)d.requiereCambioPass=ovr[d.ruc].requiereCambioPass;
-    });
-  }catch(e){}
-}
-function guardarCambioPass(ruc,newPass){
-  var d=DISTRIBUIDORES.find(function(x){return x.ruc===ruc;});
-  if(!d)return;
-  d.pass=newPass;
-  d.requiereCambioPass=false;
-  if(d._nuevo){
-    guardarDistribuidores();
-  } else {
-    try{
-      var ovr=JSON.parse(localStorage.getItem("pyro_dist_ovr")||"{}");
-      ovr[ruc]={pass:newPass,requiereCambioPass:false};
-      localStorage.setItem("pyro_dist_ovr",JSON.stringify(ovr));
-    }catch(e){avisarStorage();}
-  }
-}
-
-// Clipboard
-function copiarAlPortapapeles(txt){
-  if(navigator.clipboard&&navigator.clipboard.writeText){
-    navigator.clipboard.writeText(txt).then(function(){toast("📋 Copiado");}).catch(function(){_copiarFallback(txt);});
-  } else {_copiarFallback(txt);}
-}
-function _copiarFallback(txt){
-  var ta=document.createElement("textarea");
-  ta.value=txt;ta.style.cssText="position:fixed;opacity:0";
-  document.body.appendChild(ta);ta.select();
-  try{document.execCommand("copy");toast("📋 Copiado");}catch(e){toast("Copia manual: "+txt);}
-  document.body.removeChild(ta);
-}
-function copiarCredenciales(ruc){
-  var d=DISTRIBUIDORES.find(function(x){return x.ruc===ruc;});
-  if(!d)return;
-  copiarAlPortapapeles("Usuario: "+d.ruc+" / Contraseña: "+d.pass);
-}
-function copiarNuevoCred(){
-  var r=document.getElementById("nd-cred-ruc"),p=document.getElementById("nd-cred-pass");
-  if(r&&p)copiarAlPortapapeles("Usuario: "+r.textContent+" / Contraseña: "+p.textContent);
-}
-
-// ════════════════════ HERRAMIENTAS — LIMPIEZA ════════════════════
-function confirmarLimpiarDatos(){
-  confirmar(
-    "⚠️ <b>¿Limpiar todos los datos de prueba?</b><br><br>"+
-    "Se borrarán pedidos, canjes, carritos, borradores y regalos de bienvenida.<br>"+
-    "<b>Esta acción es irreversible.</b>",
-    function(){
-      var n=contarRegistrosBorrables();
-      confirmar(
-        "🔴 <b>ÚLTIMA CONFIRMACIÓN</b><br><br>"+
-        "Se eliminarán <b>"+n+" registros</b> permanentemente.<br><br>"+
-        "✓ Distribuidores, contraseñas y precios <b>NO se tocan</b>.<br><br>"+
-        "¿Confirmar limpieza definitiva?",
-        function(){
-          var borrados=ejecutarLimpiezaDatos();
-          toast("🗑️ Limpieza: "+borrados+" registros eliminados");
-          renderAdmPedidos();
-        }
-      );
-    }
-  );
-}
-function contarRegistrosBorrables(){
-  var n=0;
-  try{n+=JSON.parse(localStorage.getItem("pyro_pedidos")||"[]").length;}catch(e){}
-  if(localStorage.getItem("pyro_sync_pendientes"))n++;
-  for(var i=0;i<localStorage.length;i++){
-    var k=localStorage.key(i);
-    if(k&&(k.startsWith("pyro_cart_")||k.startsWith("pyro_borradores_")||k.startsWith("pyro_tut_")||k.startsWith("pyro_bienvenida_")||k.startsWith("pyro_primer_ingreso_")))n++;
-  }
-  return n;
-}
-function ejecutarLimpiezaDatos(){
-  var count=0;
-  try{count+=JSON.parse(localStorage.getItem("pyro_pedidos")||"[]").length;}catch(e){}
-  localStorage.removeItem("pyro_pedidos");
-  if(localStorage.getItem("pyro_sync_pendientes")){localStorage.removeItem("pyro_sync_pendientes");count++;}
-  var toDel=[];
-  for(var i=0;i<localStorage.length;i++){
-    var k=localStorage.key(i);
-    if(k&&(k.startsWith("pyro_cart_")||k.startsWith("pyro_borradores_")||k.startsWith("pyro_tut_")||k.startsWith("pyro_bienvenida_")||k.startsWith("pyro_primer_ingreso_")))toDel.push(k);
-  }
-  toDel.forEach(function(k){localStorage.removeItem(k);count++;});
-  PEDIDOS=[];
-  return count;
-}
-
 function cargarDistribuidoresExtra(){
   try{
     var extra=JSON.parse(localStorage.getItem("pyro_dist_extra")||"[]");
@@ -3374,7 +3199,6 @@ window.addEventListener("load",function(){
     if(sp){sp.classList.add("hide");setTimeout(function(){sp.style.display="none";},600);}
   },1500);
   cargarDistribuidoresExtra();
-  cargarDistribuidoresOverrides();
   // Mostrar/ocultar credenciales demo según MODO_DEMO
   var demoBox=document.getElementById("login-demo-box");
   if(demoBox)demoBox.style.display=(typeof MODO_DEMO!=="undefined"&&MODO_DEMO)?"block":"none";
