@@ -1858,6 +1858,31 @@ function admTab(t,btn){
   if(t==="stock")renderAdmStock();
   if(t==="recompensas")renderAdmRecompensas();
   if(t==="log")renderAdmLog();
+  if(t==="mapa")renderAdmMapa();
+}
+var _mapaDistInstance=null;
+function renderAdmMapa(){
+  var msg=document.getElementById("mapa-dist-msg");
+  var cont=document.getElementById("mapa-dist");
+  if(!cont)return;
+  if(!window.L){if(msg)msg.textContent="⏳ Cargando mapa... reabre la pestaña en unos segundos.";return;}
+  if(!_mapaDistInstance){
+    _mapaDistInstance=L.map("mapa-dist").setView([-1.83,-78.18],7);
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:19,attribution:"© OpenStreetMap"}).addTo(_mapaDistInstance);
+  }else{
+    _mapaDistInstance.eachLayer(function(layer){if(layer instanceof L.Marker)_mapaDistInstance.removeLayer(layer);});
+  }
+  var conCoords=DISTRIBUIDORES.filter(function(d){return typeof d.lat==="number"&&typeof d.lng==="number"&&!isNaN(d.lat)&&!isNaN(d.lng);});
+  if(!conCoords.length){if(msg)msg.textContent="Asigna coordenadas a los distribuidores desde su edición";}
+  else{
+    if(msg)msg.textContent="";
+    conCoords.forEach(function(d){
+      var dir=(d.establecimientos&&d.establecimientos[0]&&d.establecimientos[0].dir)||"";
+      var popup="<b>"+escHtml(d.razon||d.empresa||d.ruc)+"</b>"+(dir?"<br>"+escHtml(dir):"");
+      L.marker([d.lat,d.lng]).addTo(_mapaDistInstance).bindPopup(popup);
+    });
+  }
+  setTimeout(function(){if(_mapaDistInstance)_mapaDistInstance.invalidateSize();},150);
 }
 function renderAdmin(){
   if(USER&&USER.rol==="impresion"){
@@ -2490,6 +2515,10 @@ function abrirEditarDist(ruc){
     '</div>'+
     '<label class="form-label">Saldo pendiente ($)</label>'+
     '<input class="form-input" id="ed-saldo" type="number" step="0.01" value="'+(d.saldoPendiente||0)+'">'+
+    '<div style="display:flex;gap:8px"><div style="flex:1"><label class="form-label">Latitud (mapa)</label>'+
+    '<input class="form-input" id="ed-lat" type="number" step="any" placeholder="-1.83" value="'+(typeof d.lat==="number"?d.lat:"")+'"></div>'+
+    '<div style="flex:1"><label class="form-label">Longitud (mapa)</label>'+
+    '<input class="form-input" id="ed-lng" type="number" step="any" placeholder="-78.18" value="'+(typeof d.lng==="number"?d.lng:"")+'"></div></div>'+
     '<label class="form-label">Notas internas (solo admin)</label>'+
     '<textarea class="form-input" id="ed-notas" rows="2" style="resize:none" placeholder="Notas privadas sobre este distribuidor">'+escHtml(d.notasInternas||"")+'</textarea>'+
     '<label class="form-label">Establecimientos / Direcciones de entrega</label>'+
@@ -2557,6 +2586,9 @@ function guardarEditarDist(ruc){
   var bloqEl=document.getElementById("ed-bloqueado");if(bloqEl)d.bloqueado=bloqEl.checked;
   var saldoEl=document.getElementById("ed-saldo");if(saldoEl)d.saldoPendiente=parseFloat(saldoEl.value)||0;
   var notasEl=document.getElementById("ed-notas");if(notasEl)d.notasInternas=notasEl.value.trim();
+  var latEl=document.getElementById("ed-lat"),lngEl=document.getElementById("ed-lng");
+  if(latEl)d.lat=latEl.value.trim()===""?undefined:parseFloat(latEl.value);
+  if(lngEl)d.lng=lngEl.value.trim()===""?undefined:parseFloat(lngEl.value);
   guardarDistribuidores();
   cerrarModal("modal-editar-dist");
   renderAdmDist();
