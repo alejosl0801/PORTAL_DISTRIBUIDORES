@@ -48,7 +48,7 @@ var AZUR_API = "https://azur-proxy.alejosl0801.workers.dev/";
 // ════════════════════ PROMOCIONES ════════════════════
 var PROMOS = [
   {
-    id: "p3", estado: "activa",
+    id: "p3", estado: "finalizada",
     titulo: "Promo de la Semana",
     fechaVence: "2026-06-06",
     items: [
@@ -102,7 +102,6 @@ function promoDelProducto(pid){
 // ════════════════════ DATOS DISTRIBUIDORES ════════════════════
 // Nota: el campo "ruc" admite RUC (13 díg) o CÉDULA (10 díg) — ambos válidos para facturar.
 //   El campo "tipoDoc" indica cuál es ("ruc" o "cedula"); si falta, se detecta por longitud.
-// ⚠️ POR CONFIRMAR: email "efreinreyesv539@gmail.com" → ¿posible typo de "efrain"?
 var DISTRIBUIDORES = [
   {ruc:"ADMIN",pass:"d0f0c1955aa832124e11c72a66f97da8cca523d3a1000e797df6f61586797f7d",razon:"Administrador PyroShield",esAdmin:true},
   {ruc:"FABIOLA",pass:"fabiola123",razon:"Fabiola Impresiones",rol:"impresion",esAdmin:false},
@@ -120,41 +119,41 @@ var DISTRIBUIDORES = [
     "PIT112":17.80,"NIP112":6.88,"BRAZOPOR":11.71,"HACHA":11.78,"SPANNER":5.98
    }
   },
-  {ruc:"953657509001",pass:"Pyro-k3Fn9",requiereCambioPass:true,razon:"SOLIS MINA KAREN ZULAY",tel:"",correo:"",entrega:{habilitada:false,montoMin:30},establecimientos:[{nm:"Local",dir:"CAPITAN NAJERA 2802 Y PASAJE ANDRES MARIN",obs:""}]},
-  {ruc:"919853390001",pass:"Pyro-7xPa2",requiereCambioPass:true,razon:"FRANCO PEREZ CHRISTIAN LENIN",tel:"0987583223",correo:"intriseg_17@outlook.com",entrega:{habilitada:false,montoMin:30},establecimientos:[]},
-  {ruc:"930371331001",pass:"Pyro-bR5qK",requiereCambioPass:true,razon:"MARTINEZ PALACIOS IRIS NATHALI",tel:"",correo:"",entrega:{habilitada:false,montoMin:30},establecimientos:[]},
-  {ruc:"918043050001",pass:"Pyro-Hm8eT",requiereCambioPass:true,razon:"LAFFERTE ALANIZ NEXO EGIDIO",empresa:"SEPRO",tel:"",correo:"sepro.matriz@seproecuador.com",entrega:{habilitada:false,montoMin:30},establecimientos:[]},
-  {ruc:"991265147001",pass:"Pyro-9wNc4",requiereCambioPass:true,razon:"SEGUINDUSTRIAS DEL ECUADOR CIA. LTDA.",empresa:"Seguindustrias",tel:"",correo:"seguindustrias@hotmail.com",entrega:{habilitada:true,montoMin:50},establecimientos:[]},
+  {ruc:"0953657509001",pass:"Pyro-k3Fn9",requiereCambioPass:true,razon:"SOLIS MINA KAREN ZULAY",tel:"",correo:"",entrega:{habilitada:false,montoMin:30},establecimientos:[{nm:"Local",dir:"CAPITAN NAJERA 2802 Y PASAJE ANDRES MARIN",obs:""}]},
+  {ruc:"0919853390001",pass:"Pyro-7xPa2",requiereCambioPass:true,razon:"FRANCO PEREZ CHRISTIAN LENIN",tel:"0987583223",correo:"intriseg_17@outlook.com",entrega:{habilitada:false,montoMin:30},establecimientos:[]},
+  {ruc:"0930371331001",pass:"Pyro-bR5qK",requiereCambioPass:true,razon:"MARTINEZ PALACIOS IRIS NATHALI",tel:"",correo:"",entrega:{habilitada:false,montoMin:30},establecimientos:[]},
+  {ruc:"0918043050001",pass:"Pyro-Hm8eT",requiereCambioPass:true,razon:"LAFFERTE ALANIZ NEXO EGIDIO",empresa:"SEPRO",tel:"",correo:"sepro.matriz@seproecuador.com",entrega:{habilitada:false,montoMin:30},establecimientos:[]},
+  {ruc:"0991265147001",pass:"Pyro-9wNc4",requiereCambioPass:true,razon:"SEGUINDUSTRIAS DEL ECUADOR CIA. LTDA.",empresa:"Seguindustrias",tel:"",correo:"seguindustrias@hotmail.com",entrega:{habilitada:true,montoMin:50},establecimientos:[]},
   {ruc:"0908549173",tipoDoc:"cedula",pass:"Pyro-2vJu6",requiereCambioPass:true,razon:"JIMENEZ CHACON RAUL GONZALO",tel:"0994819051",correo:"",entrega:{habilitada:false,montoMin:30},establecimientos:[]},
-  {ruc:"992901667001",pass:"Pyro-fGx3Y",requiereCambioPass:true,razon:"CARSAGUE S.A.",empresa:"Carsague",tel:"",correo:"Carsague10@hotmail.com",entrega:{habilitada:false,montoMin:30},establecimientos:[]},
-  {ruc:"953406188001",pass:"Pyro-5pBd7",requiereCambioPass:true,razon:"ORTIZ GOMEZ IVAN ALEJANDRO",tel:"0968208770",correo:"prosuinortiz@gmail.com",entrega:{habilitada:false,montoMin:30},establecimientos:[]},
-  {ruc:"916094998001",pass:"Pyro-rZa4n",requiereCambioPass:true,razon:"GARCIA LOOR KLEBER REINALDO",tel:"0958894313",correo:"audazservi@hotmail.com",entrega:{habilitada:false,montoMin:30},establecimientos:[]},
-  {ruc:"919832741001",pass:"Pyro-8kWe3",requiereCambioPass:true,razon:"AVEIGA SUAREZ MARCO ANTONIO",tel:"0986878798",correo:"conseg.ecu@gmail.com",entrega:{habilitada:false,montoMin:30},establecimientos:[]},
-  {ruc:"993396809001",pass:"Pyro-tF6gS",requiereCambioPass:true,razon:"INNOVASAFE S.A.S.",empresa:"Innovasafe",tel:"",correo:"",entrega:{habilitada:false,montoMin:30},establecimientos:[]},
-  {ruc:"907587562001",pass:"Pyro-2mVc9",requiereCambioPass:true,razon:"LORENTZEN GUERRERO JOHN RYCHARD",empresa:"Rilorsa",tel:"0987324925",correo:"ventas-corp@richardlorentzen.com",entrega:{habilitada:false,montoMin:30},establecimientos:[]},
-  {ruc:"911128205001",pass:"Pyro-hA7qp",requiereCambioPass:true,razon:"CHACON MACIAS JOSE FRANCISCO",tel:"",correo:"f_chaconm@hotmail.com",entrega:{habilitada:false,montoMin:30},establecimientos:[]},
-  {ruc:"991385568001",pass:"Pyro-6XsE4",requiereCambioPass:true,razon:"OFERSERVI S.A.",empresa:"Oferservi",tel:"",correo:"ventas@oferservi.com",entrega:{habilitada:false,montoMin:30},establecimientos:[]},
-  {ruc:"926711722001",pass:"Pyro-ydN8z",requiereCambioPass:true,razon:"LOPEZ ALVARADO DANIEL ALEJANDRO",tel:"",correo:"danny_lopez_87@hotmail.com",entrega:{habilitada:false,montoMin:30},establecimientos:[]},
-  {ruc:"909473225001",pass:"Pyro-3Kbv5",requiereCambioPass:true,razon:"VALVERDE MITE FRANKLIN GERARDO",tel:"",correo:"",entrega:{habilitada:false,montoMin:30},establecimientos:[]},
-  {ruc:"917725780001",pass:"Pyro-wJp9H",requiereCambioPass:true,razon:"GONZALEZ SANCHEZ ALEJANDRO JAVIER",tel:"",correo:"agsextintores@gmail.com",entrega:{habilitada:false,montoMin:30},establecimientos:[]},
-  {ruc:"991241027001",pass:"Pyro-e4MgT",requiereCambioPass:true,razon:"TECSIND CIA. LTDA.",empresa:"Tecsind",tel:"",correo:"contabilidad@tecsindecuador.com",entrega:{habilitada:false,montoMin:30},establecimientos:[]},
-  {ruc:"993125490001",pass:"Pyro-7nBx2",requiereCambioPass:true,razon:"INDUSTRIALES Y MARITIMOS SEGUMAR-SCI S.A.",empresa:"Segumar",tel:"",correo:"operaciones@segumar.org",entrega:{habilitada:false,montoMin:30},establecimientos:[]},
-  {ruc:"918211111001",pass:"Pyro-Rf5k6",requiereCambioPass:true,razon:"ORTEGA LARREA GALO EDUARDO",tel:"0989585165",correo:"controldfire@gmail.com",entrega:{habilitada:false,montoMin:30},establecimientos:[]},
-  {ruc:"907655294001",pass:"Pyro-9cWm4",requiereCambioPass:true,razon:"REYES VACA EFRAIN",tel:"0980285376",correo:"efreinreyesv539@gmail.com",entrega:{habilitada:false,montoMin:30},establecimientos:[]},
-  {ruc:"919661330001",pass:"Pyro-vPa8s",requiereCambioPass:true,razon:"LAFFERTE TACLE PAMELA MELISSA",tel:"0999659269",correo:"pmlafferte@hotmail.com",entrega:{habilitada:false,montoMin:30},establecimientos:[]},
-  {ruc:"922529888001",pass:"Pyro-3dHn7",requiereCambioPass:true,razon:"TRUJILLO GUERRERO FRANKLIN JORGE",tel:"0993087608",correo:"ventas@extintores.ec",entrega:{habilitada:false,montoMin:30},establecimientos:[]},
-  {ruc:"910133636001",pass:"Pyro-xG2jQ",requiereCambioPass:true,razon:"GIRALDO OLIVES NARCISA MARGARITA",tel:"0997158433",correo:"giraldonarcisa65@gmail.com",entrega:{habilitada:false,montoMin:30},establecimientos:[]},
-  {ruc:"931713697001",pass:"Pyro-8uEb5",requiereCambioPass:true,razon:"OLMEDO MORALES MIKE DANIEL",tel:"",correo:"extinprocec93@gmail.com",entrega:{habilitada:false,montoMin:30},establecimientos:[]},
-  {ruc:"924345820001",pass:"Pyro-kZ4wF",requiereCambioPass:true,razon:"DUMANI GUAJALA DIANA JACKELINE",tel:"0991239128",correo:"ventas_firesolutions@hotmail.com",entrega:{habilitada:false,montoMin:30},establecimientos:[]},
+  {ruc:"0992901667001",pass:"Pyro-fGx3Y",requiereCambioPass:true,razon:"CARSAGUE S.A.",empresa:"Carsague",tel:"",correo:"Carsague10@hotmail.com",entrega:{habilitada:false,montoMin:30},establecimientos:[]},
+  {ruc:"0953406188001",pass:"Pyro-5pBd7",requiereCambioPass:true,razon:"ORTIZ GOMEZ IVAN ALEJANDRO",tel:"0968208770",correo:"prosuinortiz@gmail.com",entrega:{habilitada:false,montoMin:30},establecimientos:[]},
+  {ruc:"0916094998001",pass:"Pyro-rZa4n",requiereCambioPass:true,razon:"GARCIA LOOR KLEBER REINALDO",tel:"0958894313",correo:"audazservi@hotmail.com",entrega:{habilitada:false,montoMin:30},establecimientos:[]},
+  {ruc:"0919832741001",pass:"Pyro-8kWe3",requiereCambioPass:true,razon:"AVEIGA SUAREZ MARCO ANTONIO",tel:"0986878798",correo:"conseg.ecu@gmail.com",entrega:{habilitada:false,montoMin:30},establecimientos:[]},
+  {ruc:"0993396809001",pass:"Pyro-tF6gS",requiereCambioPass:true,razon:"INNOVASAFE S.A.S.",empresa:"Innovasafe",tel:"",correo:"",entrega:{habilitada:false,montoMin:30},establecimientos:[]},
+  {ruc:"0907587562001",pass:"Pyro-2mVc9",requiereCambioPass:true,razon:"LORENTZEN GUERRERO JOHN RYCHARD",empresa:"Rilorsa",tel:"0987324925",correo:"ventas-corp@richardlorentzen.com",entrega:{habilitada:false,montoMin:30},establecimientos:[]},
+  {ruc:"0911128205001",pass:"Pyro-hA7qp",requiereCambioPass:true,razon:"CHACON MACIAS JOSE FRANCISCO",tel:"",correo:"f_chaconm@hotmail.com",entrega:{habilitada:false,montoMin:30},establecimientos:[]},
+  {ruc:"0991385568001",pass:"Pyro-6XsE4",requiereCambioPass:true,razon:"OFERSERVI S.A.",empresa:"Oferservi",tel:"",correo:"ventas@oferservi.com",entrega:{habilitada:false,montoMin:30},establecimientos:[]},
+  {ruc:"0926711722001",pass:"Pyro-ydN8z",requiereCambioPass:true,razon:"LOPEZ ALVARADO DANIEL ALEJANDRO",tel:"",correo:"danny_lopez_87@hotmail.com",entrega:{habilitada:false,montoMin:30},establecimientos:[]},
+  {ruc:"0909473225001",pass:"Pyro-3Kbv5",requiereCambioPass:true,razon:"VALVERDE MITE FRANKLIN GERARDO",tel:"",correo:"",entrega:{habilitada:false,montoMin:30},establecimientos:[]},
+  {ruc:"0917725780001",pass:"Pyro-wJp9H",requiereCambioPass:true,razon:"GONZALEZ SANCHEZ ALEJANDRO JAVIER",tel:"",correo:"agsextintores@gmail.com",entrega:{habilitada:false,montoMin:30},establecimientos:[]},
+  {ruc:"0991241027001",pass:"Pyro-e4MgT",requiereCambioPass:true,razon:"TECSIND CIA. LTDA.",empresa:"Tecsind",tel:"",correo:"contabilidad@tecsindecuador.com",entrega:{habilitada:false,montoMin:30},establecimientos:[]},
+  {ruc:"0993125490001",pass:"Pyro-7nBx2",requiereCambioPass:true,razon:"INDUSTRIALES Y MARITIMOS SEGUMAR-SCI S.A.",empresa:"Segumar",tel:"",correo:"operaciones@segumar.org",entrega:{habilitada:false,montoMin:30},establecimientos:[]},
+  {ruc:"0918211111001",pass:"Pyro-Rf5k6",requiereCambioPass:true,razon:"ORTEGA LARREA GALO EDUARDO",tel:"0989585165",correo:"controldfire@gmail.com",entrega:{habilitada:false,montoMin:30},establecimientos:[]},
+  {ruc:"0907655294001",pass:"Pyro-9cWm4",requiereCambioPass:true,razon:"REYES VACA EFRAIN",tel:"0980285376",correo:"efrainreyesv539@gmail.com",entrega:{habilitada:false,montoMin:30},establecimientos:[]},
+  {ruc:"0919661330001",pass:"Pyro-vPa8s",requiereCambioPass:true,razon:"LAFFERTE TACLE PAMELA MELISSA",tel:"0999659269",correo:"pmlafferte@hotmail.com",entrega:{habilitada:false,montoMin:30},establecimientos:[]},
+  {ruc:"0922529888001",pass:"Pyro-3dHn7",requiereCambioPass:true,razon:"TRUJILLO GUERRERO FRANKLIN JORGE",tel:"0993087608",correo:"ventas@extintores.ec",entrega:{habilitada:false,montoMin:30},establecimientos:[]},
+  {ruc:"0910133636001",pass:"Pyro-xG2jQ",requiereCambioPass:true,razon:"GIRALDO OLIVES NARCISA MARGARITA",tel:"0997158433",correo:"giraldonarcisa65@gmail.com",entrega:{habilitada:false,montoMin:30},establecimientos:[]},
+  {ruc:"0931713697001",pass:"Pyro-8uEb5",requiereCambioPass:true,razon:"OLMEDO MORALES MIKE DANIEL",tel:"",correo:"extinprocec93@gmail.com",entrega:{habilitada:false,montoMin:30},establecimientos:[]},
+  {ruc:"0924345820001",pass:"Pyro-kZ4wF",requiereCambioPass:true,razon:"DUMANI GUAJALA DIANA JACKELINE",tel:"0991239128",correo:"ventas_firesolutions@hotmail.com",entrega:{habilitada:false,montoMin:30},establecimientos:[]},
   {ruc:"0965129075",tipoDoc:"cedula",pass:"Pyro-5yCr9",requiereCambioPass:true,razon:"ADAN CORRO SAMANTHA CATHERINE",tel:"0982669482",correo:"panamitoee@hotmail.com",entrega:{habilitada:false,montoMin:30},establecimientos:[]},
-  {ruc:"907921118001",pass:"Pyro-mNe6p",requiereCambioPass:true,razon:"VASQUEZ VILLENA MARCOS VINICIO",tel:"0994878943",correo:"marcosvasquezvillena@yahoo.com",entrega:{habilitada:false,montoMin:30},establecimientos:[]},
+  {ruc:"0907921118001",pass:"Pyro-mNe6p",requiereCambioPass:true,razon:"VASQUEZ VILLENA MARCOS VINICIO",tel:"0994878943",correo:"marcosvasquezvillena@yahoo.com",entrega:{habilitada:false,montoMin:30},establecimientos:[]},
   {ruc:"1202305254001",pass:"Pyro-T3hXa",requiereCambioPass:true,razon:"CAMACHO SANCHEZ JUAN ROBERTO",tel:"0997858033",correo:"gerente@jurocsan.com",entrega:{habilitada:false,montoMin:30},establecimientos:[]},
-  {ruc:"957433477001",pass:"Pyro-7sKd4",requiereCambioPass:true,razon:"JURADO QUIJIJE SAMUEL ALEJANDRO",tel:"",correo:"juradoenterprise@hotmail.com",entrega:{habilitada:false,montoMin:30},establecimientos:[]},
+  {ruc:"0957433477001",pass:"Pyro-7sKd4",requiereCambioPass:true,razon:"JURADO QUIJIJE SAMUEL ALEJANDRO",tel:"",correo:"juradoenterprise@hotmail.com",entrega:{habilitada:false,montoMin:30},establecimientos:[]},
   {ruc:"2490407858001",pass:"Pyro-bP9wY",requiereCambioPass:true,razon:"SEGUINVIA S.A.S.",empresa:"Seguinvia",tel:"",correo:"",entrega:{habilitada:false,montoMin:30},establecimientos:[]},
-  {ruc:"703361014001",pass:"Pyro-4fVn8",requiereCambioPass:true,razon:"BUELE JARA ANGEL GIOVANNY",tel:"0993891462",correo:"",entrega:{habilitada:false,montoMin:30},establecimientos:[]}, // ⚠️ VERIFICAR: 12 dígitos — confirmar RUC correcto con el cliente
-  {ruc:"909599599001",pass:"Pyro-gR2xe",requiereCambioPass:true,razon:"DELGADO INSUASTI WASHINGTON BERNARDO",tel:"",correo:"marberd29@gmail.com",entrega:{habilitada:false,montoMin:30},establecimientos:[]},
-  {ruc:"927628149001",pass:"Pyro-6mKq3",requiereCambioPass:true,razon:"MENDOZA MUÑOZ MARY ARIANA",empresa:"Segurimen",tel:"0992415104",correo:"segurimen@hotmail.com",entrega:{habilitada:false,montoMin:30},establecimientos:[]},
-  {ruc:"905294708001",pass:"Pyro-hW5aJ",requiereCambioPass:true,razon:"JURADO FIERRO CESAR VICTOR JULIO",tel:"",correo:"ventasyrecargasjurado@hotmail.com",entrega:{habilitada:false,montoMin:30},establecimientos:[]},
-  {ruc:"953672144001",pass:"Pyro-9tBc2",requiereCambioPass:true,razon:"PLÚAS VITERI ALLISSON THAIZ",tel:"",correo:"alisonpluas@gmail.com",entrega:{habilitada:false,montoMin:30},establecimientos:[]}
+  {ruc:"0703361014001",pass:"Pyro-4fVn8",requiereCambioPass:true,razon:"BUELE JARA ANGEL GIOVANNY",tel:"0993891462",correo:"",entrega:{habilitada:false,montoMin:30},establecimientos:[]},
+  {ruc:"0909599599001",pass:"Pyro-gR2xe",requiereCambioPass:true,razon:"DELGADO INSUASTI WASHINGTON BERNARDO",tel:"",correo:"marberd29@gmail.com",entrega:{habilitada:false,montoMin:30},establecimientos:[]},
+  {ruc:"0927628149001",pass:"Pyro-6mKq3",requiereCambioPass:true,razon:"MENDOZA MUÑOZ MARY ARIANA",empresa:"Segurimen",tel:"0992415104",correo:"segurimen@hotmail.com",entrega:{habilitada:false,montoMin:30},establecimientos:[]},
+  {ruc:"0905294708001",pass:"Pyro-hW5aJ",requiereCambioPass:true,razon:"JURADO FIERRO CESAR VICTOR JULIO",tel:"",correo:"ventasyrecargasjurado@hotmail.com",entrega:{habilitada:false,montoMin:30},establecimientos:[]},
+  {ruc:"0953672144001",pass:"Pyro-9tBc2",requiereCambioPass:true,razon:"PLÚAS VITERI ALLISSON THAIZ",tel:"",correo:"alisonpluas@gmail.com",entrega:{habilitada:false,montoMin:30},establecimientos:[]}
 ];
 
