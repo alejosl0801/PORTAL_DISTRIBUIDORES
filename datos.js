@@ -141,6 +141,7 @@ var DISTRIBUIDORES = [
   {ruc:"0918211111001",pass:"Pyro-Rf5k6",requiereCambioPass:true,razon:"ORTEGA LARREA GALO EDUARDO",tel:"0989585165",correo:"controldfire@gmail.com",entrega:{habilitada:true,montoMin:30},establecimientos:[]},
   {ruc:"0907655294001",pass:"Pyro-9cWm4",requiereCambioPass:true,razon:"REYES VACA EFRAIN",tel:"0980285376",correo:"efrainreyesv539@gmail.com",entrega:{habilitada:true,montoMin:30},establecimientos:[]},
   {ruc:"0919661330001",pass:"Pyro-vPa8s",requiereCambioPass:true,razon:"LAFFERTE TACLE PAMELA MELISSA",tel:"0999659269",correo:"pmlafferte@hotmail.com",entrega:{habilitada:true,montoMin:30},establecimientos:[]},
+  {ruc:"0922902143001",pass:"Pyro-Km7sX",requiereCambioPass:true,razon:"MOSCOSO VASQUEZ KARLA VANESSA",empresa:"Karmoseg",tel:"",correo:"Karmoseg@hotmail.com",entrega:{habilitada:true,montoMin:10},establecimientos:[{nm:"Matriz",dir:"ANDRES MARIN 1018 Y CAPITAN NAJERA",obs:""}]},
   {ruc:"0922529888001",pass:"Pyro-3dHn7",requiereCambioPass:true,razon:"TRUJILLO GUERRERO FRANKLIN JORGE",tel:"0993087608",correo:"ventas@extintores.ec",entrega:{habilitada:true,montoMin:30},establecimientos:[]},
   {ruc:"0910133636001",pass:"Pyro-xG2jQ",requiereCambioPass:true,razon:"GIRALDO OLIVES NARCISA MARGARITA",tel:"0997158433",correo:"giraldonarcisa65@gmail.com",entrega:{habilitada:true,montoMin:30},establecimientos:[]},
   {ruc:"0931713697001",pass:"Pyro-8uEb5",requiereCambioPass:true,razon:"OLMEDO MORALES MIKE DANIEL",tel:"",correo:"extinprocec93@gmail.com",entrega:{habilitada:true,montoMin:30},establecimientos:[]},
