@@ -64,6 +64,7 @@ var USER=null, CARRITO=[], PEDIDOS=[], FILTRO="todos", SUB_FILTRO=null, ADM_TAB=
 var ADM_PED_FILTRO="pendiente";
 var CALIF_PED_ID=null, CALIF_ESTRELLAS=0;
 var FAVORITOS=[];
+var DESEOS=[];
 var H_DESDE=null, H_HASTA=null;
 var CAT_GRID=false;
 var _autoguardadoInterval=null;
@@ -249,6 +250,15 @@ function loginConCredenciales(ruc,pw){
   if(!d)return false;
   if(d.bloqueado&&!d.esAdmin)return false;
   USER=d; PEDIDOS=cargarPedidos(); cargarStock();
+  // Log de accesos (#25)
+  try{
+    var logAccesos=[];
+    try{logAccesos=JSON.parse(localStorage.getItem("pyro_log_accesos")||"[]");}catch(e){}
+    var _now=new Date(),_p2=function(n){return n<10?"0"+n:String(n);};
+    logAccesos.unshift({ruc:d.ruc,razon:d.razon||d.empresa||d.ruc,fecha:_now.getFullYear()+"-"+_p2(_now.getMonth()+1)+"-"+_p2(_now.getDate()),hora:_p2(_now.getHours())+":"+_p2(_now.getMinutes())+":"+_p2(_now.getSeconds())});
+    if(logAccesos.length>50)logAccesos=logAccesos.slice(0,50);
+    localStorage.setItem("pyro_log_accesos",JSON.stringify(logAccesos));
+  }catch(e){}
   setTimeout(reintentarSyncPendientes,2000);
   if(d.rol==="impresion"){
     // Rol de impresión: usa la pantalla admin con UI reducida (solo pedidos)
@@ -261,6 +271,7 @@ function loginConCredenciales(ruc,pw){
     CARRITO=cargarCarrito();
     // Cargar favoritos del usuario
     try{FAVORITOS=JSON.parse(localStorage.getItem("pyro_favs_"+USER.ruc)||"[]");}catch(e){FAVORITOS=[];}
+    try{DESEOS=JSON.parse(localStorage.getItem("pyro_deseos_"+USER.ruc)||"[]");}catch(e){DESEOS=[];}
     // Cargar preferencia de grid
     CAT_GRID=localStorage.getItem("pyro_cat_grid")==="1";
     mostrar("s-main");
@@ -527,6 +538,7 @@ function renderInicio(){
     } else { saldoTag.style.display="none"; }
   }
   renderInsignias();
+  renderDeseosSec();
   var up=mp.slice().reverse().slice(0,3);
   document.getElementById("ultimos-pedidos").innerHTML=up.length?up.map(function(p){
     return '<div class="ped" onclick="verDetallePed(\''+p.id+'\')" style="cursor:pointer">'+
@@ -824,6 +836,9 @@ function renderProdCard(p){
   var imgSrc=p.img&&IMGS[p.img]?IMGS[p.img]:null;
   var imgHtml=imgSrc?'<img src="'+imgSrc+'" alt="'+p.nm+'" loading="lazy" onerror="this.onerror=null;this.src=IMG_PLACEHOLDER" onclick="zoomImg(\''+imgSrc+'\')" style="cursor:zoom-in">':"<div class='ph'>🧯</div>";
   var favBtn='<button class="fav-btn'+(isFav?" active":"")+'\" onclick="toggleFav(\''+p.id+'\')">'+(isFav?"❤️":"🤍")+'</button>';
+  var isDeseo=DESEOS.indexOf(p.id)!==-1;
+  var deseoBtn='<button class="fav-btn deseo-btn'+(isDeseo?" active":"")+'\" onclick="toggleDeseo(\''+p.id+'\')" title="'+(isDeseo?"Quitar de lista de deseos":"Guardar en lista de deseos")+'">'+(isDeseo?"🔖":"🏷️")+'</button>';
+  var calcBtn='<button class="fav-btn" onclick="abrirCalculadora(\''+p.id+'\')" title="Calcular ganancia" style="font-size:11px">📊</button>';
 
   // Indicador próximo descuento
   var proxDescHtml="";
@@ -878,7 +893,7 @@ function renderProdCard(p){
   '</div>';
 
   return '<div class="prod'+(p.ago?" ago":"")+'\" style="position:relative">'+
-    favBtn+
+    favBtn+deseoBtn+calcBtn+
     '<div class="prod-img">'+imgHtml+'</div>'+
     '<div class="prod-info">'+
       '<div class="prod-nm">'+p.nm+'</div>'+
@@ -899,6 +914,89 @@ function toggleFav(id){
   renderCatalogo();
 }
 
+function toggleDeseo(id){
+  var idx=DESEOS.indexOf(id);
+  if(idx===-1){DESEOS.push(id);toast("🔖 Añadido a tu lista de deseos");}
+  else{DESEOS.splice(idx,1);toast("Quitado de lista de deseos");}
+  try{localStorage.setItem("pyro_deseos_"+USER.ruc,JSON.stringify(DESEOS));}catch(e){}
+  renderCatalogo();renderDeseosSec();
+}
+function renderDeseosSec(){
+  var wrap=document.getElementById("deseos-sec");if(!wrap)return;
+  var prods=PRODUCTOS.filter(function(p){return DESEOS.indexOf(p.id)!==-1;});
+  if(!prods.length){wrap.style.display="none";return;}
+  wrap.style.display="";
+  var html='<div class="sec-titulo">🔖 Mi lista de deseos</div><div style="display:flex;flex-direction:column;gap:8px">';
+  prods.forEach(function(p){
+    var pc=precioCliente(p);
+    html+='<div class="ped" style="padding:10px 14px;display:flex;align-items:center;gap:12px">'+
+      '<div style="flex:1"><div style="font-weight:700;font-size:14px">'+escHtml(p.nm)+'</div>'+
+      '<div style="font-size:13px;color:var(--azul);font-weight:600">'+fmt$(pc)+'</div>'+
+      (p.ago?'<span class="badge b-rojo" style="font-size:10px">Agotado</span>':'<span class="badge b-verde" style="font-size:10px">Stock: '+p.stock+'</span>')+
+      '</div><div style="display:flex;flex-direction:column;gap:6px">'+
+      (!p.ago?'<button class="btn btn-p btn-sm" onclick="agregarAlCarrito(\''+p.id+'\')">+ Carrito</button>':'')+
+      '<button class="btn btn-s btn-sm" onclick="toggleDeseo(\''+p.id+'\')">🗑️ Quitar</button>'+
+      '</div></div>';
+  });
+  wrap.innerHTML=html+'</div>';
+}
+function abrirCalculadora(id){
+  var p=PRODUCTOS.find(function(x){return x.id===id;});if(!p)return;
+  var cartItem=CARRITO.find(function(i){return i.id===id;});
+  var cant=cartItem?cartItem.cant:1;
+  var rv=precioConVolumen(p,cant>0?cant:1);var pc=rv.precio;
+  var ov=document.getElementById("modal-calc"),cont=document.getElementById("modal-calc-c");
+  if(!ov||!cont)return;
+  cont.innerHTML='<div class="mhandle"></div><h3>📊 Calculadora</h3>'+
+    '<div style="font-size:13px;font-weight:600;margin-bottom:12px">'+escHtml(p.nm)+'</div>'+
+    '<div style="background:var(--g1);border-radius:10px;padding:10px 14px;margin-bottom:14px;font-size:13px;display:flex;justify-content:space-between"><span>Tu precio de compra:</span><b style="color:var(--azul)">'+fmt$(pc)+'</b></div>'+
+    '<label class="form-label">Precio de venta al cliente ($)</label>'+
+    '<input class="form-input" id="calc-pv-final" type="number" min="0" step="0.01" value="'+parseFloat((pc*1.3).toFixed(2))+'" oninput="actualizarCalc(\''+id+'\','+pc+')">'+
+    '<label class="form-label">Cantidad</label>'+
+    '<input class="form-input" id="calc-cant" type="number" min="1" value="'+Math.max(1,cant)+'" oninput="actualizarCalc(\''+id+'\','+pc+')">'+
+    '<div id="calc-resultado" style="margin-top:10px"></div>'+
+    '<button class="btn btn-s btn-full" style="margin-top:10px" onclick="cerrarModal(\'modal-calc\')">Cerrar</button>';
+  abrir("modal-calc");actualizarCalc(id,pc);
+}
+function actualizarCalc(id,precioCompra){
+  var pvInp=document.getElementById("calc-pv-final"),cantInp=document.getElementById("calc-cant"),res=document.getElementById("calc-resultado");
+  if(!pvInp||!cantInp||!res)return;
+  var pvFinal=parseFloat(pvInp.value)||0,cant=Math.max(1,parseInt(cantInp.value)||1);
+  var ganUnit=pvFinal-precioCompra,ganTotal=ganUnit*cant;
+  var margen=pvFinal>0?ganUnit/pvFinal*100:0;
+  var col=ganUnit>=0?"var(--verde)":"var(--rojo)";
+  res.innerHTML='<div style="background:var(--g1);border-radius:10px;padding:14px 16px;display:grid;gap:8px">'+
+    '<div style="display:flex;justify-content:space-between"><span style="font-size:13px;color:var(--g4)">Ganancia por unidad</span><b style="color:'+col+'">'+fmt$(ganUnit)+'</b></div>'+
+    '<div style="display:flex;justify-content:space-between"><span style="font-size:13px;color:var(--g4)">Ganancia total (×'+cant+')</span><b style="font-size:17px;color:'+col+'">'+fmt$(ganTotal)+'</b></div>'+
+    '<div style="display:flex;justify-content:space-between"><span style="font-size:13px;color:var(--g4)">Margen</span><b style="color:'+(margen>=20?"var(--verde)":margen>=10?"var(--amar)":"var(--rojo)")+'">'+margen.toFixed(1)+'%</b></div>'+
+  '</div>'+(ganUnit<0?'<div style="font-size:11px;color:var(--rojo);margin-top:6px;text-align:center">⚠️ Precio menor al costo — perderías dinero</div>':'');
+}
+function renderDetallePuntos(){
+  var wrap=document.getElementById("pts-detalle-wrap");if(!wrap)return;
+  var mp=misPedidos().filter(function(p){return!p.esCanje&&(p.puntos||0)>0;}).slice().reverse();
+  var confirmados=puntosConfirmados(),pendientes=puntosPendientes(),canjeados=puntosCanjeados();
+  var html='<div class="sec-titulo" style="font-size:15px;margin-top:14px">📋 Puntos por pedido</div>';
+  if(mp.length){
+    html+='<div style="background:var(--g1);border-radius:12px;overflow:hidden;margin-bottom:10px">';
+    mp.forEach(function(p){
+      var esConf=p.estado==="entregado"||p.estado==="finalizado";
+      html+='<div style="display:flex;justify-content:space-between;align-items:center;padding:9px 14px;border-bottom:1px solid var(--g2)">'+
+        '<div><div style="font-size:12px;font-weight:600">Pedido #'+escHtml(p.id)+'</div>'+
+        '<div style="font-size:11px;color:var(--g3)">'+escHtml(p.fecha||"")+'</div>'+
+        '<span class="est-chip '+estadoClass(p.estado)+'" style="font-size:10px;padding:1px 6px">'+estadoLabel(p.estado)+'</span></div>'+
+        '<div style="text-align:right"><div style="font-weight:700;color:'+(esConf?"var(--verde)":"var(--amar)")+'">🏆 '+fmtPts(p.puntos||0)+'</div>'+
+        '<div style="font-size:10px;color:var(--g3)">'+(esConf?"Confirmados":"Pendientes")+'</div></div></div>';
+    });
+    html+='</div>';
+  } else {html+='<div class="empty" style="padding:16px"><p>Aún no tienes pedidos con puntos</p></div>';}
+  html+='<div style="background:var(--g1);border-radius:12px;padding:12px 14px;display:grid;gap:6px;margin-bottom:4px">'+
+    '<div style="display:flex;justify-content:space-between"><span style="font-size:13px;color:var(--g4)">Confirmados</span><b style="color:var(--verde)">'+fmtPts(confirmados)+'</b></div>'+
+    '<div style="display:flex;justify-content:space-between"><span style="font-size:13px;color:var(--g4)">Pendientes</span><b style="color:var(--amar)">'+fmtPts(pendientes)+'</b></div>'+
+    (canjeados>0?'<div style="display:flex;justify-content:space-between"><span style="font-size:13px;color:var(--g4)">Canjeados</span><b style="color:var(--rojo)">−'+fmtPts(canjeados)+'</b></div>':'')+
+    '<div style="border-top:1.5px solid var(--g2);padding-top:6px;display:flex;justify-content:space-between"><b style="font-size:13px">Saldo disponible</b><b style="font-size:15px;color:var(--azul)">'+fmtPts(saldoPuntos())+'</b></div>'+
+  '</div>';
+  wrap.innerHTML=html;
+}
 function zoomImg(src){
   var ov=document.getElementById("img-zoom-ov");
   var img=document.getElementById("img-zoom-img");
@@ -1699,6 +1797,7 @@ function renderRecompensas(){
   document.getElementById("rec-pts-v").textContent=fmtPts(saldo);
   var pendHtml=pendiente>0?'<div class="rec-pts-pend">⏳ '+fmtPts(pendiente)+' pts pendientes de entrega</div>':'';
   document.getElementById("rec-pts-pend-box").innerHTML=pendHtml;
+  renderDetallePuntos();
   var activas=REWARDS.filter(function(r){return!r.agotado;});
   var siguiente=activas.find(function(r){return r.pts>saldo;});
   var mot=siguiente?"¡Te faltan "+fmtPts(siguiente.pts-saldo)+" puntos para "+siguiente.nm+"!":"🎉 ¡Tienes puntos para canjear!";
@@ -1758,6 +1857,7 @@ function admTab(t,btn){
   if(t==="distribuidores")renderAdmDist();
   if(t==="stock")renderAdmStock();
   if(t==="recompensas")renderAdmRecompensas();
+  if(t==="log")renderAdmLog();
 }
 function renderAdmin(){
   if(USER&&USER.rol==="impresion"){
@@ -1874,7 +1974,12 @@ function renderAdmPedidos(){
     '<div class="adm-stat"><div class="v">'+canjesPend+'</div><div class="l">Canjes pendientes</div></div>'+
     '<div class="adm-stat"><div class="v">'+canjesEntregados+' canjes entregados</div><div class="l">me costaron '+fmt$(costoCanjes)+'</div></div>';
   var extraEl=document.getElementById("adm-dashboard-extra");
-  if(extraEl)extraEl.innerHTML=renderTop5Distribuidores()+
+  if(extraEl)extraEl.innerHTML=
+    renderGraficoVentas6Meses()+
+    renderTop5MesActual()+
+    renderDistribuidoresInactivos()+
+    renderTicketPromedioDist()+
+    renderTop5Distribuidores()+
     '<button class="btn btn-s btn-full" style="margin-bottom:14px" onclick="generarReporteMensual()">📊 Reporte mensual PDF</button>';
 
   // Barra de filtros de estado (chips)
@@ -1907,6 +2012,7 @@ function renderAdmPedidos(){
         '</div>'+
       '</div>'+
       (!p.esCanje?'<div style="font-size:18px;font-weight:800;font-family:\'Barlow Condensed\',sans-serif;margin-top:6px">'+fmt$(p.total)+'</div>':'')+
+      (function(){if(p.esCanje)return'';var mg=(p.items||[]).reduce(function(s,it){return s+(it.cant||0)*((it.pr||0)-getCostoProducto(it.id));},0);var pct=p.subtotal>0?(mg/p.subtotal*100):0;var col=mg>=0?"var(--verde)":"var(--rojo)";return'<div style="font-size:11px;color:'+col+';margin-top:2px">Margen est.: '+fmt$(mg)+' ('+pct.toFixed(1)+'%)</div>';}())+
     '</div></div>';
   }).join(""):'<div class="empty"><div class="ico">📦</div><p>No hay pedidos en esta categoría.</p></div>');
 }
@@ -2586,7 +2692,7 @@ function renderAdmStock(){
   '</div>';
   // Notificación agrupada de productos bajo umbral
   var bajosUmbral=[];
-  var html="";
+  var html=renderProductosSinMovimiento()+renderAnalisisABC();
   Object.keys(CATS).forEach(function(ck){
     var cat=CATS[ck];
     cat.subs.forEach(function(sn){
@@ -3344,3 +3450,93 @@ window.addEventListener("load",function(){
   try{var lastRuc=localStorage.getItem("pyro_last_ruc");if(lastRuc&&lu&&!lu.value){lu.value=lastRuc;if(lp)setTimeout(function(){lp.focus();},100);}}catch(e){}
   if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js').catch(function(){});}
 });
+
+// ════════ FEATURE 11/12/13/14/25/82/83/84/87 — Dashboard Admin ════════
+function parseFechaPed(p){try{if(p.fechaISO)return new Date(p.fechaISO);var parts=(p.fecha||"").split("/");if(parts.length===3)return new Date(parseInt(parts[2]),parseInt(parts[1])-1,parseInt(parts[0]));return new Date(p.fecha||0);}catch(e){return new Date(0);}}
+function getCostoProducto(id){var p=PRODUCTOS.find(function(x){return x.id===id;});if(!p)return 0;try{var c=JSON.parse(localStorage.getItem("pyro_costos")||"{}");return c[id]!=null?c[id]:p.costo;}catch(e){return p.costo;}}
+
+function renderGraficoVentas6Meses(){
+  var meses=["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
+  var ahora=new Date();
+  var datos=[];
+  for(var i=5;i>=0;i--){var d=new Date(ahora.getFullYear(),ahora.getMonth()-i,1);datos.push({m:d.getMonth(),a:d.getFullYear(),nm:meses[d.getMonth()],total:0});}
+  PEDIDOS.forEach(function(p){
+    if(p.esCanje)return;
+    if(p.estado!=="entregado"&&p.estado!=="finalizado"&&p.estado!=="facturado")return;
+    var fd=parseFechaPed(p);
+    for(var k=0;k<datos.length;k++){if(datos[k].m===fd.getMonth()&&datos[k].a===fd.getFullYear()){datos[k].total+=(p.subtotal||0);break;}}
+  });
+  var max=0;for(var j=0;j<datos.length;j++){if(datos[j].total>max)max=datos[j].total;}
+  var H=120,barW=30,gap=12,pad=8,svgBars="";
+  for(var n=0;n<datos.length;n++){
+    var x=pad+n*(barW+gap);
+    var bh=max>0?Math.round((datos[n].total/max)*(H-40)):2;
+    var by=H-20-bh;
+    svgBars+='<rect x="'+x+'" y="'+by+'" width="'+barW+'" height="'+bh+'" rx="4" fill="var(--rojo,#e53935)"/>';
+    svgBars+='<text x="'+(x+barW/2)+'" y="'+(H-6)+'" text-anchor="middle" font-size="10" fill="var(--g3,#888)">'+datos[n].nm+'</text>';
+    if(datos[n].total>0)svgBars+='<text x="'+(x+barW/2)+'" y="'+(by-4)+'" text-anchor="middle" font-size="9" fill="var(--g4,#444)">$'+Math.round(datos[n].total)+'</text>';
+  }
+  var totalW=datos.length*(barW+gap)-gap+pad*2;
+  return '<div style="background:var(--g1);border-radius:10px;padding:12px 14px;margin-bottom:14px"><div style="font-weight:700;margin-bottom:8px;font-size:14px">📊 Ventas últimos 6 meses</div><svg viewBox="0 0 '+totalW+' '+H+'" width="100%" height="'+H+'">'+svgBars+'</svg></div>';
+}
+function renderTop5MesActual(){
+  var ahora=new Date(),mes=ahora.getMonth(),anio=ahora.getFullYear();
+  var montos={};
+  PEDIDOS.forEach(function(p){
+    if(p.esCanje)return;if(p.estado!=="entregado"&&p.estado!=="finalizado"&&p.estado!=="facturado")return;
+    var fd=parseFechaPed(p);if(fd.getMonth()!==mes||fd.getFullYear()!==anio)return;
+    if(!montos[p.ruc])montos[p.ruc]={ruc:p.ruc,razon:p.razon,total:0};
+    montos[p.ruc].total+=(p.subtotal||0);
+  });
+  var top5=Object.values(montos).sort(function(a,b){return b.total-a.total;}).slice(0,5);
+  var mesesNm=["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
+  if(!top5.length)return'';
+  return '<div style="background:var(--g1);border-radius:10px;padding:12px 14px;margin-bottom:14px"><div style="font-weight:700;margin-bottom:8px;font-size:14px">🥇 Top 5 — '+mesesNm[mes]+'</div>'+
+    top5.map(function(d,i){var dist=DISTRIBUIDORES.find(function(x){return x.ruc===d.ruc;})||{};return '<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid var(--g2)"><span><b style="color:var(--rojo)">#'+(i+1)+'</b> '+escHtml(dist.empresa||d.razon)+'</span><b>'+fmt$(d.total)+'</b></div>';}).join("")+'</div>';
+}
+function renderDistribuidoresInactivos(){
+  var ahora=Date.now(),umbral30=30*24*60*60*1000,ultPedido={};
+  PEDIDOS.forEach(function(p){if(p.esCanje)return;var fd=parseFechaPed(p),ts=fd.getTime();if(!ultPedido[p.ruc]||ts>ultPedido[p.ruc].ts)ultPedido[p.ruc]={ts:ts,fecha:p.fecha};});
+  var inactivos=[];
+  DISTRIBUIDORES.forEach(function(d){if(d.esAdmin||d.bloqueado||d.rol==="impresion")return;var ul=ultPedido[d.ruc];if(!ul){inactivos.push({razon:d.razon,fecha:"Sin pedidos"});return;}if(ahora-ul.ts>umbral30)inactivos.push({razon:d.razon,fecha:ul.fecha});});
+  if(!inactivos.length)return'';
+  return '<div style="background:var(--amarc);border:1.5px solid var(--amar);border-radius:10px;padding:12px 14px;margin-bottom:14px"><div style="font-weight:700;margin-bottom:8px;font-size:14px">⚠️ Sin pedidos hace >30 días ('+inactivos.length+')</div>'+
+    inactivos.map(function(d){return '<div style="display:flex;justify-content:space-between;font-size:13px;padding:3px 0;border-bottom:1px solid var(--g2)"><span>'+escHtml(d.razon)+'</span><span style="color:var(--g3)">'+escHtml(d.fecha)+'</span></div>';}).join("")+'</div>';
+}
+function renderTicketPromedioDist(){
+  var map={};
+  PEDIDOS.forEach(function(p){if(p.esCanje)return;if(!map[p.ruc])map[p.ruc]={ruc:p.ruc,total:0,n:0};map[p.ruc].total+=(p.subtotal||0);map[p.ruc].n++;});
+  var lista=Object.values(map).sort(function(a,b){return(b.n?b.total/b.n:0)-(a.n?a.total/a.n:0);});
+  if(!lista.length)return'';
+  return '<details style="background:var(--g1);border-radius:10px;padding:12px 14px;margin-bottom:14px"><summary style="font-weight:700;font-size:14px;cursor:pointer;list-style:none">🎫 Ticket promedio por distribuidor ▸</summary>'+
+    '<table style="width:100%;border-collapse:collapse;margin-top:10px"><thead><tr><th style="font-size:11px;text-align:left;color:var(--g3);padding:4px 6px">Distribuidor</th><th style="font-size:11px;text-align:right;color:var(--g3);padding:4px 6px">Pedidos</th><th style="font-size:11px;text-align:right;color:var(--g3);padding:4px 6px">Ticket</th></tr></thead><tbody>'+
+    lista.map(function(d){var dist=DISTRIBUIDORES.find(function(x){return x.ruc===d.ruc;})||{};var tkt=d.n?d.total/d.n:0;return '<tr><td style="padding:4px 6px;font-size:12px">'+escHtml(dist.empresa||d.ruc)+'</td><td style="padding:4px 6px;font-size:12px;text-align:right">'+d.n+'</td><td style="padding:4px 6px;font-size:12px;text-align:right;font-weight:700">'+fmt$(tkt)+'</td></tr>';}).join("")+
+    '</tbody></table></details>';
+}
+function renderProductosSinMovimiento(){
+  var ahora=Date.now(),umbral=60*24*60*60*1000,movidos={};
+  PEDIDOS.forEach(function(p){if(p.esCanje)return;var fd=parseFechaPed(p);if(ahora-fd.getTime()>umbral)return;(p.items||[]).forEach(function(it){movidos[it.id]=true;});});
+  var sinMov=PRODUCTOS.filter(function(p){return!movidos[p.id];});
+  if(!sinMov.length)return'';
+  return '<details style="background:var(--rojoc);border:1.5px solid var(--rojo);border-radius:10px;padding:12px 14px;margin-bottom:14px"><summary style="font-weight:700;font-size:14px;cursor:pointer;list-style:none;color:var(--rojo)">🚫 Sin movimiento en 60 días ('+sinMov.length+') ▸</summary><div style="margin-top:8px">'+sinMov.map(function(p){return '<div style="font-size:12px;padding:3px 0;border-bottom:1px solid var(--g2)">'+escHtml(p.nm)+'<span style="color:var(--g3);margin-left:6px">'+p.id+'</span></div>';}).join("")+'</div></details>';
+}
+function renderAnalisisABC(){
+  var ventas={};
+  PEDIDOS.forEach(function(p){if(p.esCanje)return;(p.items||[]).forEach(function(it){if(!ventas[it.id])ventas[it.id]={id:it.id,nm:it.nm,total:0};ventas[it.id].total+=((it.pr||0)*(it.cant||0));});});
+  var lista=Object.values(ventas).sort(function(a,b){return b.total-a.total;});
+  if(!lista.length)return'';
+  var gran=lista.reduce(function(s,x){return s+x.total;},0),acum=0;
+  lista.forEach(function(x){acum+=x.total;var pct=gran>0?acum/gran:0;x.clase=pct<=0.70?"A":pct<=0.90?"B":"C";x.pctPartic=gran>0?x.total/gran*100:0;});
+  var col={"A":"var(--verde)","B":"var(--azul)","C":"var(--g3)"};
+  return '<details style="background:var(--g1);border-radius:10px;padding:12px 14px;margin-bottom:14px"><summary style="font-weight:700;font-size:14px;cursor:pointer;list-style:none">📐 Análisis ABC de productos ▸</summary><div style="font-size:11px;color:var(--g3);margin:6px 0 8px">A=top 70% ventas · B=siguiente 20% · C=resto</div><div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;min-width:260px"><thead><tr><th style="font-size:11px;text-align:left;color:var(--g3);padding:4px 6px">Producto</th><th style="font-size:11px;text-align:right;color:var(--g3);padding:4px 6px">Ventas</th><th style="font-size:11px;text-align:right;color:var(--g3);padding:4px 6px">%</th><th style="font-size:11px;text-align:center;color:var(--g3);padding:4px 6px">Clase</th></tr></thead><tbody>'+
+    lista.map(function(x){return '<tr><td style="padding:4px 6px;font-size:11px">'+escHtml(x.nm)+'</td><td style="padding:4px 6px;font-size:11px;text-align:right">'+fmt$(x.total)+'</td><td style="padding:4px 6px;font-size:11px;text-align:right">'+x.pctPartic.toFixed(1)+'%</td><td style="padding:4px 6px;text-align:center"><b style="color:'+col[x.clase]+'">'+x.clase+'</b></td></tr>';}).join("")+'</tbody></table></div></details>';
+}
+function renderAdmLog(){
+  var cont=document.getElementById("adm-log");if(!cont)return;
+  var log=[];try{log=JSON.parse(localStorage.getItem("pyro_log_accesos")||"[]");}catch(e){}
+  if(!log.length){cont.innerHTML='<div class="empty"><div class="ico">📋</div><p>No hay registros aún.</p></div>';return;}
+  cont.innerHTML='<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;min-width:300px"><thead><tr style="border-bottom:2px solid var(--g2)"><th style="font-size:11px;text-align:left;color:var(--g3);padding:6px 8px">RUC</th><th style="font-size:11px;text-align:left;color:var(--g3);padding:6px 8px">Razón social</th><th style="font-size:11px;text-align:left;color:var(--g3);padding:6px 8px">Fecha</th><th style="font-size:11px;text-align:left;color:var(--g3);padding:6px 8px">Hora</th></tr></thead><tbody>'+
+    log.map(function(e){return '<tr><td style="padding:6px 8px;font-size:12px;font-weight:700">'+escHtml(e.ruc)+'</td><td style="padding:6px 8px;font-size:12px">'+escHtml(e.razon)+'</td><td style="padding:6px 8px;font-size:12px;white-space:nowrap">'+escHtml(e.fecha)+'</td><td style="padding:6px 8px;font-size:12px;white-space:nowrap">'+escHtml(e.hora)+'</td></tr>';}).join("")+
+  '</tbody></table></div>';
+}
+

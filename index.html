@@ -90,6 +90,7 @@
       <div id="cli-saldo-tag" style="display:none;background:var(--rojoc);color:var(--rojo);border:1.5px solid var(--rojo);border-radius:10px;padding:10px 12px;font-size:13px;margin-bottom:12px"></div>
       <div class="sec-titulo">🏅 Mis logros</div>
       <div id="insignias-lista" style="margin-bottom:8px"></div>
+      <div id="deseos-sec" style="display:none;margin-bottom:8px"></div>
       <div class="sec-titulo">Últimos pedidos</div>
       <div id="ultimos-pedidos"></div>
       <div style="text-align:center;font-size:11px;color:var(--g3);margin-top:20px;opacity:.7" id="app-version-tag"></div>
@@ -152,6 +153,7 @@
         <div id="rec-pts-pend-box"></div>
         <div class="rec-mot" id="rec-mot"></div>
       </div>
+      <div id="pts-detalle-wrap"></div>
       <div class="sec-titulo">Canjea tus puntos</div>
       <div id="rec-lista"></div>
       <div id="pts-historial-wrap" style="margin-top:14px">
@@ -190,6 +192,7 @@
     <button class="adm-tab" onclick="admTab('stock',this)">📊 Stock</button>
     <button class="adm-tab" onclick="admTab('recompensas',this)">🎁 Recompensas</button>
     <button class="adm-tab" onclick="admTab('herramientas',this)">⚙️ Config</button>
+    <button class="adm-tab" onclick="admTab('log',this)">📋 Registro</button>
   </div>
   <div class="content" style="padding-top:12px">
     <div id="adm-pedidos" class="adm-panel active">
@@ -209,6 +212,7 @@
       <div id="adm-stock-lista"></div>
     </div>
     <div id="adm-recompensas" class="adm-panel"></div>
+    <div id="adm-log" class="adm-panel"></div>
     <div id="adm-herramientas" class="adm-panel">
       <div class="sec-titulo" style="margin-top:4px">Mantenimiento</div>
       <p style="font-size:13px;color:var(--g3);margin-bottom:16px">Acciones para preparar el portal antes del lanzamiento con clientes reales.</p>
@@ -325,6 +329,12 @@
 </div>
 
 <!-- MODAL CALIFICACIÓN -->
+<div class="ov" id="modal-calc">
+  <div class="modal">
+    <div id="modal-calc-c"></div>
+  </div>
+</div>
+
 <div class="ov" id="modal-calif">
   <div class="modal">
     <div class="mhandle"></div>
