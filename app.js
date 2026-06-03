@@ -246,6 +246,7 @@ function passCoincide(stored,pw){
 function loginConCredenciales(ruc,pw){
   var d=DISTRIBUIDORES.find(function(x){return x.ruc.toLowerCase()===ruc.toLowerCase()&&passCoincide(x.pass,pw);});
   if(!d)return false;
+  if(d.bloqueado&&!d.esAdmin)return false;
   USER=d; PEDIDOS=cargarPedidos(); cargarStock();
   setTimeout(reintentarSyncPendientes,2000);
   if(d.rol==="impresion"){
@@ -516,6 +517,14 @@ function renderInicio(){
   animarContador(document.getElementById("hs-carrito"),CARRITO.reduce(function(s,i){return s+i.cant;},0),600);
   renderPromosHome();
   renderPedidoFrecuente();
+  // Saldo pendiente del distribuidor (si el admin registró uno)
+  var saldoTag=document.getElementById("cli-saldo-tag");
+  if(saldoTag){
+    if(USER&&USER.saldoPendiente>0){
+      saldoTag.style.display="block";
+      saldoTag.innerHTML='💲 Saldo pendiente de pago: <b>'+fmt$(USER.saldoPendiente)+'</b>';
+    } else { saldoTag.style.display="none"; }
+  }
   var up=mp.slice().reverse().slice(0,3);
   document.getElementById("ultimos-pedidos").innerHTML=up.length?up.map(function(p){
     return '<div class="ped" onclick="verDetallePed(\''+p.id+'\')" style="cursor:pointer">'+
@@ -2280,7 +2289,10 @@ function renderAdmDist(){
         (esp?'<span class="badge b-oro">★ '+esp+' precios esp.</span>':'')+
         (d.sinDescVol?'<span class="badge b-rojo">Sin desc. volumen</span>':'')+
         (d.entrega&&d.entrega.habilitada?'<span class="badge b-azul">🚚 Entrega $'+d.entrega.montoMin+'+</span>':'<span class="badge b-gris">Solo retiro</span>')+
+        (d.bloqueado?'<span class="badge b-rojo">🚫 Bloqueado</span>':'')+
+        (d.saldoPendiente>0?'<span class="badge b-rojo">💲 Debe $'+(d.saldoPendiente).toFixed(2)+'</span>':'')+
       '</div>'+
+      (d.notasInternas?'<div style="margin-top:6px;font-size:11px;color:var(--g3);background:var(--g1);border-radius:8px;padding:6px 8px">📝 '+escHtml(d.notasInternas)+'</div>':'')+
       '<div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap">'+
         '<button class="btn btn-sm btn-s" onclick="abrirPreciosEsp(\''+d.ruc+'\')">💲 Precios especiales</button>'+
         '<button class="btn btn-sm btn-s" onclick="verResumenDist(\''+d.ruc+'\')">📊 Resumen</button>'+
@@ -2330,6 +2342,14 @@ function abrirEditarDist(ruc){
       '<input type="checkbox" id="ed-sinvol" '+(d.sinDescVol?"checked":"")+' style="width:18px;height:18px">'+
       '<label for="ed-sinvol" style="font-size:14px;color:var(--rojo)">Sin descuentos por volumen</label>'+
     '</div>'+
+    '<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">'+
+      '<input type="checkbox" id="ed-bloqueado" '+(d.bloqueado?"checked":"")+' style="width:18px;height:18px">'+
+      '<label for="ed-bloqueado" style="font-size:14px;color:var(--rojo)">🚫 Bloquear acceso (no puede iniciar sesión)</label>'+
+    '</div>'+
+    '<label class="form-label">Saldo pendiente ($)</label>'+
+    '<input class="form-input" id="ed-saldo" type="number" step="0.01" value="'+(d.saldoPendiente||0)+'">'+
+    '<label class="form-label">Notas internas (solo admin)</label>'+
+    '<textarea class="form-input" id="ed-notas" rows="2" style="resize:none" placeholder="Notas privadas sobre este distribuidor">'+escHtml(d.notasInternas||"")+'</textarea>'+
     '<label class="form-label">Establecimientos / Direcciones de entrega</label>'+
     '<div id="ed-dirs-lista" style="margin-bottom:8px"></div>'+
     '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">'+
@@ -2392,6 +2412,9 @@ function guardarEditarDist(ruc){
   if(!d.entrega)d.entrega={};
   d.entrega.habilitada=document.getElementById("ed-entrega").checked;
   d.entrega.montoMin=parseFloat(document.getElementById("ed-min").value)||30;
+  var bloqEl=document.getElementById("ed-bloqueado");if(bloqEl)d.bloqueado=bloqEl.checked;
+  var saldoEl=document.getElementById("ed-saldo");if(saldoEl)d.saldoPendiente=parseFloat(saldoEl.value)||0;
+  var notasEl=document.getElementById("ed-notas");if(notasEl)d.notasInternas=notasEl.value.trim();
   guardarDistribuidores();
   cerrarModal("modal-editar-dist");
   renderAdmDist();
