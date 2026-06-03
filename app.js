@@ -525,6 +525,7 @@ function renderInicio(){
       saldoTag.innerHTML='💲 Saldo pendiente de pago: <b>'+fmt$(USER.saldoPendiente)+'</b>';
     } else { saldoTag.style.display="none"; }
   }
+  renderInsignias();
   var up=mp.slice().reverse().slice(0,3);
   document.getElementById("ultimos-pedidos").innerHTML=up.length?up.map(function(p){
     return '<div class="ped" onclick="verDetallePed(\''+p.id+'\')" style="cursor:pointer">'+
@@ -536,6 +537,39 @@ function renderInicio(){
   }).join(""):'<div class="empty"><div class="ico">📭</div><p>Aún no tienes pedidos. ¡Haz tu primero!</p></div>';
 }
 
+// ════════════════════ INSIGNIAS / LOGROS ════════════════════
+function calcularInsignias(){
+  var mp=misPedidos().filter(function(p){return!p.esCanje;});
+  var completados=mp.filter(function(p){return p.estado==="finalizado"||p.estado==="entregado"||p.estado==="facturado";});
+  var nPed=completados.length;
+  var totalGastado=completados.reduce(function(s,p){return s+(p.total||0);},0);
+  var pts=saldoPuntos();
+  var canjes=misPedidos().filter(function(p){return p.esCanje&&!p.esBienvenida;}).length;
+  return [
+    {ico:"🥇",nm:"Primer pedido",desc:"Realiza tu primer pedido",ok:nPed>=1},
+    {ico:"🔥",nm:"Cliente activo",desc:"5 pedidos completados",ok:nPed>=5},
+    {ico:"⭐",nm:"Cliente fiel",desc:"10 pedidos completados",ok:nPed>=10},
+    {ico:"👑",nm:"Cliente élite",desc:"25 pedidos completados",ok:nPed>=25},
+    {ico:"💰",nm:"Gran comprador",desc:"$1.000 en compras",ok:totalGastado>=1000},
+    {ico:"💎",nm:"Comprador premium",desc:"$5.000 en compras",ok:totalGastado>=5000},
+    {ico:"🎁",nm:"Primer canje",desc:"Canjea tu primer premio",ok:canjes>=1},
+    {ico:"🏆",nm:"Coleccionista de puntos",desc:"Acumula 5.000 puntos",ok:pts>=5000}
+  ];
+}
+function renderInsignias(){
+  var el=document.getElementById("insignias-lista");
+  if(!el)return;
+  var ins=calcularInsignias();
+  var logrados=ins.filter(function(i){return i.ok;}).length;
+  el.innerHTML='<div style="font-size:12px;color:var(--g3);margin-bottom:8px">'+logrados+' de '+ins.length+' logros desbloqueados</div>'+
+    '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px">'+
+    ins.map(function(i){
+      return '<div title="'+escHtml(i.desc)+'" style="text-align:center;padding:10px 4px;border-radius:12px;background:'+(i.ok?'var(--oro-claro,#fff7e0)':'var(--g1)')+';border:1.5px solid '+(i.ok?'var(--oro)':'transparent')+';opacity:'+(i.ok?'1':'.45')+'">'+
+        '<div style="font-size:26px;filter:'+(i.ok?'none':'grayscale(1)')+'">'+i.ico+'</div>'+
+        '<div style="font-size:9px;font-weight:600;margin-top:2px;line-height:1.1">'+escHtml(i.nm)+'</div>'+
+      '</div>';
+    }).join("")+'</div>';
+}
 function renderPedidoFrecuente(){
   var el=document.getElementById("ultimos-pedidos");
   if(!el)return;
