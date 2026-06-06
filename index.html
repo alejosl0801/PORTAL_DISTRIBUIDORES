@@ -9,6 +9,7 @@
 <link rel="stylesheet" href="./style.css">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#C0392B">
+<meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="PyroShield">
@@ -41,7 +42,10 @@
     <div class="field-label">RUC / Usuario</div>
     <input class="field-inp" id="login-user" type="text" placeholder="Tu RUC" autocomplete="username" inputmode="numeric" maxlength="13">
     <div class="field-label">Contraseña</div>
-    <input class="field-inp" id="login-pass" type="password" placeholder="Tu contraseña" autocomplete="current-password">
+    <div style="position:relative">
+      <input class="field-inp" id="login-pass" type="password" placeholder="Tu contraseña" autocomplete="current-password" style="padding-right:48px;margin-bottom:0">
+      <button type="button" onclick="toggleVerPass()" id="btn-ver-pass" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:18px;color:rgba(255,255,255,.5);padding:4px;line-height:1" title="Ver contraseña">👁️</button>
+    </div>
     <button class="btn-login" onclick="hacerLogin()">Ingresar</button>
     <button id="btn-biometria" class="btn-login" style="display:none;background:var(--g1);color:var(--g3);border:1.5px solid var(--g2);margin-top:8px" onclick="loginBiometrico()">🪪 Ingresar con huella / Face ID</button>
     <div class="login-err" id="login-err">RUC o contraseña incorrectos</div>
