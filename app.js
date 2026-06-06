@@ -1133,6 +1133,7 @@ function agregarAlCarrito(id){
   var item=CARRITO.find(function(i){return i.id===id;});
   if(!item){
     var min=cantMinProducto(p);
+    if(p.stock!=null&&min>p.stock){toast("⚠️ Stock insuficiente: solo hay "+p.stock+" unidades de "+p.nm);return;}
     CARRITO.push({id:id,cant:min});
     if(min>1)toast("ℹ️ Cant. mínima: "+min+" unidades de "+p.nm);
     else toast("🛒 "+p.nm+" en carrito");
@@ -1531,15 +1532,19 @@ function confirmarPedido(){
   var notas=document.getElementById("cart-notas").value;
   var subtotal=0,ptsTotal=0;
   var items=[];
+  var stockError=[];
   CARRITO.forEach(function(it){
     var p=PRODUCTOS.find(function(x){return x.id===it.id;});
     if(!p||p.ago||it.cant<=0)return;
+    if(p.stock!=null&&it.cant>p.stock){stockError.push(p.nm+" (pediste "+it.cant+", hay "+p.stock+")");return;}
     var rv=precioConVolumen(p,it.cant);
     var pr=rv.precio;
     var pts=calcPuntos(pr,p.costo)*it.cant;
     subtotal+=pr*it.cant; ptsTotal+=pts;
     items.push({id:p.id,nm:p.nm,cant:it.cant,pv:p.pv,pr:pr,descPct:rv.descPct,pts:pts,costo:p.costo||0});
   });
+  if(stockError.length){alert("⚠️ Stock insuficiente:\n"+stockError.join("\n")+"\n\nAjusta las cantidades antes de confirmar.");return;}
+  if(!items.length){toast("⚠️ No hay productos válidos en el carrito");return;}
   var iva=parseFloat((subtotal*IVA).toFixed(2)), total=parseFloat((subtotal+iva).toFixed(2));
   var pid="P"+Date.now()+Math.floor(Math.random()*1000);
   var now=new Date();
@@ -2125,8 +2130,13 @@ function renderAdmPedidos(){
     return '<button class="fbtn'+(ADM_PED_FILTRO===o.f?" active":"")+'" onclick="setAdmPedFiltro(\''+o.f+'\')">'+o.l+'</button>';
   }).join("")+'</div>';
 
-  var lista=PEDIDOS.slice().reverse().filter(filtrarPedAdmin);
-  document.getElementById("adm-ped-lista").innerHTML=filtrosHtml+(lista.length?lista.map(function(p){
+  var busqPed=(document.getElementById("adm-ped-busq")||{value:""}).value.toLowerCase().trim();
+  var lista=PEDIDOS.slice().reverse().filter(filtrarPedAdmin).filter(function(p){
+    if(!busqPed)return true;
+    return (p.id||"").toLowerCase().indexOf(busqPed)!==-1||(p.razon||"").toLowerCase().indexOf(busqPed)!==-1||(p.ruc||"").toLowerCase().indexOf(busqPed)!==-1;
+  });
+  var busqHtml='<div style="margin-bottom:8px"><input id="adm-ped-busq" class="form-input" placeholder="🔍 Buscar por pedido, distribuidor o RUC..." oninput="renderAdmPedidos()" style="font-size:13px;padding:6px 10px"></div>';
+  document.getElementById("adm-ped-lista").innerHTML=busqHtml+filtrosHtml+(lista.length?lista.map(function(p){
     var facBadge="";
     if(!p.esCanje){
       if(p.azurFactura)facBadge='<span class="badge b-verde" style="font-size:10px">✔️ Facturado</span>';
@@ -2516,7 +2526,7 @@ function generarAzur(pid){
   if(numDoc==="9999999999999"||numDoc==="9999999999") tipoIdent="07";
   var ahora=new Date();
   var fechaAzur=ahora.getFullYear()+"/"+String(ahora.getMonth()+1).padStart(2,"0")+"/"+String(ahora.getDate()).padStart(2,"0");
-  var itemsAzur=(p.items||[]).map(function(it){
+  var itemsAzur=(p.items||[]).filter(function(it){return it.pr>0&&it.cant>0;}).map(function(it){
     var prod=PRODUCTOS.find(function(x){return x.id===it.id;});
     var codAzur=(prod&&prod.codigoAzur)?prod.codigoAzur:it.id;
     return {codigo_principal:codAzur,codigo_auxiliar:null,descripcion:it.nm,tipoproducto:1,tipo_iva:4,precio_unitario:parseFloat(it.pr.toFixed(2)),cantidad:it.cant,descuento:0};
