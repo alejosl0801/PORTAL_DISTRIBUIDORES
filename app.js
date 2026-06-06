@@ -383,6 +383,21 @@ function hacerLogin(){
   // Recordar último RUC usado (no la contraseña)
   try{localStorage.setItem("pyro_last_ruc",u);}catch(e){}
   try{localStorage.setItem("pyro_sesion",JSON.stringify({ruc:u}));}catch(e){}
+  // Alerta contraseña débil (últimos 6 dígitos del RUC o contraseñas conocidas)
+  var PASSES_DEBILES=["dist123","jorge123","fabiola123","123456","password","pyroshield"];
+  var esDebil=PASSES_DEBILES.indexOf(pw)!==-1||(u.length>=6&&pw===u.slice(-6))||(u.length>=6&&pw===u.slice(-7));
+  if(esDebil&&!USER.esAdmin){
+    setTimeout(function(){
+      var llave="pyro_pass_alerta_"+USER.ruc;
+      if(!localStorage.getItem(llave)){
+        localStorage.setItem(llave,"1");
+        confirmar(
+          "⚠️ <b>Tu contraseña es muy fácil de adivinar</b><br><br>Por seguridad, te recomendamos cambiarla ahora.<br><small style='color:var(--g3)'>Ve a Perfil → Cambiar contraseña</small>",
+          function(){irTab("perfil");setTimeout(mostrarCambioPassOpcional,400);}
+        );
+      }
+    },1800);
+  }
   if(!USER.esAdmin&&USER.rol!=="impresion"){
     mostrarSaludoFlash();
     otorgarBienvenida();
