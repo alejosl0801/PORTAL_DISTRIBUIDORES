@@ -4037,7 +4037,23 @@ window.addEventListener("load",function(){
   if(lu)lu.addEventListener("keydown",function(e){if(e.key==="Enter")lp.focus();});
   // Recordar último RUC: prellenar y enfocar la contraseña
   try{var lastRuc=localStorage.getItem("pyro_last_ruc");if(lastRuc&&lu&&!lu.value){lu.value=lastRuc;if(lp)setTimeout(function(){lp.focus();},100);}}catch(e){}
-  if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js').catch(function(){});}
+  if('serviceWorker' in navigator){
+    navigator.serviceWorker.register('./sw.js').then(function(reg){
+      // Forzar actualización inmediata si hay nuevo SW esperando
+      if(reg.waiting){reg.waiting.postMessage({type:'SKIP_WAITING'});}
+      reg.addEventListener('updatefound',function(){
+        var newSW=reg.installing;
+        newSW.addEventListener('statechange',function(){
+          if(newSW.state==='installed'&&navigator.serviceWorker.controller){
+            newSW.postMessage({type:'SKIP_WAITING'});
+            window.location.reload();
+          }
+        });
+      });
+    }).catch(function(){});
+    // Recargar cuando el SW activo cambia
+    navigator.serviceWorker.addEventListener('controllerchange',function(){window.location.reload();});
+  }
   mostrarBotonBiometria();
   // Auto-login si el usuario marcó "Recordarme"
   setTimeout(intentarAutoLogin, 300);

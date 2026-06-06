@@ -9,6 +9,10 @@ var CACHE_FILES = [
   './img/logo.jpg'
 ];
 
+self.addEventListener('message', function(e) {
+  if(e.data&&e.data.type==='SKIP_WAITING') self.skipWaiting();
+});
+
 self.addEventListener('install', function(e) {
   self.skipWaiting();
   e.waitUntil(
