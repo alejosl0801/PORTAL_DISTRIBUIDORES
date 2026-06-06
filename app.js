@@ -2784,6 +2784,7 @@ function guardarPreciosEsp(ruc){
   var d=DISTRIBUIDORES.find(function(x){return x.ruc===ruc;});
   if(!d)return;
   if(!d.preciosEsp)d.preciosEsp={};
+  var errores=[];
   PRODUCTOS.forEach(function(p){
     var inp=document.getElementById("esp-"+p.id);
     if(!inp)return;
@@ -2791,9 +2792,15 @@ function guardarPreciosEsp(ruc){
     if(v===""||isNaN(parseFloat(v))){
       delete d.preciosEsp[p.id];
     } else {
-      d.preciosEsp[p.id]=parseFloat(v);
+      var val=parseFloat(v);
+      if(val<(p.costo||0)){
+        errores.push(p.nombre+": mínimo $"+p.costo.toFixed(2));
+      } else {
+        d.preciosEsp[p.id]=val;
+      }
     }
   });
+  if(errores.length){alert("⚠️ Precios por debajo del costo:\n"+errores.join("\n"));return;}
   guardarDistribuidores();
   cerrarModal("modal-precios-esp");
   renderAdmDist();
