@@ -380,6 +380,16 @@ function primerIngresoPaso3(){
   try{localStorage.setItem("pyro_primer_ingreso_"+USER.ruc,"1");}catch(e){}
   iniciarTutorial();
 }
+function mostrarCambioPassOpcional(){
+  if(!USER)return;
+  _primerIngresoOv(
+    '<div style="font-size:21px;font-weight:800;margin-bottom:10px">🔐 Cambiar contraseña</div>'+
+    '<input class="form-input" id="pi-pass1" type="password" placeholder="Nueva contraseña" style="margin-bottom:8px">'+
+    '<input class="form-input" id="pi-pass2" type="password" placeholder="Repetir contraseña" style="margin-bottom:12px">'+
+    '<button class="btn btn-p btn-full" style="margin-bottom:8px" onclick="primerIngresoGuardarPass();_cerrarPrimerIngresoOv();">Guardar</button>'+
+    '<button class="btn btn-s btn-full" onclick="_cerrarPrimerIngresoOv()">Cancelar</button>'
+  );
+}
 
 // Otorga (una sola vez por cuenta) un canje gratis de bienvenida al primer login
 function otorgarBienvenida(){
