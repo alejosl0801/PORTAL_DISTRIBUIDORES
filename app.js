@@ -367,7 +367,7 @@ function intentarAutoLogin(){
   // Auto-login silencioso
   if(loginConCredenciales(rec.ruc,rec.pw)){
     document.getElementById("login-err").style.display="none";
-    finalizarLogin();
+    finalizarLogin(rec.ruc,rec.pw);
   }
 }
 
