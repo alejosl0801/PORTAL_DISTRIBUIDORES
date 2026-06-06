@@ -340,9 +340,10 @@ function hacerLogin(){
   if(!USER.esAdmin&&USER.rol!=="impresion"){setTimeout(function(){var ahora=new Date();var viejos=PEDIDOS.filter(function(p){if(p.ruc!==USER.ruc||p.estado!=="pendiente")return false;var f=parseFechaPed(p);return f&&(ahora-f)>30*24*60*60*1000;});if(viejos.length)toast("⏰ Tienes "+viejos.length+" pedido(s) en 'pendiente' hace más de 30 días — contacta a PyroShield");},2500);}
   if(USER.esAdmin){
     backupAutomatico(false);
-    sincronizarDesdeNube(null); // descarga TODOS los pedidos
+    sincronizarDesdeNube(null);
+    restaurarMetaDesdeNube();
   } else {
-    sincronizarDesdeNube(USER.ruc); // descarga solo los de este distribuidor
+    sincronizarDesdeNube(USER.ruc);
   }
 }
 
@@ -2970,7 +2971,7 @@ function ajustarStock(id,val){
   var n=parseInt(val,10);
   if(isNaN(n)||n<0){toast("⚠️ Ingresa un número válido");return;}
   p.stock=n; p.ago=(n===0);
-  guardarStock(); renderAdmStock();
+  guardarStock(); backupCambio(); renderAdmStock();
   toast("✅ Stock actualizado: "+p.nm);
 }
 
@@ -3421,6 +3422,7 @@ function guardarDistribuidores(){
     // Excluir admins y usuarios de sistema (rol:"impresion") — su fuente de verdad es datos.js
     var todos=DISTRIBUIDORES.filter(function(d){return!d.esAdmin&&d.rol!=="impresion";});
     localStorage.setItem("pyro_dist_extra",JSON.stringify(todos));
+    backupCambio();
   }catch(e){avisarStorage();}
 }
 function cargarDistribuidoresExtra(){
@@ -3825,6 +3827,7 @@ function guardarDescVol(){
   localStorage.setItem("pyro_descvol",JSON.stringify(dv));
   var p=PRODUCTOS.find(function(x){return x.id===_descvolId;});
   if(p)p.descVol=tiers;
+  backupCambio();
   cerrarModal("modal-descvol");
   toast("✅ Descuentos actualizados");
   if(document.getElementById("adm-stock")&&document.getElementById("adm-stock").classList.contains("active")){admTab("stock");}
@@ -3931,6 +3934,22 @@ function sincronizarDesdeNube(ruc){
 /* ═══════════════════════════════════════════
    BACKUP AUTOMÁTICO → Google Apps Script
 ═══════════════════════════════════════════ */
+function _buildBackupPayload(){
+  var stock={};PRODUCTOS.forEach(function(p){stock[p.id]={stock:p.stock,ago:p.ago};});
+  var distExtra=[];try{distExtra=JSON.parse(localStorage.getItem("pyro_dist_extra")||"[]");}catch(e){}
+  var descvol={};try{descvol=JSON.parse(localStorage.getItem("pyro_descvol")||"{}");}catch(e){}
+  var umbrales={};try{umbrales=JSON.parse(localStorage.getItem("pyro_umbrales")||"{}");}catch(e){}
+  var costos={};try{costos=JSON.parse(localStorage.getItem("pyro_costos")||"{}");}catch(e){}
+  return {
+    accion:"backup",
+    token:GAS_TOKEN,
+    fecha:new Date().toISOString(),
+    pedidos:PEDIDOS||[],
+    stock:stock,
+    meta:{dist_extra:distExtra,descvol:descvol,umbrales:umbrales,costos:costos}
+  };
+}
+
 function backupAutomatico(forzado){
   if(!forzado){
     var hoy=new Date().toISOString().slice(0,10);
@@ -3938,20 +3957,59 @@ function backupAutomatico(forzado){
     if(ultimo===hoy)return;
   }
   if(!GAS_URL){if(forzado)toast("⚠️ GAS_URL no configurado");return;}
-  var stock={};PRODUCTOS.forEach(function(p){stock[p.id]={stock:p.stock,ago:p.ago};});
-  var payload={
-    accion:"backup",
-    token:GAS_TOKEN,
-    fecha:new Date().toISOString(),
-    pedidos:PEDIDOS||[],
-    stock:stock
-  };
-  fetch(GAS_URL,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(payload)})
+  fetch(GAS_URL,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(_buildBackupPayload())})
     .then(function(r){return r.json();})
     .then(function(){
       localStorage.setItem("pyro_ultimo_backup",new Date().toISOString().slice(0,10));
       if(forzado)toast("☁️ Backup enviado — "+new Date().toLocaleString());
     })
     .catch(function(e){if(forzado)toast("⚠️ Backup falló: "+e.message);});
+}
+
+// Backup de cambio: se lanza tras cada modificación crítica (con debounce de 3s)
+var _backupCambioTimer=null;
+function backupCambio(){
+  if(!GAS_URL)return;
+  clearTimeout(_backupCambioTimer);
+  _backupCambioTimer=setTimeout(function(){
+    fetch(GAS_URL,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(_buildBackupPayload())})
+      .then(function(r){return r.json();})
+      .then(function(){localStorage.setItem("pyro_ultimo_backup",new Date().toISOString().slice(0,10));})
+      .catch(function(){});
+  },3000);
+}
+
+// Restaura dist_extra, descvol, umbrales desde el último snapshot en nube
+function restaurarMetaDesdeNube(){
+  if(!GAS_URL)return;
+  var url=GAS_URL+"?accion=obtenerMeta&token="+encodeURIComponent(GAS_TOKEN);
+  fetch(url).then(function(r){return r.json();}).then(function(data){
+    if(!data.ok||!data.meta)return;
+    var m=data.meta;
+    if(m.dist_extra&&m.dist_extra.length){
+      var localExtra=[];try{localExtra=JSON.parse(localStorage.getItem("pyro_dist_extra")||"[]");}catch(e){}
+      if(!localExtra.length){
+        localStorage.setItem("pyro_dist_extra",JSON.stringify(m.dist_extra));
+        cargarDistribuidoresExtra();
+        toast("☁️ Distribuidores restaurados desde nube ("+m.dist_extra.length+")");
+      }
+    }
+    if(m.descvol){
+      var localDv={};try{localDv=JSON.parse(localStorage.getItem("pyro_descvol")||"{}");}catch(e){}
+      if(!Object.keys(localDv).length&&Object.keys(m.descvol).length){
+        localStorage.setItem("pyro_descvol",JSON.stringify(m.descvol));
+        cargarDescVol();
+        toast("☁️ Descuentos por volumen restaurados desde nube");
+      }
+    }
+    if(m.umbrales){
+      var localU={};try{localU=JSON.parse(localStorage.getItem("pyro_umbrales")||"{}");}catch(e){}
+      if(!Object.keys(localU).length)localStorage.setItem("pyro_umbrales",JSON.stringify(m.umbrales));
+    }
+    if(m.costos){
+      var localC={};try{localC=JSON.parse(localStorage.getItem("pyro_costos")||"{}");}catch(e){}
+      if(!Object.keys(localC).length)localStorage.setItem("pyro_costos",JSON.stringify(m.costos));
+    }
+  }).catch(function(){});
 }
 

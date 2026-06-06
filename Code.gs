@@ -65,6 +65,9 @@ function doGet(e) {
   if (params.accion === "obtenerStock") {
     return _json(obtenerStockNube());
   }
+  if (params.accion === "obtenerMeta") {
+    return _json(obtenerMetaNube());
+  }
   return _json({ ok: false, error: "Acción no reconocida" });
 }
 
@@ -107,7 +110,7 @@ function actualizarEstadoPyro(datos) {
 }
 
 // ════════════════════════════════════════════════════════════════
-// recibirBackupPyro — guarda snapshot completo de pedidos + stock
+// recibirBackupPyro — guarda snapshot completo de pedidos + stock + meta
 // ════════════════════════════════════════════════════════════════
 function recibirBackupPyro(datos) {
   var ss = SpreadsheetApp.openById(SHEET_ID);
@@ -132,7 +135,6 @@ function recibirBackupPyro(datos) {
         new Date()
       ]);
     } else {
-      // Actualizar estado si cambió
       var idx = ids.indexOf(p.id);
       hojaPed.getRange(idx + 2, 7).setValue(p.estado || "");
     }
@@ -150,12 +152,13 @@ function recibirBackupPyro(datos) {
     });
   }
 
-  // ── Snapshot JSON en BACKUP_COMPLETO ──
-  var hojaSnap = obtenerHoja(HOJA_BACKUP, ["fecha","pedidos_json","stock_json"]);
+  // ── Snapshot JSON en BACKUP_COMPLETO (4 columnas: fecha, pedidos, stock, meta) ──
+  var hojaSnap = obtenerHoja(HOJA_BACKUP, ["fecha","pedidos_json","stock_json","meta_json"]);
   hojaSnap.appendRow([
     new Date(),
     JSON.stringify(datos.pedidos || []),
-    JSON.stringify(datos.stock || {})
+    JSON.stringify(datos.stock || {}),
+    JSON.stringify(datos.meta || {})
   ]);
   // Mantener solo los últimos 30 snapshots
   var lastRow = hojaSnap.getLastRow();
@@ -168,10 +171,8 @@ function recibirBackupPyro(datos) {
 // obtenerTodosPedidos — devuelve todos los pedidos del Sheet
 // ════════════════════════════════════════════════════════════════
 function obtenerTodosPedidos(params) {
-  // Si se pasa ruc, filtra solo ese distribuidor
   var rucFiltro = params.ruc || null;
 
-  // Intentar devolver desde BACKUP_COMPLETO (snapshot más reciente)
   var ss = SpreadsheetApp.openById(SHEET_ID);
   var hojaSnap = ss.getSheetByName(HOJA_BACKUP);
   if (hojaSnap && hojaSnap.getLastRow() > 1) {
@@ -212,6 +213,26 @@ function obtenerStockNube() {
     if (r[0]) stock[r[0]] = { stock: Number(r[1]) || 0, ago: r[2] === "SI" };
   });
   return { ok: true, stock: stock };
+}
+
+// ════════════════════════════════════════════════════════════════
+// obtenerMetaNube — devuelve el meta_json del último snapshot
+// ════════════════════════════════════════════════════════════════
+function obtenerMetaNube() {
+  var ss = SpreadsheetApp.openById(SHEET_ID);
+  var hoja = ss.getSheetByName(HOJA_BACKUP);
+  if (!hoja || hoja.getLastRow() < 2) return { ok: true, meta: {} };
+  var lastRow = hoja.getLastRow();
+  // Columna 4 = meta_json (si existe)
+  var numCols = hoja.getLastColumn();
+  if (numCols < 4) return { ok: true, meta: {} };
+  var metaJson = hoja.getRange(lastRow, 4).getValue();
+  try {
+    var meta = JSON.parse(metaJson);
+    return { ok: true, meta: meta };
+  } catch(e) {
+    return { ok: true, meta: {} };
+  }
 }
 
 // ════════════════════════════════════════════════════════════════
