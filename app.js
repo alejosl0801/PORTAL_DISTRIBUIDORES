@@ -713,7 +713,8 @@ function _logrosDefinicion(){
   var meses=new Set(comp.map(function(p){return(p.fechaISO||p.fecha||"").slice(0,7);})).size;
   var semanas=new Set(comp.map(function(p){var d=parseFechaPed(p);var w=Math.floor(d/6048e5);return w;})).size;
   var prods=new Set(comp.reduce(function(a,p){return a.concat((p.items||[]).map(function(i){return i.id;}));},[]).filter(Boolean)).size;
-  var items=comp.reduce(function(s,p){return s+(p.items||[]).reduce(function(ss,i){return ss+i.cant;},0);},0);
+  var _excUnid=["SEGPLAM","MANOPQS"]; // seguros plásticos y manómetros no cuentan por ser accesorios de muy bajo valor unitario
+  var items=comp.reduce(function(s,p){return s+(p.items||[]).reduce(function(ss,i){return _excUnid.indexOf(i.id)!==-1?ss:ss+i.cant;},0);},0);
   var maxPed=comp.reduce(function(s,p){return Math.max(s,p.total||0);},0);
   var diasSemana=comp.map(function(p){return parseFechaPed(p).getDay();});
   var tieneViernesPed=diasSemana.indexOf(5)!==-1;
@@ -745,19 +746,19 @@ function _logrosDefinicion(){
     {ico:"☀️",nm:"Madrugador",             desc:"Abre el portal antes de las 8am",          ok:(ahora.getHours()<8),bonoPts:1},
 
     // ── PEDIDOS ──
-    {ico:"🔥",nm:"En racha",               desc:"3 pedidos completados",                   ok:n>=3,     bonoPts:3},
-    {ico:"⭐",nm:"Cliente activo",         desc:"5 pedidos completados",                   ok:n>=5,     bonoPts:4},
-    {ico:"💪",nm:"Constante",              desc:"8 pedidos completados",                   ok:n>=8,     bonoPts:4},
-    {ico:"🏅",nm:"Cliente fiel",           desc:"10 pedidos completados",                  ok:n>=10,    bonoPts:5},
-    {ico:"🚀",nm:"Imparable",              desc:"15 pedidos completados",                  ok:n>=15,    bonoPts:5},
-    {ico:"💼",nm:"Profesional",            desc:"20 pedidos completados",                  ok:n>=20,    bonoPts:5},
-    {ico:"👑",nm:"Cliente élite",          desc:"25 pedidos completados",                  ok:n>=25,    bonoPts:6},
-    {ico:"🦅",nm:"Águila",                 desc:"35 pedidos completados",                  ok:n>=35,    bonoPts:6},
-    {ico:"🌟",nm:"Estrella",               desc:"50 pedidos completados",                  ok:n>=50,    bonoPts:7},
-    {ico:"🏆",nm:"Leyenda",                desc:"75 pedidos completados",                  ok:n>=75,    bonoPts:8},
-    {ico:"💯",nm:"Centenario",             desc:"100 pedidos completados",                 ok:n>=100,   bonoPts:10},
-    {ico:"🌈",nm:"150 pedidos",            desc:"150 pedidos completados",                 ok:n>=150,   bonoPts:10},
-    {ico:"🔱",nm:"200 pedidos",            desc:"200 pedidos completados",                 ok:n>=200,   bonoPts:12},
+    {ico:"🔥",nm:"En racha",               desc:"5 pedidos completados",                   ok:n>=5,     bonoPts:3},
+    {ico:"⭐",nm:"Cliente activo",         desc:"15 pedidos completados",                  ok:n>=15,    bonoPts:4},
+    {ico:"💪",nm:"Constante",              desc:"30 pedidos completados",                  ok:n>=30,    bonoPts:5},
+    {ico:"🏅",nm:"Cliente fiel",           desc:"50 pedidos completados",                  ok:n>=50,    bonoPts:5},
+    {ico:"🚀",nm:"Imparable",              desc:"75 pedidos completados",                  ok:n>=75,    bonoPts:6},
+    {ico:"💼",nm:"Profesional",            desc:"100 pedidos completados",                 ok:n>=100,   bonoPts:6},
+    {ico:"👑",nm:"Cliente élite",          desc:"150 pedidos completados",                 ok:n>=150,   bonoPts:7},
+    {ico:"🦅",nm:"Águila",                 desc:"200 pedidos completados",                 ok:n>=200,   bonoPts:8},
+    {ico:"🌟",nm:"Estrella",               desc:"300 pedidos completados",                 ok:n>=300,   bonoPts:8},
+    {ico:"🏆",nm:"Leyenda",                desc:"500 pedidos completados",                 ok:n>=500,   bonoPts:10},
+    {ico:"💯",nm:"Centenario",             desc:"750 pedidos completados",                 ok:n>=750,   bonoPts:10},
+    {ico:"🌈",nm:"Mil pedidos",            desc:"1.000 pedidos completados",               ok:n>=1000,  bonoPts:12},
+    {ico:"🔱",nm:"Élite absoluto",         desc:"2.000 pedidos completados",               ok:n>=2000,  bonoPts:15},
 
     // ── COMPRAS EN DÓLARES ──
     {ico:"💵",nm:"Primeros $100",          desc:"$100 en compras totales",                 ok:total>=100,  bonoPts:3},
