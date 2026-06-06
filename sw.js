@@ -1,10 +1,5 @@
-var CACHE_NAME = 'pyro-v5';
+var CACHE_NAME = 'pyro-v6';
 var CACHE_FILES = [
-  './',
-  './index.html',
-  './app.js',
-  './datos.js',
-  './style.css',
   './manifest.json',
   './img/logo.jpg'
 ];
@@ -43,6 +38,12 @@ self.addEventListener('fetch', function(e) {
         return caches.match(e.request);
       })
     );
+    return;
+  }
+
+  // index.html nunca se cachea — siempre red para que los ?v= nuevos carguen
+  if (url.indexOf('index.html') !== -1 || url.endsWith('/') && (url.indexOf('alejosl0801.github.io') !== -1 || url.indexOf('localhost') !== -1)) {
+    e.respondWith(fetch(e.request).catch(function(){return caches.match(e.request);}));
     return;
   }
 
