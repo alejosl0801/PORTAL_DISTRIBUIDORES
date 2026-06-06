@@ -61,6 +61,8 @@ var PRODUCTOS = [
 
 // ════════════════════ ESTADO GLOBAL ════════════════════
 var USER=null, CARRITO=[], PEDIDOS=[], FILTRO="todos", SUB_FILTRO=null, ADM_TAB="pedidos";
+var FILTRO_MARGEN_MIN=0;
+var FILTRO_STOCK_MIN=0;
 var ADM_PED_FILTRO="pendiente";
 var CALIF_PED_ID=null, CALIF_ESTRELLAS=0;
 var FAVORITOS=[];
@@ -176,6 +178,16 @@ function puntosCanjeados(){
   },0);
 }
 
+function registrarLogPuntos(ruc,tipo,pts,detalle){
+  try{
+    var key="pyro_log_puntos_"+ruc;
+    var log=[];try{log=JSON.parse(localStorage.getItem(key)||"[]");}catch(e){}
+    var now=new Date(),p2=function(n){return n<10?"0"+n:String(n);};
+    log.unshift({tipo:tipo,pts:pts,detalle:detalle,fecha:now.getFullYear()+"-"+p2(now.getMonth()+1)+"-"+p2(now.getDate()),hora:p2(now.getHours())+":"+p2(now.getMinutes())});
+    if(log.length>100)log=log.slice(0,100);
+    localStorage.setItem(key,JSON.stringify(log));
+  }catch(e){}
+}
 function saldoPuntos(){
   // Solo puntos confirmados menos canjeados
   return Math.max(0, puntosConfirmados()-puntosCanjeados());
@@ -310,7 +322,7 @@ function hacerLogin(){
   }
   // Recordar último RUC usado (no la contraseña)
   try{localStorage.setItem("pyro_last_ruc",u);}catch(e){}
-  try{localStorage.setItem("pyro_sesion",JSON.stringify({ruc:u,pass:pw}));}catch(e){}
+  try{localStorage.setItem("pyro_sesion",JSON.stringify({ruc:u}));}catch(e){}
   if(!USER.esAdmin&&USER.rol!=="impresion"){
     mostrarSaludoFlash();
     otorgarBienvenida();
@@ -324,6 +336,8 @@ function hacerLogin(){
       if(!localStorage.getItem(key)){iniciarTutorial();}
     }
   }
+  // Alerta pedidos pendientes >30 días
+  if(!USER.esAdmin&&USER.rol!=="impresion"){setTimeout(function(){var ahora=new Date();var viejos=PEDIDOS.filter(function(p){if(p.ruc!==USER.ruc||p.estado!=="pendiente")return false;var f=parseFechaPed(p);return f&&(ahora-f)>30*24*60*60*1000;});if(viejos.length)toast("⏰ Tienes "+viejos.length+" pedido(s) en 'pendiente' hace más de 30 días — contacta a PyroShield");},2500);}
   if(USER.esAdmin){
     backupAutomatico(false);
     sincronizarDesdeNube(null); // descarga TODOS los pedidos
@@ -376,7 +390,7 @@ function primerIngresoGuardarPass(){
   if(v1!==v2){toast("⚠️ Las contraseñas no coinciden");return;}
   USER.pass=v1;
   guardarDistribuidores();
-  try{localStorage.setItem("pyro_sesion",JSON.stringify({ruc:USER.ruc,pass:v1}));}catch(e){}
+  try{localStorage.setItem("pyro_sesion",JSON.stringify({ruc:USER.ruc}));}catch(e){}
   toast("✅ Contraseña actualizada");
   primerIngresoPaso3();
 }
@@ -766,10 +780,31 @@ function usarBusquedaReciente(q){
   renderCatalogo();
 }
 
+function setFiltroAvanzado(tipo,val){
+  if(tipo==="margen")FILTRO_MARGEN_MIN=val;
+  if(tipo==="stock")FILTRO_STOCK_MIN=val;
+  document.querySelectorAll(".fadv-margen").forEach(function(b){b.classList.remove("active");});
+  document.querySelectorAll(".fadv-stock").forEach(function(b){b.classList.remove("active");});
+  var actM=document.querySelector(".fadv-margen[data-val='"+FILTRO_MARGEN_MIN+"']");
+  var actS=document.querySelector(".fadv-stock[data-val='"+FILTRO_STOCK_MIN+"']");
+  if(actM)actM.classList.add("active");
+  if(actS)actS.classList.add("active");
+  renderCatalogo();
+}
 function renderCatToolbar(){
   var el=document.getElementById("cat-toolbar");
   if(!el)return;
-  el.innerHTML='<button class="cat-grid-btn fbtn'+(CAT_GRID?" active":"")+'\" onclick="toggleCatGrid()" title="'+(CAT_GRID?"Vista lista":"Vista cuadrícula")+'">'+(CAT_GRID?"☰ Lista":"⊞ Cuadrícula")+'</button>';
+  el.innerHTML=
+    '<button class="cat-grid-btn fbtn'+(CAT_GRID?' active':'')+'" onclick="toggleCatGrid()" title="'+(CAT_GRID?'Vista lista':'Vista cuadrícula')+'">'+(CAT_GRID?'☰ Lista':'⊞ Cuadrícula')+'</button>'+
+    '<div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:6px;align-items:center">'+
+      '<span style="font-size:10px;color:var(--g3);font-weight:600;margin-right:2px">Margen:</span>'+
+      '<button class="fbtn fadv-margen'+(FILTRO_MARGEN_MIN===0?' active':'')+'" data-val="0" onclick="setFiltroAvanzado(\'margen\',0)" style="font-size:10px;padding:2px 8px">Todos</button>'+
+      '<button class="fbtn fadv-margen'+(FILTRO_MARGEN_MIN===20?' active':'')+'" data-val="20" onclick="setFiltroAvanzado(\'margen\',20)" style="font-size:10px;padding:2px 8px">20%+</button>'+
+      '<button class="fbtn fadv-margen'+(FILTRO_MARGEN_MIN===30?' active':'')+'" data-val="30" onclick="setFiltroAvanzado(\'margen\',30)" style="font-size:10px;padding:2px 8px">30%+</button>'+
+      '<span style="font-size:10px;color:var(--g3);font-weight:600;margin-left:6px;margin-right:2px">Stock:</span>'+
+      '<button class="fbtn fadv-stock'+(FILTRO_STOCK_MIN===0?' active':'')+'" data-val="0" onclick="setFiltroAvanzado(\'stock\',0)" style="font-size:10px;padding:2px 8px">Todos</button>'+
+      '<button class="fbtn fadv-stock'+(FILTRO_STOCK_MIN===1?' active':'')+'" data-val="1" onclick="setFiltroAvanzado(\'stock\',1)" style="font-size:10px;padding:2px 8px">Con stock</button>'+
+    '</div>';
 }
 
 function toggleCatGrid(){
@@ -826,6 +861,8 @@ function renderCatalogo(){
       var ps=PRODUCTOS.filter(function(p){
         if(p.cat!==ck||p.sub!==sn)return false;
         if(q&&!coincideBusqueda(p,q))return false;
+        if(FILTRO_MARGEN_MIN>0){var pc2=precioCliente(p);var costo2=getCostoProducto(p.id);if(pc2>0&&(pc2-costo2)/pc2*100<FILTRO_MARGEN_MIN)return false;}
+        if(FILTRO_STOCK_MIN>0&&p.stock<=0)return false;
         return true;
       });
       if(!ps.length)return;
@@ -856,6 +893,13 @@ function renderProdCard(p){
   var isDeseo=DESEOS.indexOf(p.id)!==-1;
   var deseoBtn='<button class="fav-btn deseo-btn'+(isDeseo?" active":"")+'\" onclick="toggleDeseo(\''+p.id+'\')" title="'+(isDeseo?"Quitar de lista de deseos":"Guardar en lista de deseos")+'">'+(isDeseo?"🔖":"🏷️")+'</button>';
   var calcBtn='<button class="fav-btn" onclick="abrirCalculadora(\''+p.id+'\')" title="Calcular ganancia" style="font-size:11px">📊</button>';
+
+  // Banner descuento por volumen (cuando aún no hay en carrito)
+  var bannerVol='';
+  if((!USER||!USER.sinDescVol)&&p.descVol&&p.descVol.length&&!promoIt&&cantActual===0){
+    var nextTier=p.descVol.find(function(t){return t[0]>1;});
+    if(nextTier)bannerVol='<div style="background:linear-gradient(135deg,var(--rojo),#ff6b35);color:#fff;border-radius:8px;padding:5px 10px;font-size:11px;font-weight:700;margin-top:6px;text-align:center">🔥 Compra '+nextTier[0]+'+ y ahorra '+nextTier[1]+'% extra</div>';
+  }
 
   // Indicador próximo descuento
   var proxDescHtml="";
@@ -892,6 +936,7 @@ function renderProdCard(p){
         '<div class="prod-pu">'+fmt$(pc)+'</div>'+
         (descPctDisp>0?'<div class="prod-desc-badge" style="display:inline-block;margin-bottom:4px">−'+descPctDisp+'%</div>':'')+
         proxDescHtml+
+        bannerVol+
         addHtml+
       '</div>'+
     '</div>';
@@ -1513,6 +1558,7 @@ function confirmarPedido(){
   if(navigator.vibrate)navigator.vibrate([30,20,60]);
   guardarPedidos();
   sincronizarConSheets(ped, false);
+  registrarLogPuntos(USER.ruc,"pendiente",ptsTotal,"Pedido #"+pid);
   items.forEach(function(it){
     var p=PRODUCTOS.find(function(x){return x.id===it.id;});
     if(p){p.stock=Math.max(0,p.stock-it.cant);if(p.stock===0)p.ago=true;}
@@ -1835,6 +1881,28 @@ function renderRecompensas(){
   setTimeout(function(){
     document.querySelectorAll("#rec-lista .rec-bar").forEach(function(b){b.style.width=(b.getAttribute("data-pct")||0)+"%";});
   },60);
+  // Historial de puntos
+  var logPts=[];try{logPts=JSON.parse(localStorage.getItem("pyro_log_puntos_"+USER.ruc)||"[]");}catch(e){}
+  var logEl=document.getElementById("rec-log-puntos");
+  if(logEl){
+    var logHtml2;
+    if(logPts.length){
+      logHtml2='<div class="sec-titulo" style="margin-top:16px">📜 Historial de puntos</div>'
+        +'<div style="background:var(--g1);border-radius:12px;overflow:hidden">'
+        +logPts.map(function(e,i){
+          var col2=e.tipo==="canjeados"?"var(--rojo)":e.tipo==="confirmado"?"var(--verde)":"var(--amar)";
+          var signo2=e.tipo==="canjeados"?"-":"+";
+          return '<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;'+(i>0?"border-top:1px solid var(--g2)":"")+'">'
+            +'<div><div style="font-size:13px;font-weight:600">'+escHtml(e.detalle)+'</div>'
+            +'<div style="font-size:11px;color:var(--g3)">'+escHtml(e.fecha)+" "+escHtml(e.hora)+'</div></div>'
+            +'<div style="font-weight:800;color:'+col2+'">'+signo2+e.pts+' pts</div>'
+            +'</div>';
+        }).join("")+'</div>';
+    } else {
+      logHtml2='<div style="font-size:13px;color:var(--g3);text-align:center;padding:12px">Sin movimientos aún</div>';
+    }
+    logEl.innerHTML=logHtml2;
+  }
 }
 function canjear(pts,nm){
   if(saldoPuntos()<pts){toast("⚠️ No tienes suficientes puntos confirmados");return;}
@@ -1842,7 +1910,9 @@ function canjear(pts,nm){
     if(saldoPuntos()<pts){toast("⚠️ Ya no tienes suficientes puntos");renderRecompensas();return;}
     var pid="C"+Date.now().toString().slice(-5);
     PEDIDOS.push({id:pid,ruc:USER.ruc,razon:USER.razon,fecha:new Date().toLocaleDateString(),fechaISO:new Date().toISOString(),esCanje:true,canjePts:pts,canjeNm:nm,estado:"pendiente",total:0,puntos:0});
-    guardarPedidos(); renderRecompensas();
+    guardarPedidos();
+    registrarLogPuntos(USER.ruc,"canjeados",pts,"Canje: "+nm);
+    renderRecompensas();
     setTopbarPts(saldoPuntos());
     mostrarOverlayCanje();
   });
@@ -2034,6 +2104,7 @@ function renderAdmPedidos(){
     '<div class="adm-stat"><div class="v">'+canjesEntregados+' canjes entregados</div><div class="l">me costaron '+fmt$(costoCanjes)+'</div></div>';
   var extraEl=document.getElementById("adm-dashboard-extra");
   if(extraEl)extraEl.innerHTML=
+    renderAdmAlertas()+
     renderGraficoVentas6Meses()+
     renderTop5MesActual()+
     renderDistribuidoresInactivos()+
@@ -2221,6 +2292,20 @@ function guardarEstadoPed(pid){
   }
   guardarPedidos(); cerrarModal("modal-pedido-det"); renderAdmPedidos();
   toast("✅ Estado actualizado");
+  // Notificación WhatsApp al distribuidor
+  var nuevoEstado=sel.value;
+  if(nuevoEstado==="entregado"||nuevoEstado==="finalizado"){
+    var distWA=DISTRIBUIDORES.find(function(x){return x.ruc===p.ruc;});
+    var telWA=(distWA&&distWA.tel)?distWA.tel.replace(/\D/g,""):"";
+    if(telWA){
+      var msgWA=encodeURIComponent("Hola "+((distWA&&distWA.encargado)||"")+"! Tu pedido #"+p.id+" está "+(nuevoEstado==="entregado"?"listo para entrega 📦":"finalizado ✅")+". Entra al portal: https://alejosl0801.github.io/PORTAL_DISTRIBUIDORES");
+      setTimeout(function(){
+        if(confirm("¿Notificar al distribuidor por WhatsApp?")){
+          window.open("https://wa.me/593"+telWA.replace(/^0/,"")+"?text="+msgWA,"_blank");
+        }
+      },300);
+    }
+  }
 }
 
 function generarProforma(pid){
@@ -2464,12 +2549,55 @@ function tipoDocLabel(d){
 }
 
 // ════════════════════ ADMIN DISTRIBUIDORES ════════════════════
+function renderAdmAlertas(){
+  var alertas=[];var ahora=new Date();
+  var pedViejos=PEDIDOS.filter(function(p){if(p.estado!=="pendiente"||p.esCanje||p.esBienvenida)return false;var f=parseFechaPed(p);return f&&(ahora-f)>30*24*60*60*1000;});
+  if(pedViejos.length)alertas.push({tipo:"rojo",ico:"⏰",msg:pedViejos.length+" pedido(s) en 'pendiente' hace más de 30 días",accion:"admTab('pedidos')"});
+  var umbrales={};try{umbrales=JSON.parse(localStorage.getItem("pyro_umbrales")||"{}");}catch(e){}
+  var stockCrit=PRODUCTOS.filter(function(p){var u=umbrales[p.id]!=null?umbrales[p.id]:20;return p.stock<=u&&p.stock>0;});
+  if(stockCrit.length)alertas.push({tipo:"amar",ico:"📦",msg:stockCrit.length+" producto(s) con stock bajo umbral",accion:"admTab('stock')"});
+  var agotados=PRODUCTOS.filter(function(p){return p.stock<=0;});
+  if(agotados.length)alertas.push({tipo:"rojo",ico:"🚨",msg:agotados.length+" producto(s) agotados",accion:"admTab('stock')"});
+  var inactivos=DISTRIBUIDORES.filter(function(d){
+    if(d.esAdmin||d.rol==="impresion")return false;
+    var misPeds=PEDIDOS.filter(function(p){return p.ruc===d.ruc&&!p.esCanje;});
+    if(!misPeds.length)return true;
+    var ultimo=misPeds.slice().sort(function(a,b){return(b.fechaISO||b.fecha||"")>(a.fechaISO||a.fecha||"")?1:-1;})[0];
+    var f=parseFechaPed(ultimo);return !f||(ahora-f)>30*24*60*60*1000;
+  });
+  if(inactivos.length)alertas.push({tipo:"amar",ico:"😴",msg:inactivos.length+" distribuidor(es) sin pedidos en 30+ días",accion:"admTab('distribuidores')"});
+  if(!alertas.length)return'<div style="background:#e8f5e9;border-radius:10px;padding:12px 14px;font-size:13px;color:#2e7d32;margin-bottom:14px">✅ Todo en orden — sin alertas críticas</div>';
+  return'<div style="display:grid;gap:8px;margin-bottom:14px">'+alertas.map(function(a){
+    var bg=a.tipo==="rojo"?"var(--rojoc)":"var(--amarc)";
+    var col=a.tipo==="rojo"?"var(--rojo)":"#8a6600";
+    var border=a.tipo==="rojo"?"var(--rojo)":"var(--amar)";
+    return'<div onclick="'+a.accion+'" style="background:'+bg+';border:1.5px solid '+border+';border-radius:10px;padding:10px 14px;display:flex;align-items:center;gap:10px;cursor:pointer"><span style="font-size:20px">'+a.ico+'</span><span style="font-size:13px;font-weight:600;color:'+col+'">'+escHtml(a.msg)+'</span><span style="margin-left:auto;font-size:12px;color:'+col+'">Ver →</span></div>';
+  }).join("")+'</div>';
+}
+function exportarExcelDist(){
+  var todos=DISTRIBUIDORES.filter(function(d){return!d.esAdmin&&d.rol!=="impresion";});
+  var rows=todos.map(function(d){
+    var misPeds=PEDIDOS.filter(function(p){return p.ruc===d.ruc&&!p.esCanje;});
+    var total=misPeds.reduce(function(s,p){return s+(p.total||0);},0);
+    var sorted=misPeds.slice().sort(function(a,b){return(b.fechaISO||b.fecha||"")>(a.fechaISO||a.fecha||"")?1:-1;});
+    var ultimo=sorted.length?sorted[0].fecha:"Nunca";
+    return[d.ruc,d.razon||"",d.encargado||"",d.correo||"",d.tel||"",misPeds.length,fmt$(total),ultimo,d.bloqueado?"Bloqueado":"Activo"];
+  });
+  var header=["RUC","Razón Social","Encargado","Email","Teléfono","Nº Pedidos","Total Comprado","Último Pedido","Estado"];
+  var xml='<?xml version="1.0"?><Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"><Worksheet ss:Name="Distribuidores"><Table>'
+    +'<Row>'+header.map(function(h){return'<Cell><Data ss:Type="String">'+h+'</Data></Cell>';}).join("")+'</Row>'
+    +rows.map(function(r){return'<Row>'+r.map(function(c){return'<Cell><Data ss:Type="String">'+String(c).replace(/&/g,"&amp;").replace(/</g,"&lt;")+'</Data></Cell>';}).join("")+'</Row>';}).join("")
+    +'</Table></Worksheet></Workbook>';
+  var blob=new Blob([xml],{type:"application/vnd.ms-excel"});
+  var a=document.createElement("a");a.href=URL.createObjectURL(blob);
+  a.download="distribuidores_pyroshield_"+new Date().toISOString().slice(0,10)+".xls";a.click();
+}
 function renderAdmDist(){
   if(USER&&USER.rol==="impresion")return;
   var lista=DISTRIBUIDORES.filter(function(d){return!d.esAdmin;});
   var q=(document.getElementById("adm-dist-search").value||"").toLowerCase();
   if(q)lista=lista.filter(function(d){return norm(d.razon).indexOf(norm(q))!==-1||d.ruc.indexOf(q)!==-1;});
-  document.getElementById("adm-dist-lista").innerHTML=lista.length?lista.map(function(d){
+  document.getElementById("adm-dist-lista").innerHTML='<div style="margin-bottom:10px"><button class="btn btn-s btn-sm" onclick="exportarExcelDist()">📥 Exportar Excel</button></div>'+(lista.length?lista.map(function(d){
     var nped=PEDIDOS.filter(function(p){return p.ruc===d.ruc&&!p.esCanje;}).length;
     var esp=d.preciosEsp?Object.keys(d.preciosEsp).length:0;
     return '<div class="card"><div class="card-b">'+
@@ -2490,7 +2618,7 @@ function renderAdmDist(){
         (esp?'<span class="badge b-oro">★ '+esp+' precios esp.</span>':'')+
         (d.sinDescVol?'<span class="badge b-rojo">Sin desc. volumen</span>':'')+
         (d.entrega&&d.entrega.habilitada?'<span class="badge b-azul">🚚 Entrega $'+d.entrega.montoMin+'+</span>':'<span class="badge b-gris">Solo retiro</span>')+
-        (d.bloqueado?'<span class="badge b-rojo">🚫 Bloqueado</span>':'')+
+        (d.bloqueado?'<span class="badge b-rojo">🚫 Bloqueado'+(d.bloqueoRazon?' — '+escHtml(d.bloqueoRazon):'')+' </span>':'')+
         (d.saldoPendiente>0?'<span class="badge b-rojo">💲 Debe $'+(d.saldoPendiente).toFixed(2)+'</span>':'')+
       '</div>'+
       (d.notasInternas?'<div style="margin-top:6px;font-size:11px;color:var(--g3);background:var(--g1);border-radius:8px;padding:6px 8px">📝 '+escHtml(d.notasInternas)+'</div>':'')+
@@ -2499,7 +2627,7 @@ function renderAdmDist(){
         '<button class="btn btn-sm btn-s" onclick="verResumenDist(\''+d.ruc+'\')">📊 Resumen</button>'+
       '</div>'+
     '</div></div>';
-  }).join(""):'<div class="empty"><div class="ico">🏢</div><p>No se encontraron distribuidores</p></div>';
+  }).join(""):'<div class="empty"><div class="ico">🏢</div><p>No se encontraron distribuidores</p></div>');
 }
 
 function filtrarDist(){renderAdmDist();}
@@ -2618,6 +2746,7 @@ function guardarEditarDist(ruc){
   d.entrega.habilitada=document.getElementById("ed-entrega").checked;
   d.entrega.montoMin=parseFloat(document.getElementById("ed-min").value)||30;
   var bloqEl=document.getElementById("ed-bloqueado");if(bloqEl)d.bloqueado=bloqEl.checked;
+  var bloqRazonEl=document.getElementById("ed-bloqueo-razon");if(bloqRazonEl)d.bloqueoRazon=bloqRazonEl.value||"";
   var saldoEl=document.getElementById("ed-saldo");if(saldoEl)d.saldoPendiente=parseFloat(saldoEl.value)||0;
   var notasEl=document.getElementById("ed-notas");if(notasEl)d.notasInternas=notasEl.value.trim();
   var latEl=document.getElementById("ed-lat"),lngEl=document.getElementById("ed-lng");
@@ -3257,7 +3386,17 @@ function confirmar(html,cb){
 function cargarCarrito(){if(!USER||!USER.ruc)return[];try{return JSON.parse(localStorage.getItem("pyro_cart_"+USER.ruc)||"[]");}catch(e){return[];}}
 function guardarCarrito(){if(!USER||!USER.ruc)return;try{localStorage.setItem("pyro_cart_"+USER.ruc,JSON.stringify(CARRITO));}catch(e){avisarStorage();}}
 function cargarPedidos(){try{return JSON.parse(localStorage.getItem("pyro_pedidos")||"[]");}catch(e){return[];}}
-function guardarPedidos(){try{localStorage.setItem("pyro_pedidos",JSON.stringify(PEDIDOS));}catch(e){avisarStorage();}}
+function checkStorageQuota(){
+  try{
+    var total=0;
+    for(var k in localStorage){if(localStorage.hasOwnProperty(k))total+=localStorage[k].length+k.length;}
+    var mb=(total*2/1024/1024).toFixed(1);
+    if(total*2>4*1024*1024&&USER&&USER.esAdmin){
+      toast("⚠️ Almacenamiento local al "+Math.round(total*2/5/1024/1024*100)+"% ("+mb+"MB) — haz backup desde Config");
+    }
+  }catch(e){}
+}
+function guardarPedidos(){checkStorageQuota();try{localStorage.setItem("pyro_pedidos",JSON.stringify(PEDIDOS));}catch(e){avisarStorage();}}
 function guardarStock(){var st={};PRODUCTOS.forEach(function(p){st[p.id]={stock:p.stock,ago:p.ago};});try{localStorage.setItem("pyro_stock",JSON.stringify(st));}catch(e){}}
 function cargarStock(){try{var st=JSON.parse(localStorage.getItem("pyro_stock")||"{}");PRODUCTOS.forEach(function(p){if(st[p.id]!=null){p.stock=st[p.id].stock;p.ago=st[p.id].ago;}});}catch(e){}}
 function guardarDistribuidores(){
@@ -3511,7 +3650,7 @@ window.addEventListener("load",function(){
   if(demoBox)demoBox.style.display=(typeof MODO_DEMO!=="undefined"&&MODO_DEMO)?"block":"none";
   try{
     var s=JSON.parse(localStorage.getItem("pyro_sesion")||"null");
-    if(s&&s.ruc&&s.pass){loginConCredenciales(s.ruc,s.pass);}
+    if(s&&s.ruc){var lu2=document.getElementById("login-user");if(lu2&&!lu2.value)lu2.value=s.ruc;}
   }catch(e){}
   var lp=document.getElementById("login-pass"),lu=document.getElementById("login-user");
   if(lp)lp.addEventListener("keydown",function(e){if(e.key==="Enter")hacerLogin();});
