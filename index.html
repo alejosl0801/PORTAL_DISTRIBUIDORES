@@ -46,6 +46,10 @@
       <input class="field-inp" id="login-pass" type="password" placeholder="Tu contraseña" autocomplete="off" style="padding-right:48px;margin-bottom:0">
       <button type="button" onclick="toggleVerPass()" id="btn-ver-pass" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:18px;color:rgba(255,255,255,.5);padding:4px;line-height:1" title="Ver contraseña">👁️</button>
     </div>
+    <div style="display:flex;align-items:center;gap:8px;margin:10px 0 4px">
+      <input type="checkbox" id="login-recordar" style="width:18px;height:18px;accent-color:var(--rojo);cursor:pointer">
+      <label for="login-recordar" style="font-size:13px;color:rgba(255,255,255,.6);cursor:pointer;user-select:none">Recordarme en este dispositivo</label>
+    </div>
     <button class="btn-login" onclick="hacerLogin()">Ingresar</button>
     <button id="btn-biometria" class="btn-login" style="display:none;background:var(--g1);color:var(--g3);border:1.5px solid var(--g2);margin-top:8px" onclick="loginBiometrico()">🪪 Ingresar con huella / Face ID</button>
     <div class="login-err" id="login-err">RUC o contraseña incorrectos</div>

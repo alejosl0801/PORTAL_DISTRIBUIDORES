@@ -360,6 +360,45 @@ function loginConCredenciales(ruc,pw){
   }
   return true;
 }
+// ════════ RECORDARME ════════
+var _REC_KEY="pyro_recuerdo";
+function _xor(str,key){var r="";for(var i=0;i<str.length;i++)r+=String.fromCharCode(str.charCodeAt(i)^key.charCodeAt(i%key.length));return r;}
+function _b64e(s){try{return btoa(unescape(encodeURIComponent(s)));}catch(e){return "";}}
+function _b64d(s){try{return decodeURIComponent(escape(atob(s)));}catch(e){return "";}}
+var _REC_SALT="PyroShield#2026!";
+function guardarRecuerdo(ruc,pw){
+  try{
+    var cifrado=_b64e(_xor(ruc+"|||"+pw,_REC_SALT));
+    localStorage.setItem(_REC_KEY,cifrado);
+  }catch(e){}
+}
+function borrarRecuerdo(){try{localStorage.removeItem(_REC_KEY);}catch(e){}}
+function cargarRecuerdo(){
+  try{
+    var raw=localStorage.getItem(_REC_KEY);
+    if(!raw)return null;
+    var plain=_xor(_b64d(raw),_REC_SALT);
+    var parts=plain.split("|||");
+    if(parts.length===2)return{ruc:parts[0],pw:parts[1]};
+  }catch(e){}
+  return null;
+}
+function intentarAutoLogin(){
+  var rec=cargarRecuerdo();
+  if(!rec)return;
+  var lu=document.getElementById("login-user");
+  var lp=document.getElementById("login-pass");
+  var chk=document.getElementById("login-recordar");
+  if(lu)lu.value=rec.ruc;
+  if(lp)lp.value=rec.pw;
+  if(chk)chk.checked=true;
+  // Auto-login silencioso
+  if(loginConCredenciales(rec.ruc,rec.pw)){
+    document.getElementById("login-err").style.display="none";
+    finalizarLogin();
+  }
+}
+
 function toggleVerPass(){
   var inp=document.getElementById("login-pass");
   var btn=document.getElementById("btn-ver-pass");
@@ -380,9 +419,14 @@ function hacerLogin(){
     err.style.display="block";
     return;
   }
-  // Recordar último RUC usado (no la contraseña)
+  // Recordarme
+  var chkRec=document.getElementById("login-recordar");
+  if(chkRec&&chkRec.checked){guardarRecuerdo(u,pw);}else{borrarRecuerdo();}
   try{localStorage.setItem("pyro_last_ruc",u);}catch(e){}
   try{localStorage.setItem("pyro_sesion",JSON.stringify({ruc:u}));}catch(e){}
+  finalizarLogin(u,pw);
+}
+function finalizarLogin(u,pw){
   // Alerta contraseña débil (últimos 6 dígitos del RUC o contraseñas conocidas)
   var PASSES_DEBILES=["dist123","jorge123","fabiola123","123456","password","pyroshield"];
   var esDebil=PASSES_DEBILES.indexOf(pw)!==-1||(u.length>=6&&pw===u.slice(-6))||(u.length>=6&&pw===u.slice(-7));
@@ -3995,6 +4039,8 @@ window.addEventListener("load",function(){
   try{var lastRuc=localStorage.getItem("pyro_last_ruc");if(lastRuc&&lu&&!lu.value){lu.value=lastRuc;if(lp)setTimeout(function(){lp.focus();},100);}}catch(e){}
   if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js').catch(function(){});}
   mostrarBotonBiometria();
+  // Auto-login si el usuario marcó "Recordarme"
+  setTimeout(intentarAutoLogin, 300);
 });
 
 // ════════ FEATURE 11/12/13/14/25/82/83/84/87 — Dashboard Admin ════════
