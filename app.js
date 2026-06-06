@@ -564,7 +564,7 @@ function cerrarTutorial(){
   if(t)t.style.display="none";
   try{if(USER)localStorage.setItem("pyro_tut_"+USER.ruc,"1");}catch(e){}
 }
-// Muestra un tip de sección la primera vez que el usuario entra a esa tab
+// Muestra un overlay tipo tutorial la primera vez que el usuario entra a cada sección
 function mostrarTipSeccion(tab){
   if(!USER)return;
   var tips=TUT_TIPS[tab];
@@ -572,36 +572,38 @@ function mostrarTipSeccion(tab){
   var key="pyro_tipsec_"+USER.ruc+"_"+tab;
   if(localStorage.getItem(key))return;
   try{localStorage.setItem(key,"1");}catch(e){}
-  // Busca el panel de la tab para insertar el tip al inicio
-  var panel=document.getElementById("tab-"+tab);
-  if(!panel)return;
-  var prev=panel.querySelector(".tipsec-card");
-  if(prev)prev.remove();
-  var card=document.createElement("div");
-  card.className="tipsec-card";
-  card.style.cssText="background:linear-gradient(135deg,#fff7e0,#ffe8b0);border:1.5px solid var(--oro);border-radius:14px;padding:14px 16px;margin:10px 12px 0;position:relative;";
   var paso=0;
-  function renderTip(){
+  var ov=document.createElement("div");
+  ov.id="tipsec-ov";
+  ov.style.cssText="position:fixed;top:0;left:50%;transform:translateX(-50%);width:min(520px,100vw);height:100vh;background:rgba(0,0,0,.82);z-index:800;display:flex;align-items:center;justify-content:center;padding:24px";
+  function renderOv(){
     var t=tips[paso];
-    card.innerHTML=
-      '<div style="font-size:11px;font-weight:700;color:var(--oro);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">'+
-        'Tip '+(paso+1)+' de '+tips.length+
-      '</div>'+
-      '<div style="display:flex;gap:10px;align-items:flex-start">'+
-        '<span style="font-size:22px;flex-shrink:0">'+t.ico+'</span>'+
-        '<div>'+
-          '<div style="font-size:13px;font-weight:700;margin-bottom:2px">'+escHtml(t.t)+'</div>'+
-          '<div style="font-size:12px;color:#555;line-height:1.45">'+escHtml(t.d)+'</div>'+
+    var pct=Math.round((paso+1)/tips.length*100);
+    ov.innerHTML=
+      '<div style="background:#fff;border-radius:24px;padding:36px 28px;width:100%;max-width:380px;text-align:center;box-shadow:0 16px 60px rgba(0,0,0,.5)">'+
+        '<div style="font-size:56px;margin-bottom:14px">'+t.ico+'</div>'+
+        '<div style="font-size:11px;font-weight:700;color:var(--oro);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:10px">'+
+          'Paso '+(paso+1)+' de '+tips.length+
         '</div>'+
-      '</div>'+
-      '<div style="display:flex;gap:8px;margin-top:10px">'+
-        (paso<tips.length-1?'<button class="btn btn-s" style="font-size:12px;padding:5px 14px" onclick="this.closest(\'.tipsec-card\')._next()">Siguiente →</button>':'')+
-        '<button class="btn" style="font-size:12px;padding:5px 14px;background:var(--g2);color:var(--g4)" onclick="this.closest(\'.tipsec-card\').remove()">Entendido ✓</button>'+
+        '<div style="font-size:20px;font-weight:800;color:var(--negro);margin-bottom:10px;line-height:1.2">'+escHtml(t.t)+'</div>'+
+        '<div style="font-size:14px;color:#555;line-height:1.6;margin-bottom:22px">'+escHtml(t.d)+'</div>'+
+        '<div style="background:#eee;border-radius:6px;height:6px;margin-bottom:22px">'+
+          '<div style="background:var(--rojo);height:6px;border-radius:6px;width:'+pct+'%;transition:width .3s"></div>'+
+        '</div>'+
+        '<div style="display:flex;gap:10px">'+
+          (paso>0?'<button onclick="document.getElementById(\'tipsec-ov\')._prev()" style="flex:1;padding:13px;border:1.5px solid #ddd;border-radius:12px;font-size:14px;font-weight:600;background:#fff;cursor:pointer;color:#555">← Atrás</button>':'')+
+          (paso<tips.length-1
+            ?'<button onclick="document.getElementById(\'tipsec-ov\')._next()" style="flex:2;padding:13px;background:var(--rojo);color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer">Siguiente →</button>'
+            :'<button onclick="document.getElementById(\'tipsec-ov\').remove()" style="flex:2;padding:13px;background:var(--rojo);color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer">¡Entendido! ✓</button>'
+          )+
+        '</div>'+
+        '<button onclick="document.getElementById(\'tipsec-ov\').remove()" style="margin-top:14px;background:none;border:none;color:#aaa;font-size:12px;cursor:pointer;width:100%">Saltar tutorial</button>'+
       '</div>';
+    ov._next=function(){paso++;renderOv();};
+    ov._prev=function(){paso--;renderOv();};
   }
-  card._next=function(){paso++;renderTip();};
-  renderTip();
-  panel.insertBefore(card,panel.firstChild);
+  renderOv();
+  document.body.appendChild(ov);
 }
 
 // ════════════════════ NAV ════════════════════
