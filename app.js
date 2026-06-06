@@ -546,7 +546,7 @@ function animarContador(el, valor, duracion){
 function renderInicio(){
   var mp=misPedidos();
   var entregados=mp.filter(function(p){return p.estado==="entregado"||p.estado==="finalizado";});
-  var pend=mp.filter(function(p){return p.estado==="pendiente"||p.estado==="en_proceso"||p.estado==="autorizado"||p.estado==="facturado";});
+  var pend=mp.filter(function(p){return p.estado==="pendiente"||p.estado==="en_proceso"||p.estado==="autorizado"||p.estado==="entrega"||p.estado==="facturado";});
   var saludoNm=USER.encargado||primerNombre(USER.razon);
   var empresaNm=USER.empresa||USER.razon;
   var heroTxt=(empresaNm&&empresaNm!==saludoNm)?saludoNm+" / "+empresaNm:saludoNm;
