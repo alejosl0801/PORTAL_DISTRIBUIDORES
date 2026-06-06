@@ -478,6 +478,7 @@ function primerIngresoGuardarPass(){
   if(v1.length<6){toast("⚠️ La contraseña debe tener al menos 6 caracteres");return;}
   if(v1!==v2){toast("⚠️ Las contraseñas no coinciden");return;}
   USER.pass=v1;
+  USER.passModificado=true;
   guardarDistribuidores();
   try{localStorage.setItem("pyro_sesion",JSON.stringify({ruc:USER.ruc}));}catch(e){}
   toast("✅ Contraseña actualizada");
@@ -3108,7 +3109,8 @@ function guardarEditarDist(ruc){
   if(encEl)d.encargado=encEl.value.trim();
   d.tel=document.getElementById("ed-tel").value.trim();
   d.correo=document.getElementById("ed-correo").value.trim();
-  d.pass=document.getElementById("ed-pass").value.trim()||d.pass;
+  var newPass=document.getElementById("ed-pass").value.trim();
+  if(newPass){d.pass=newPass;d.passModificado=true;}
   d.sinDescVol=document.getElementById("ed-sinvol").checked;
   if(!d.entrega)d.entrega={};
   d.entrega.habilitada=document.getElementById("ed-entrega").checked;
@@ -3790,7 +3792,10 @@ function cargarDistribuidoresExtra(){
       if(idx>-1){
         // No sobreescribir usuarios de sistema (admin, impresion) — sus datos vienen de datos.js
         if(DISTRIBUIDORES[idx].esAdmin||DISTRIBUIDORES[idx].rol==="impresion")return;
+        // La contraseña de datos.js es la fuente de verdad — solo la sobreescribimos si el usuario la cambió explícitamente
+        var passOrig=DISTRIBUIDORES[idx].pass;
         Object.assign(DISTRIBUIDORES[idx],d);
+        if(!d.passModificado)DISTRIBUIDORES[idx].pass=passOrig;
       } else {
         DISTRIBUIDORES.push(d);
       }
