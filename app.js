@@ -81,11 +81,59 @@ var FRASES_MOTIVACIONALES=[
 ];
 var TUT_PASO=0;
 var TUT_PASOS=[
-  {ico:"🧯",t:"Bienvenido al Portal PyroShield",d:"Tu plataforma exclusiva para distribuidores. Aquí puedes ver precios especiales, hacer pedidos y gestionar todo tu negocio en un solo lugar."},
-  {ico:"🛒",t:"Catálogo y pedidos",d:"Explora el catálogo, agrega productos al carrito y confirma tu pedido en minutos. Coordinamos la entrega directo a tu local."},
-  {ico:"📦",t:"Descuentos por volumen",d:"¡Compra más, paga menos! Al agregar más unidades se activan descuentos automáticos. Verás el precio actualizado en tiempo real en el carrito."},
-  {ico:"🏆",t:"Sistema de puntos",d:"Cada pedido confirmado te suma puntos según la ganancia generada. Acumúlalos y canjéalos por premios reales: tarjetas de consumo, KFC y más."},
-  {ico:"📋",t:"Historial y borradores",d:"Consulta todos tus pedidos anteriores, repite los que más te gustan con un clic y guarda borradores para continuar más tarde sin perder nada."}
+  // ── BIENVENIDA ──
+  {ico:"👋",t:"¡Bienvenido al Portal PyroShield!",
+   d:"Este tutorial te enseña a usar el portal paso a paso. Son menos de 2 minutos. ¡No te lo saltes!"},
+
+  // ── SECCIÓN: INICIO ──
+  {ico:"🏠",t:"Sección INICIO — Tu resumen",
+   d:"Al entrar verás tu resumen: cuántos pedidos tienes activos, tus puntos acumulados y el acceso rápido al catálogo. Es tu pantalla principal."},
+
+  // ── SECCIÓN: CATÁLOGO ──
+  {ico:"🛒",t:"Sección CATÁLOGO — Busca productos",
+   d:"Aquí están todos los productos disponibles. Puedes buscar por nombre usando la lupa 🔍, o filtrar por categoría con los botones de arriba."},
+  {ico:"❤️",t:"Catálogo — Favoritos",
+   d:"Toca el corazón ❤️ en cualquier producto para guardarlo como favorito. Después puedes filtrar solo tus favoritos con el botón 'Favs'."},
+  {ico:"➕",t:"Catálogo — Agregar al carrito",
+   d:"Toca el botón rojo del producto para agregarlo al carrito 🛒. El número del carrito (arriba a la derecha) se actualiza automáticamente."},
+  {ico:"🔥",t:"Catálogo — Descuentos por volumen",
+   d:"Algunos productos dicen 'Compra 10+ y ahorra 5% extra'. Eso significa que si pides más unidades, el precio baja solo. ¡Aprovéchalo!"},
+
+  // ── SECCIÓN: CARRITO ──
+  {ico:"🛒",t:"Sección CARRITO — Revisa tu pedido",
+   d:"Aquí ves todos los productos que vas a pedir. Puedes cambiar las cantidades con los botones ➕ y ➖, o eliminar un producto con 🗑️."},
+  {ico:"💵",t:"Carrito — El precio final",
+   d:"El precio ya incluye tu descuento especial como distribuidor. Al final ves: Subtotal + IVA 15% = Total. Todo desglosado claramente."},
+  {ico:"✅",t:"Carrito — Confirmar pedido",
+   d:"Cuando estés listo, toca 'CONFIRMAR PEDIDO'. Elige cómo pagas (efectivo, transferencia, etc.) y listo. Recibirás tu número de pedido."},
+
+  // ── SECCIÓN: HISTORIAL ──
+  {ico:"📋",t:"Sección HISTORIAL — Todos tus pedidos",
+   d:"Aquí aparecen todos tus pedidos con su estado actual. Puedes filtrar por estado: Pendiente, En proceso, Entregado, Finalizado."},
+  {ico:"🟡",t:"Historial — Estados del pedido",
+   d:"⏳ Pendiente = lo recibimos. 🔄 En proceso = lo estamos preparando. 📦 Entregado = en camino. ✔️ Finalizado = completado."},
+  {ico:"✏️",t:"Historial — Editar o cancelar",
+   d:"Si un pedido está en ⏳ Pendiente, puedes editarlo o cancelarlo. Una vez que está en proceso ya no se puede modificar."},
+  {ico:"🔁",t:"Historial — Repetir un pedido",
+   d:"¿Te gustó un pedido anterior? En los pedidos Finalizados hay un botón 'Repetir' que carga todos esos productos al carrito de nuevo."},
+
+  // ── SECCIÓN: RECOMPENSAS ──
+  {ico:"🏆",t:"Sección RECOMPENSAS — Gana puntos",
+   d:"Cada pedido que confirmas te genera puntos según la ganancia del pedido. Los puntos se acreditan cuando el pedido es entregado."},
+  {ico:"🎁",t:"Recompensas — Canjea premios",
+   d:"Cuando tengas suficientes puntos confirmados, puedes canjearlos por premios: tarjetas de consumo, bonos KFC y más. ¡Toca 'Canjear'!"},
+
+  // ── SECCIÓN: PERFIL ──
+  {ico:"👤",t:"Sección PERFIL — Tus datos",
+   d:"Aquí puedes ver tu información: RUC, razón social, correo y teléfono. También puedes cambiar tu contraseña cuando quieras."},
+  {ico:"🌙",t:"Perfil — Modo oscuro",
+   d:"¿Prefieres fondo oscuro? En tu perfil puedes activar el modo oscuro 🌙. Se guarda automáticamente para la próxima vez que entres."},
+  {ico:"📲",t:"Instala la app en tu celular",
+   d:"En tu celular, abre el portal en Chrome o Safari, toca el menú ⋮ o el botón 'Compartir' y elige 'Agregar a pantalla de inicio'. ¡Queda como una app!"},
+
+  // ── FIN ──
+  {ico:"🚀",t:"¡Listo! Ya sabes todo",
+   d:"Navega por el portal, haz tu primer pedido y empieza a acumular puntos. Si tienes dudas, contacta a PyroShield. ¡Éxito en tus ventas!"}
 ];
 
 // ════════════════════ UTILIDADES ════════════════════
@@ -473,10 +521,13 @@ function renderTutPaso(){
   document.getElementById("tut-ico").textContent=p.ico;
   document.getElementById("tut-t").textContent=p.t;
   document.getElementById("tut-d").textContent=p.d;
-  var dots="";
-  for(var i=0;i<TUT_PASOS.length;i++)dots+='<div class="tutorial-dot'+(i===TUT_PASO?" active":"")+'"></div>';
+  var pct=Math.round((TUT_PASO+1)/TUT_PASOS.length*100);
+  var dots='<div style="font-size:11px;color:var(--g3);margin-bottom:6px">'+
+    (TUT_PASO+1)+' de '+TUT_PASOS.length+'</div>'+
+    '<div style="background:var(--g2);border-radius:4px;height:6px;width:100%;margin-bottom:14px">'+
+    '<div style="background:var(--rojo);height:6px;border-radius:4px;width:'+pct+'%;transition:width .3s"></div></div>';
   document.getElementById("tut-dots").innerHTML=dots;
-  document.getElementById("tut-next").textContent=(TUT_PASO===TUT_PASOS.length-1)?"Empezar ✓":"Siguiente";
+  document.getElementById("tut-next").textContent=(TUT_PASO===TUT_PASOS.length-1)?"¡Empezar! ✓":"Siguiente →";
 }
 function tutNext(){
   if(TUT_PASO<TUT_PASOS.length-1){TUT_PASO++;renderTutPaso();}
