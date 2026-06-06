@@ -2752,7 +2752,8 @@ function renderAdmStock(){
   var topHtml='<div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">'+
     '<button class="btn btn-s btn-sm" onclick="exportarExcelStock()">📥 Exportar Excel</button>'+
     '<label class="btn btn-s btn-sm" style="cursor:pointer">📤 Importar CSV<input type="file" accept=".csv" style="display:none" onchange="importarStock(event)"></label>'+
-  '</div>'+
+    '</div>'+
+    '<details style="background:var(--g1);border-radius:10px;padding:12px 14px;margin-bottom:14px"><summary style="font-weight:700;font-size:14px;cursor:pointer;list-style:none">📈 Historial de cambios de precios ▸</summary><div style="margin-top:10px">'+renderHistorialPrecios()+'</div></details>'+
   '<div style="background:var(--amarc);border:1.5px solid var(--amar);border-radius:10px;padding:10px 14px;margin-bottom:14px;font-size:12px;color:#8a6600">'+
     '💡 <b>Para importar:</b> Exporta el Excel, edita solo la columna <b>Stock</b> (número), guarda como CSV y reimporta. El estado se recalcula automáticamente.'+
   '</div>';
