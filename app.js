@@ -829,27 +829,93 @@ function renderInsignias(){
   var logrados=ins.filter(function(i){return i.ok;});
   var bono=logrados.reduce(function(s,l){return s+(l.bonoPts||0);},0);
   var desbloqueados=logrados.length;
+  var pct=Math.min(100,Math.round(desbloqueados/ins.length*100));
 
+  // Mostrar solo los últimos 10 desbloqueados + resumen + botón "Ver todos"
+  var recientes=logrados.slice(-10).reverse();
   el.innerHTML=
-    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">'+
-      '<div style="font-size:12px;color:var(--g3)">'+desbloqueados+' de '+ins.length+' logros</div>'+
-      '<div style="font-size:12px;font-weight:700;color:var(--verde)">+'+bono.toFixed(1)+'% bonus pts</div>'+
+    // Resumen
+    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">'+
+      '<div style="font-size:13px;font-weight:700">'+desbloqueados+' / '+ins.length+' logros desbloqueados</div>'+
+      '<div style="font-size:12px;font-weight:700;color:var(--verde)">+'+bono.toFixed(1)+'% pts</div>'+
     '</div>'+
-    '<div style="background:var(--g2);border-radius:6px;height:8px;margin-bottom:14px">'+
-      '<div style="background:linear-gradient(90deg,var(--rojo),var(--oro));height:8px;border-radius:6px;width:'+Math.min(100,Math.round(desbloqueados/ins.length*100))+'%;transition:width .5s"></div>'+
+    // Barra de progreso
+    '<div style="background:var(--g2);border-radius:6px;height:10px;margin-bottom:4px">'+
+      '<div style="background:linear-gradient(90deg,var(--rojo),var(--oro));height:10px;border-radius:6px;width:'+pct+'%;transition:width .5s"></div>'+
     '</div>'+
-    '<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px">'+
-    ins.map(function(i){
-      return '<div title="'+escHtml(i.nm)+': '+escHtml(i.desc)+' (+'+i.bonoPts+'%)" '+
-        'style="text-align:center;padding:8px 2px;border-radius:10px;cursor:default;'+
-        'background:'+(i.ok?'var(--oro-claro,#fff7e0)':'var(--g1)')+';'+
-        'border:1.5px solid '+(i.ok?'var(--oro)':'transparent')+';'+
-        'opacity:'+(i.ok?'1':'.4')+'">'+
-        '<div style="font-size:22px;filter:'+(i.ok?'none':'grayscale(1)')+'">'+i.ico+'</div>'+
-        '<div style="font-size:8px;font-weight:700;margin-top:1px;line-height:1.1;color:'+(i.ok?'var(--negro)':'var(--g3)')+'">'+escHtml(i.nm)+'</div>'+
-        (i.ok?'<div style="font-size:7px;color:var(--verde);font-weight:700">+'+i.bonoPts+'%</div>':'')+
-      '</div>';
-    }).join("")+'</div>';
+    '<div style="font-size:11px;color:var(--g3);margin-bottom:12px">'+pct+'% completado</div>'+
+    // Últimos desbloqueados
+    (recientes.length?
+      '<div style="font-size:11px;font-weight:600;color:var(--g4);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Últimos desbloqueados</div>'+
+      '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px">'+
+      recientes.map(function(i){
+        return '<div style="display:flex;align-items:center;gap:6px;background:var(--oro-claro,#fff7e0);border:1.5px solid var(--oro);border-radius:20px;padding:4px 10px 4px 6px">'+
+          '<span style="font-size:18px">'+i.ico+'</span>'+
+          '<div>'+
+            '<div style="font-size:11px;font-weight:700;line-height:1.1">'+escHtml(i.nm)+'</div>'+
+            '<div style="font-size:10px;color:var(--verde);font-weight:700">+'+i.bonoPts+'% puntos</div>'+
+          '</div>'+
+        '</div>';
+      }).join("")+
+      '</div>'
+    :'')+
+    // Botón ver todos
+    '<button class="btn btn-s btn-full" onclick="abrirModalLogros()" style="font-size:13px">🏅 Ver los 100 logros</button>';
+}
+
+function abrirModalLogros(){
+  var ins=_logrosDefinicion();
+  var categorias=[
+    {nm:"🥇 Primeras veces",desde:0,hasta:9},
+    {nm:"📦 Por pedidos",desde:10,hasta:22},
+    {nm:"💰 Por compras ($)",desde:23,hasta:31},
+    {nm:"🎯 Pedido grande",desde:32,hasta:36},
+    {nm:"🚛 Unidades pedidas",desde:37,hasta:41},
+    {nm:"🗺️ Variedad productos",desde:42,hasta:46},
+    {nm:"📋 Items por pedido",desde:47,hasta:49},
+    {nm:"📅 Constancia mensual",desde:50,hasta:54},
+    {nm:"⚡ Constancia semanal",desde:55,hasta:58},
+    {nm:"🏆 Puntos acumulados",desde:59,hasta:65},
+    {nm:"🎁 Canjes",desde:66,hasta:68},
+    {nm:"🗓️ Pedidos este año",desde:69,hasta:72},
+    {nm:"🎲 Hábitos",desde:73,hasta:82},
+    {nm:"🏷️ Descuentos vol.",desde:83,hasta:85},
+    {nm:"❤️ Favoritos",desde:86,hasta:88},
+    {nm:"⚙️ Gestión",desde:89,hasta:92},
+    {nm:"🦄 Hitos especiales",desde:93,hasta:99}
+  ];
+  var html='<div class="mhandle"></div>'+
+    '<h3 style="margin-bottom:4px">🏅 Mis 100 logros</h3>'+
+    '<p style="font-size:12px;color:var(--g3);margin-bottom:14px">Cada logro desbloqueado suma un % de bonus permanente a tus puntos</p>';
+  categorias.forEach(function(cat){
+    var grupo=ins.slice(cat.desde,cat.hasta+1);
+    var ok=grupo.filter(function(i){return i.ok;}).length;
+    html+='<div style="margin-bottom:12px">'+
+      '<div style="font-size:11px;font-weight:700;color:var(--g4);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;display:flex;justify-content:space-between">'+
+        '<span>'+escHtml(cat.nm)+'</span><span style="color:var(--g3)">'+ok+'/'+grupo.length+'</span>'+
+      '</div>'+
+      '<div style="display:flex;flex-direction:column;gap:6px">'+
+      grupo.map(function(i){
+        return '<div style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:10px;'+
+          'background:'+(i.ok?'var(--oro-claro,#fff7e0)':'var(--g1)')+';'+
+          'border:1.5px solid '+(i.ok?'var(--oro)':'transparent')+';'+
+          'opacity:'+(i.ok?'1':'.55')+'">'+
+          '<div style="font-size:24px;filter:'+(i.ok?'none':'grayscale(1)')+';min-width:30px;text-align:center">'+i.ico+'</div>'+
+          '<div style="flex:1">'+
+            '<div style="font-size:13px;font-weight:700">'+escHtml(i.nm)+'</div>'+
+            '<div style="font-size:11px;color:var(--g3)">'+escHtml(i.desc)+'</div>'+
+          '</div>'+
+          '<div style="text-align:right;min-width:42px">'+
+            '<div style="font-size:12px;font-weight:700;color:'+(i.ok?'var(--verde)':'var(--g3)')+'">+'+i.bonoPts+'%</div>'+
+            (i.ok?'<div style="font-size:9px;color:var(--verde)">✔ logrado</div>':'<div style="font-size:9px;color:var(--g3)">bloqueado</div>')+
+          '</div>'+
+        '</div>';
+      }).join("")+
+      '</div></div>';
+  });
+  html+='<button class="btn btn-s btn-full" style="margin-top:4px" onclick="cerrarModal(\'modal-logros\')">Cerrar</button>';
+  var c=document.getElementById("modal-logros-c");
+  if(c){c.innerHTML=html;abrir("modal-logros");}
 }
 function renderPedidoFrecuente(){
   var el=document.getElementById("ultimos-pedidos");
