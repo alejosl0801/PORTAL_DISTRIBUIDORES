@@ -520,7 +520,9 @@ function otorgarBienvenida(){
   guardarPedidos();
   try{localStorage.setItem(flag,"1");}catch(e){}
   if(typeof renderInicio==="function")renderInicio();
-  setTimeout(function(){mostrarOverlayBienvenida();},1400);
+  // Solo mostrar overlay si NO es primer ingreso (primerIngresoPaso1 ya lo anuncia)
+  var esPrimerIngreso=!localStorage.getItem("pyro_primer_ingreso_"+USER.ruc);
+  if(!esPrimerIngreso){setTimeout(function(){mostrarOverlayBienvenida();},1400);}
 }
 function mostrarOverlayBienvenida(){
   var ov=document.createElement("div");
