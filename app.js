@@ -2215,7 +2215,7 @@ var REWARDS=[
   {pts:5000,ico:"💳",nm:"Tarjeta consumo $50",costoReal:50}
 ];
 function cargarRewards(){try{var r=JSON.parse(localStorage.getItem("pyro_rewards")||"null");if(r&&r.length)REWARDS=r;}catch(e){}}
-function guardarRewards(){try{localStorage.setItem("pyro_rewards",JSON.stringify(REWARDS));}catch(e){}}
+function guardarRewards(){try{localStorage.setItem("pyro_rewards",JSON.stringify(REWARDS));backupCambio();}catch(e){}}
 cargarRewards();
 
 function renderRecompensas(){
@@ -3773,8 +3773,8 @@ function checkStorageQuota(){
     }
   }catch(e){}
 }
-function guardarPedidos(){checkStorageQuota();try{localStorage.setItem("pyro_pedidos",JSON.stringify(PEDIDOS));}catch(e){avisarStorage();}}
-function guardarStock(){var st={};PRODUCTOS.forEach(function(p){st[p.id]={stock:p.stock,ago:p.ago};});try{localStorage.setItem("pyro_stock",JSON.stringify(st));}catch(e){}}
+function guardarPedidos(){checkStorageQuota();try{localStorage.setItem("pyro_pedidos",JSON.stringify(PEDIDOS));backupCambio();}catch(e){avisarStorage();}}
+function guardarStock(){var st={};PRODUCTOS.forEach(function(p){st[p.id]={stock:p.stock,ago:p.ago};});try{localStorage.setItem("pyro_stock",JSON.stringify(st));backupCambio();}catch(e){}}
 function cargarStock(){try{var st=JSON.parse(localStorage.getItem("pyro_stock")||"{}");PRODUCTOS.forEach(function(p){if(st[p.id]!=null){p.stock=st[p.id].stock;p.ago=st[p.id].ago;}});}catch(e){}}
 function guardarDistribuidores(){
   try{
@@ -4320,13 +4320,24 @@ function _buildBackupPayload(){
   var descvol={};try{descvol=JSON.parse(localStorage.getItem("pyro_descvol")||"{}");}catch(e){}
   var umbrales={};try{umbrales=JSON.parse(localStorage.getItem("pyro_umbrales")||"{}");}catch(e){}
   var costos={};try{costos=JSON.parse(localStorage.getItem("pyro_costos")||"{}");}catch(e){}
+  var rewards=[];try{rewards=JSON.parse(localStorage.getItem("pyro_rewards")||"[]");}catch(e){}
+  // Recopilar logs de puntos de todos los distribuidores conocidos
+  var logsPuntos={};
+  try{
+    var rucs=distExtra.map(function(d){return d.ruc;});
+    rucs.forEach(function(ruc){
+      var k="pyro_log_puntos_"+ruc;
+      var v=localStorage.getItem(k);
+      if(v)try{logsPuntos[ruc]=JSON.parse(v);}catch(e){}
+    });
+  }catch(e){}
   return {
     accion:"backup",
     token:GAS_TOKEN,
     fecha:new Date().toISOString(),
     pedidos:PEDIDOS||[],
     stock:stock,
-    meta:{dist_extra:distExtra,descvol:descvol,umbrales:umbrales,costos:costos}
+    meta:{dist_extra:distExtra,descvol:descvol,umbrales:umbrales,costos:costos,rewards:rewards,logs_puntos:logsPuntos}
   };
 }
 
