@@ -324,7 +324,12 @@ function hacerLogin(){
       if(!localStorage.getItem(key)){iniciarTutorial();}
     }
   }
-  if(USER.esAdmin){backupAutomatico(false);}
+  if(USER.esAdmin){
+    backupAutomatico(false);
+    sincronizarDesdeNube(null); // descarga TODOS los pedidos
+  } else {
+    sincronizarDesdeNube(USER.ruc); // descarga solo los de este distribuidor
+  }
 }
 
 // ════════════════════ FLUJO PRIMER INGRESO ════════════════════
@@ -3187,6 +3192,7 @@ function chequearPedidosNuevos(){
 // ════════════════════ SINCRONIZACIÓN GOOGLE SHEETS ════════════════════
 // NOTA para doPost en Apps Script: parsear con JSON.parse(e.postData.contents)
 var GAS_URL="https://script.google.com/macros/s/AKfycbwiIAupZxy2T33EiDHbwkLBHTw0Q2Uv98r8pc9L351b6lXwY_mOD6kI2tvfzqdIUdxG/exec";
+var GAS_TOKEN="PyroShield-portal-2026";
 
 function cargarSyncPendientes(){
   try{return JSON.parse(localStorage.getItem("pyro_sync_pendientes")||"[]");}catch(e){return[];}
@@ -3740,6 +3746,32 @@ function _b64ToUint8(b64){
 }
 
 /* ═══════════════════════════════════════════
+   SINCRONIZACIÓN DESDE LA NUBE (restaurar)
+═══════════════════════════════════════════ */
+function sincronizarDesdeNube(ruc){
+  if(!GAS_URL)return;
+  var url=GAS_URL+"?accion=obtenerPedidos&token="+encodeURIComponent(GAS_TOKEN)+(ruc?"&ruc="+encodeURIComponent(ruc):"");
+  fetch(url).then(function(r){return r.json();}).then(function(data){
+    if(!data.ok||!data.pedidos||!data.pedidos.length)return;
+    var local=[];try{local=JSON.parse(localStorage.getItem("pyro_pedidos")||"[]");}catch(e){}
+    var idsLocal={};local.forEach(function(p){idsLocal[p.id]=true;});
+    var nuevos=data.pedidos.filter(function(p){return !idsLocal[p.id];});
+    if(!nuevos.length)return;
+    var merged=local.concat(nuevos);
+    merged.sort(function(a,b){return (b.fechaISO||b.fecha||"")>(a.fechaISO||a.fecha||"")?1:-1;});
+    localStorage.setItem("pyro_pedidos",JSON.stringify(merged));
+    PEDIDOS=merged;
+    // Si estamos en la pantalla de historial o inicio, refrescar
+    try{
+      if(document.getElementById("s-main")&&document.getElementById("s-main").classList.contains("active")){
+        var tabAct=document.querySelector(".tab-btn.active");
+        if(tabAct){var t=tabAct.dataset.tab;if(t==="inicio"||t==="historial")irTab(t);}
+      }
+    }catch(e){}
+  }).catch(function(){});
+}
+
+/* ═══════════════════════════════════════════
    BACKUP AUTOMÁTICO → Google Apps Script
 ═══════════════════════════════════════════ */
 function backupAutomatico(forzado){
@@ -3748,19 +3780,20 @@ function backupAutomatico(forzado){
     var ultimo=localStorage.getItem("pyro_ultimo_backup")||"";
     if(ultimo===hoy)return;
   }
-  var gasUrl=typeof GAS_URL!=="undefined"?GAS_URL:"";
-  if(!gasUrl){if(forzado)toast("⚠️ GAS_URL no configurado");return;}
+  if(!GAS_URL){if(forzado)toast("⚠️ GAS_URL no configurado");return;}
+  var stock={};PRODUCTOS.forEach(function(p){stock[p.id]={stock:p.stock,ago:p.ago};});
   var payload={
-    action:"backup",
+    accion:"backup",
+    token:GAS_TOKEN,
     fecha:new Date().toISOString(),
     pedidos:PEDIDOS||[],
-    stock:(function(){var st={};PRODUCTOS.forEach(function(p){st[p.id]={stock:p.stock,ago:p.ago};});return st;})()
+    stock:stock
   };
-  fetch(gasUrl,{method:"POST",body:JSON.stringify(payload),headers:{"Content-Type":"application/json"}})
+  fetch(GAS_URL,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(payload)})
     .then(function(r){return r.json();})
-    .then(function(d){
+    .then(function(){
       localStorage.setItem("pyro_ultimo_backup",new Date().toISOString().slice(0,10));
-      if(forzado)toast("☁️ Backup enviado: "+new Date().toLocaleString());
+      if(forzado)toast("☁️ Backup enviado — "+new Date().toLocaleString());
     })
     .catch(function(e){if(forzado)toast("⚠️ Backup falló: "+e.message);});
 }

@@ -1,87 +1,83 @@
 // ════════════════════════════════════════════════════════════════
 // Code.gs — Backend Google Apps Script para Portal PyroShield
-//
-// Web App desplegada como endpoint POST. Recibe los pedidos
-// confirmados desde el portal (app.js → confirmarPedido)
-// y los registra/actualiza en un Google Sheet.
 // ════════════════════════════════════════════════════════════════
 
-// ID del Google Sheet donde se almacenan los pedidos
 var SHEET_ID = "1H3OQmaJtqVWHqVrI_hX2h8ZL_-a6RRobQww7IuGMhp0";
 
-// Nombre de la pestaña y encabezados de la hoja de pedidos
-var HOJA_PEDIDOS = "PEDIDOS_PYRO";
+var HOJA_PEDIDOS  = "PEDIDOS_PYRO";
+var HOJA_BACKUP   = "BACKUP_COMPLETO";
+var HOJA_STOCK    = "STOCK_PYRO";
+
 var ENCABEZADOS_PEDIDOS = [
-  "id_pedido",
-  "fecha",
-  "ruc_dist",
-  "nombre_dist",
-  "items_json",
-  "total",
-  "estado",
-  "fecha_registro"
+  "id_pedido","fecha","ruc_dist","nombre_dist",
+  "items_json","total","estado","fecha_registro"
 ];
 
 // ════════════════════════════════════════════════════════════════
-// Autenticación: el token debe coincidir con GAS_TOKEN en app.js
-// Para mayor seguridad, guardar el token en:
-//   Apps Script > Proyecto > Propiedades > PYRO_SECRET
-// Si la propiedad no existe, se usa el token hardcodeado como fallback.
+// Token de seguridad
 // ════════════════════════════════════════════════════════════════
 function verificarToken(datos) {
   var secretProp = PropertiesService.getScriptProperties().getProperty("PYRO_SECRET");
   var secret = secretProp || "PyroShield-portal-2026";
-  if (!datos.token || datos.token !== secret) {
-    return false;
-  }
-  return true;
+  return datos.token && datos.token === secret;
 }
 
 // ════════════════════════════════════════════════════════════════
-// ENTRADA: doPost — enruta por el campo "accion"
+// doPost — enruta por el campo "accion"
 // ════════════════════════════════════════════════════════════════
 function doPost(e) {
   var resultado;
   try {
     var datos = JSON.parse(e.postData.contents);
     if (!verificarToken(datos)) {
-      return ContentService
-        .createTextOutput(JSON.stringify({ ok: false, error: "No autorizado" }))
-        .setMimeType(ContentService.MimeType.JSON);
+      return _json({ ok: false, error: "No autorizado" });
     }
     switch (datos.accion) {
       case "guardarPedidoPyro":
-        resultado = recibirPedidoPyro(datos);
-        break;
+        resultado = recibirPedidoPyro(datos); break;
       case "actualizarEstadoPyro":
-        resultado = actualizarEstadoPyro(datos);
-        break;
+        resultado = actualizarEstadoPyro(datos); break;
+      case "backup":
+        resultado = recibirBackupPyro(datos); break;
+      case "obtenerPedidos":
+        resultado = obtenerTodosPedidos(datos); break;
       default:
         resultado = { ok: false, error: "Acción no reconocida: " + datos.accion };
     }
   } catch (err) {
     resultado = { ok: false, error: String(err) };
   }
-  return ContentService
-    .createTextOutput(JSON.stringify(resultado))
-    .setMimeType(ContentService.MimeType.JSON);
+  return _json(resultado);
+}
+
+// ════════════════════════════════════════════════════════════════
+// doGet — permite obtener pedidos sin necesitar POST (más simple)
+// ════════════════════════════════════════════════════════════════
+function doGet(e) {
+  var params = e.parameter || {};
+  var secretProp = PropertiesService.getScriptProperties().getProperty("PYRO_SECRET");
+  var secret = secretProp || "PyroShield-portal-2026";
+  if (params.token !== secret) return _json({ ok: false, error: "No autorizado" });
+
+  if (params.accion === "obtenerPedidos") {
+    return _json(obtenerTodosPedidos(params));
+  }
+  if (params.accion === "obtenerStock") {
+    return _json(obtenerStockNube());
+  }
+  return _json({ ok: false, error: "Acción no reconocida" });
 }
 
 // ════════════════════════════════════════════════════════════════
 // recibirPedidoPyro — registra un pedido nuevo en PEDIDOS_PYRO
 // ════════════════════════════════════════════════════════════════
 function recibirPedidoPyro(datos) {
-  var hoja = obtenerHojaPedidos();
-
-  // Evitar duplicados: si ya existe el id_pedido, no insertar de nuevo
+  var hoja = obtenerHoja(HOJA_PEDIDOS, ENCABEZADOS_PEDIDOS);
   var ultima = hoja.getLastRow();
   if (ultima > 1) {
     var ids = hoja.getRange(2, 1, ultima - 1, 1).getValues().flat();
-    if (ids.indexOf(datos.id_pedido) !== -1) {
-      return { ok: true, duplicado: true };
-    }
+    if (ids.indexOf(datos.id_pedido) !== -1) return { ok: true, duplicado: true };
   }
-
   hoja.appendRow([
     datos.id_pedido || "",
     datos.fecha || "",
@@ -92,40 +88,148 @@ function recibirPedidoPyro(datos) {
     datos.estado || "pendiente",
     new Date()
   ]);
-
   return { ok: true };
 }
 
 // ════════════════════════════════════════════════════════════════
-// actualizarEstadoPyro — actualiza la columna "estado" de un pedido
+// actualizarEstadoPyro — actualiza la columna "estado"
 // ════════════════════════════════════════════════════════════════
 function actualizarEstadoPyro(datos) {
-  if (!datos.id_pedido || !datos.estado) {
-    return { ok: false, error: "Faltan id_pedido o estado" };
-  }
-  var hoja = obtenerHojaPedidos();
+  if (!datos.id_pedido || !datos.estado) return { ok: false, error: "Faltan campos" };
+  var hoja = obtenerHoja(HOJA_PEDIDOS, ENCABEZADOS_PEDIDOS);
   var ultima = hoja.getLastRow();
   if (ultima < 2) return { ok: false, error: "No hay pedidos" };
-
   var ids = hoja.getRange(2, 1, ultima - 1, 1).getValues().flat();
   var idx = ids.indexOf(datos.id_pedido);
-  if (idx === -1) return { ok: false, error: "Pedido no encontrado: " + datos.id_pedido };
-
-  // Columna 7 = "estado" (1-based, fila idx+2)
+  if (idx === -1) return { ok: false, error: "Pedido no encontrado" };
   hoja.getRange(idx + 2, 7).setValue(datos.estado);
   return { ok: true };
 }
 
 // ════════════════════════════════════════════════════════════════
-// Util: obtiene (o crea) la hoja PEDIDOS_PYRO con sus encabezados
+// recibirBackupPyro — guarda snapshot completo de pedidos + stock
 // ════════════════════════════════════════════════════════════════
-function obtenerHojaPedidos() {
+function recibirBackupPyro(datos) {
   var ss = SpreadsheetApp.openById(SHEET_ID);
-  var hoja = ss.getSheetByName(HOJA_PEDIDOS);
+
+  // ── Backup completo de pedidos en PEDIDOS_PYRO ──
+  var hojaPed = obtenerHoja(HOJA_PEDIDOS, ENCABEZADOS_PEDIDOS);
+  var pedidos = datos.pedidos || [];
+  pedidos.forEach(function(p) {
+    var ultima = hojaPed.getLastRow();
+    var ids = ultima > 1
+      ? hojaPed.getRange(2, 1, ultima - 1, 1).getValues().flat()
+      : [];
+    if (ids.indexOf(p.id) === -1) {
+      hojaPed.appendRow([
+        p.id || "",
+        p.fecha || "",
+        p.ruc || "",
+        p.razon || "",
+        JSON.stringify(p.items || []),
+        p.total != null ? p.total : "",
+        p.estado || "",
+        new Date()
+      ]);
+    } else {
+      // Actualizar estado si cambió
+      var idx = ids.indexOf(p.id);
+      hojaPed.getRange(idx + 2, 7).setValue(p.estado || "");
+    }
+  });
+
+  // ── Stock en STOCK_PYRO ──
+  if (datos.stock) {
+    var hojaStock = obtenerHoja(HOJA_STOCK, ["id_producto","stock","ago","fecha_actualizacion"]);
+    hojaStock.clearContents();
+    hojaStock.appendRow(["id_producto","stock","ago","fecha_actualizacion"]);
+    var stockObj = datos.stock;
+    Object.keys(stockObj).forEach(function(id) {
+      var s = stockObj[id];
+      hojaStock.appendRow([id, s.stock, s.ago ? "SI" : "NO", new Date()]);
+    });
+  }
+
+  // ── Snapshot JSON en BACKUP_COMPLETO ──
+  var hojaSnap = obtenerHoja(HOJA_BACKUP, ["fecha","pedidos_json","stock_json"]);
+  hojaSnap.appendRow([
+    new Date(),
+    JSON.stringify(datos.pedidos || []),
+    JSON.stringify(datos.stock || {})
+  ]);
+  // Mantener solo los últimos 30 snapshots
+  var lastRow = hojaSnap.getLastRow();
+  if (lastRow > 31) hojaSnap.deleteRows(2, lastRow - 31);
+
+  return { ok: true, pedidos: pedidos.length };
+}
+
+// ════════════════════════════════════════════════════════════════
+// obtenerTodosPedidos — devuelve todos los pedidos del Sheet
+// ════════════════════════════════════════════════════════════════
+function obtenerTodosPedidos(params) {
+  // Si se pasa ruc, filtra solo ese distribuidor
+  var rucFiltro = params.ruc || null;
+
+  // Intentar devolver desde BACKUP_COMPLETO (snapshot más reciente)
+  var ss = SpreadsheetApp.openById(SHEET_ID);
+  var hojaSnap = ss.getSheetByName(HOJA_BACKUP);
+  if (hojaSnap && hojaSnap.getLastRow() > 1) {
+    var lastRow = hojaSnap.getLastRow();
+    var pedidosJson = hojaSnap.getRange(lastRow, 2).getValue();
+    try {
+      var pedidos = JSON.parse(pedidosJson);
+      if (rucFiltro) pedidos = pedidos.filter(function(p){ return p.ruc === rucFiltro; });
+      return { ok: true, pedidos: pedidos, fuente: "snapshot" };
+    } catch(e) {}
+  }
+
+  // Fallback: reconstruir desde PEDIDOS_PYRO fila a fila
+  var hojaPed = ss.getSheetByName(HOJA_PEDIDOS);
+  if (!hojaPed || hojaPed.getLastRow() < 2) return { ok: true, pedidos: [] };
+  var rows = hojaPed.getRange(2, 1, hojaPed.getLastRow() - 1, 8).getValues();
+  var pedidos = rows
+    .filter(function(r){ return r[0]; })
+    .map(function(r){
+      var items = [];
+      try { items = JSON.parse(r[4]); } catch(e){}
+      return { id:r[0], fecha:r[1], ruc:r[2], razon:r[3], items:items, total:r[5], estado:r[6] };
+    });
+  if (rucFiltro) pedidos = pedidos.filter(function(p){ return p.ruc === rucFiltro; });
+  return { ok: true, pedidos: pedidos, fuente: "pedidos_pyro" };
+}
+
+// ════════════════════════════════════════════════════════════════
+// obtenerStockNube — devuelve el stock guardado en STOCK_PYRO
+// ════════════════════════════════════════════════════════════════
+function obtenerStockNube() {
+  var ss = SpreadsheetApp.openById(SHEET_ID);
+  var hoja = ss.getSheetByName(HOJA_STOCK);
+  if (!hoja || hoja.getLastRow() < 2) return { ok: true, stock: {} };
+  var rows = hoja.getRange(2, 1, hoja.getLastRow() - 1, 3).getValues();
+  var stock = {};
+  rows.forEach(function(r){
+    if (r[0]) stock[r[0]] = { stock: Number(r[1]) || 0, ago: r[2] === "SI" };
+  });
+  return { ok: true, stock: stock };
+}
+
+// ════════════════════════════════════════════════════════════════
+// Util
+// ════════════════════════════════════════════════════════════════
+function obtenerHoja(nombre, encabezados) {
+  var ss = SpreadsheetApp.openById(SHEET_ID);
+  var hoja = ss.getSheetByName(nombre);
   if (!hoja) {
-    hoja = ss.insertSheet(HOJA_PEDIDOS);
-    hoja.appendRow(ENCABEZADOS_PEDIDOS);
+    hoja = ss.insertSheet(nombre);
+    hoja.appendRow(encabezados);
     hoja.setFrozenRows(1);
   }
   return hoja;
+}
+
+function _json(obj) {
+  return ContentService
+    .createTextOutput(JSON.stringify(obj))
+    .setMimeType(ContentService.MimeType.JSON);
 }
