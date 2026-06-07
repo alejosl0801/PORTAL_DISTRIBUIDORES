@@ -82,29 +82,47 @@ var FRASES_MOTIVACIONALES=[
 // Tips de tutorial por sección (se muestran la primera vez que se visita cada tab)
 var TUT_TIPS={
   inicio:[
-    {ico:"🏠",t:"Tu resumen de cuenta",d:"Aquí ves tus puntos acumulados, pedidos activos y accesos rápidos. Es tu pantalla principal cada vez que entres."},
-    {ico:"🎁",t:"Tus recompensas",d:"Los puntos se acumulan con cada pedido entregado. Úsalos para canjear premios en la sección Recompensas."}
+    {ico:"🔥",t:"¡Tu negocio, en piloto automático!",d:"Este portal fue creado SOLO para ti. Desde aquí controlas tus pedidos, puntos y premios en segundos. Los distribuidores que lo usan venden hasta un 40% más. ¡Bienvenido al club!"},
+    {ico:"💰",t:"Cada compra te genera dinero extra",d:"Con cada pedido acumulas puntos que se convierten en premios reales: tarjetas de consumo, bonos KFC y más. No es un descuento — es dinero en tu bolsillo."},
+    {ico:"🏆",t:"Tu marcador de éxito",d:"Aquí ves tus puntos confirmados, pedidos activos y tu siguiente premio. Úsalo como motivación: entre más pides, más ganas. ¡El techo lo pones tú!"},
+    {ico:"⚡",t:"Todo en tiempo real",d:"Cuando PyroShield procesa tu pedido, el estado cambia aquí al instante. Cero llamadas, cero espera — tú sabes exactamente dónde está tu mercadería."},
+    {ico:"🎯",t:"Tu meta de esta semana",d:"Los distribuidores top hacen mínimo 2 pedidos por semana. ¿Listo para estar en ese grupo? Tu primera meta: haz tu pedido antes de que acabe el día de hoy."}
   ],
   catalogo:[
-    {ico:"🛒",t:"Busca y agrega productos",d:"Usa la lupa 🔍 para buscar por nombre. Toca el botón rojo del producto para agregarlo al carrito."},
-    {ico:"🔥",t:"Descuentos por cantidad",d:"¡Pide más y paga menos! Muchos productos tienen precio especial si compras 10, 20 o más unidades."},
-    {ico:"❤️",t:"Guarda tus favoritos",d:"Toca el corazón ❤️ para guardar un producto. Después filtra rápido con el botón 'Favs'."}
+    {ico:"🛒",t:"Tu bodega virtual, siempre abierta",d:"Extintores, accesorios, gabinetes — todo el catálogo PyroShield disponible 24/7. Sin límite de horario, sin esperas. Pide cuando quieras, desde donde estés."},
+    {ico:"🔍",t:"Encuentra lo que necesitas en 3 segundos",d:"Usa la barra de búsqueda para encontrar cualquier producto por nombre o código. O filtra por categoría con los botones de arriba. Tu tiempo vale oro — no lo gastes buscando."},
+    {ico:"🔥",t:"El secreto de los mejores distribuidores",d:"Los distribuidores más rentables piden en volumen. ¿Ves ese badge de '%'? Es tu descuento extra por cantidad. A más unidades, mayor margen de ganancia para ti. ¡Eso se llama inteligencia de negocio!"},
+    {ico:"❤️",t:"Guarda tus productos estrella",d:"Toca el corazón ❤️ en los productos que más vendes. Así los encuentras en 1 segundo con el filtro 'Favs'. Tu catálogo personalizado, solo para ti."},
+    {ico:"🏷️",t:"Precios que te dejan ganar",d:"Los precios que ves ya son TUS precios especiales como distribuidor PyroShield — no los del público. Tu margen de ganancia está calculado para que seas competitivo Y rentable."},
+    {ico:"➕",t:"¡Empieza a llenar tu carrito!",d:"Toca '+ Añadir' en cualquier producto. El número rojo del carrito (abajo) se actualiza solo. Pro tip: arma tu pedido completo ANTES de confirmar para aprovechar los descuentos por volumen."}
   ],
   carrito:[
-    {ico:"🛒",t:"Revisa antes de confirmar",d:"Ajusta cantidades con ➕ ➖ o elimina productos con 🗑️. El total ya incluye IVA 15%."},
-    {ico:"✅",t:"Confirma tu pedido",d:"Toca 'CONFIRMAR PEDIDO', elige cómo pagas y listo. Te llega un número de pedido inmediatamente."}
+    {ico:"🛒",t:"Tu pedido, bajo control total",d:"Aquí ves exactamente lo que vas a pedir. Cambia cantidades con ➕ ➖, elimina con 🗑️. Todo se recalcula automáticamente — precio, descuentos, IVA y puntos."},
+    {ico:"💵",t:"Transparencia total en tu inversión",d:"Ves el Subtotal + IVA 15% = Total. Sin sorpresas, sin cargos ocultos. Lo que ves aquí es exactamente lo que pagas. Así debe ser."},
+    {ico:"🏆",t:"Cada pedido te acerca a un premio",d:"¿Ves los '🏆 pts' junto a cada producto? Esos son los puntos que ganarás con este pedido. Entre más grande el pedido, más puntos — y más cerca de tu siguiente recompensa."},
+    {ico:"💾",t:"Guarda tu pedido y vuelve después",d:"¿No tienes tiempo ahora? Toca 'Guardar borrador'. Tu carrito queda guardado (hasta 3 borradores). Vuelve cuando puedas y continúa desde donde dejaste."},
+    {ico:"✅",t:"¡Confirma y listo en 10 segundos!",d:"Toca 'CONFIRMAR PEDIDO', elige cómo pagas (efectivo, transferencia o crédito) y listo. PyroShield recibe tu pedido al instante y empieza a prepararlo. Así de simple."}
   ],
   historial:[
-    {ico:"📋",t:"Tus pedidos y su estado",d:"Aquí aparecen todos tus pedidos. ⏳ Pendiente → 🔄 En proceso → 📦 Entregado → ✔️ Finalizado."},
-    {ico:"🔁",t:"Repite pedidos anteriores",d:"¿Quieres el mismo pedido de antes? En los pedidos Finalizados hay un botón 'Repetir' que carga todo al carrito."}
+    {ico:"📋",t:"Tu historial es tu poder",d:"Aquí están TODOS tus pedidos, desde el primero hasta el último. Es tu registro completo de compras — útil para planificar, calcular rentabilidad y saber qué productos se mueven más."},
+    {ico:"🟡",t:"Sigue tu pedido paso a paso",d:"⏳ Pendiente: recibido. 🔄 En proceso: preparándose. 📦 Entregado: en camino. ✔️ Finalizado: completo y con puntos acreditados. Sin llamadas, sin dudas."},
+    {ico:"🔁",t:"El botón que te ahorra 5 minutos",d:"¿Vendes los mismos productos cada semana? En pedidos Finalizados hay un botón 'Repetir' que carga TODO ese pedido al carrito con un solo toque. Eficiencia pura."},
+    {ico:"✏️",t:"Flexibilidad cuando la necesitas",d:"¿Cometiste un error en un pedido pendiente? Sin problema — toca 'Editar' y corrígelo antes de que PyroShield lo procese. Una vez en proceso, ya va en camino."},
+    {ico:"⭐",t:"Califica y gana puntos extra",d:"Cuando tu pedido esté Finalizado, califícalo con estrellas. Es rápido y te ayuda a ganar logros especiales que suman puntos extra a tu saldo. ¡30 segundos que valen dinero!"}
   ],
   recompensas:[
-    {ico:"🏆",t:"Gana puntos con cada pedido",d:"Cada pedido confirmado genera puntos. Los puntos se confirman cuando el pedido está entregado."},
-    {ico:"🎁",t:"Canjea tus premios",d:"Acumula puntos y canjéalos por KFC, tarjetas de consumo y más. Toca 'Canjear' cuando tengas suficientes."}
+    {ico:"🏆",t:"Aquí el dinero trabaja para ti",d:"Cada pedido que confirmas genera puntos automáticamente. Los puntos se acreditan cuando el pedido es entregado. No tienes que hacer NADA extra — solo pedir como siempre."},
+    {ico:"💳",t:"Premios reales, no puntos vacíos",d:"Tus puntos se canjean por: 🍗 Combo KFC (650 pts), 💳 Tarjeta $15 (1.500 pts), 💳 Tarjeta $30 (3.000 pts), 💳 Tarjeta $50 (5.000 pts). Dinero real de vuelta a tu bolsillo."},
+    {ico:"🎯",t:"Los logros: tu máquina de puntos extra",d:"Completa logros (como hacer tu 1er pedido o comprar $500) y recibe puntos adicionales permanentes. Hay 100 logros disponibles. Cada uno es un pequeño tesoro esperándote."},
+    {ico:"⚡",t:"Estrategia ganadora: pide en volumen",d:"Un pedido de $500 te genera más puntos que diez pedidos de $50 — Y activa descuentos por volumen. Doble beneficio: más margen de ganancia + más puntos. Así piensan los distribuidores top."},
+    {ico:"🎁",t:"Tu próximo premio está más cerca de lo que crees",d:"Mira la barra de progreso de cada premio. ¿A cuántos puntos estás? Tal vez solo necesitas UN pedido más. Canjea, disfruta, y vuelve a acumular. Es un ciclo que no para."}
   ],
   perfil:[
-    {ico:"👤",t:"Tus datos y contraseña",d:"Aquí ves tu RUC, razón social y puedes cambiar tu contraseña cuando quieras."},
-    {ico:"🌙",t:"Modo oscuro disponible",d:"Activa el modo oscuro 🌙 para una experiencia más cómoda. Se guarda automáticamente."}
+    {ico:"👤",t:"Tu identidad como distribuidor",d:"Aquí están tus datos: RUC, razón social, correo y teléfono. Si algo cambió en tu empresa, contacta a PyroShield para actualizarlo. Datos correctos = facturas correctas."},
+    {ico:"🔐",t:"Tu contraseña, tu responsabilidad",d:"Cambia tu contraseña cuando quieras desde aquí. Usa una que recuerdes pero que nadie más pueda adivinar. Tu cuenta da acceso a tus pedidos y puntos — protégela."},
+    {ico:"🌙",t:"Personaliza tu experiencia",d:"¿Prefieres fondo oscuro? Activa el modo nocturno 🌙 — ideal para revisar pedidos de noche sin forzar la vista. Se guarda automáticamente."},
+    {ico:"📲",t:"Instala la app y gana puntos",d:"¿Ya tienes la app instalada en tu celular Y en tu computadora? Cada instalación te da puntos de regalo. Ve la sección de instalación en tu panel de inicio para reclamarlos."},
+    {ico:"💡",t:"Pro tip final",d:"Los mejores distribuidores revisan su portal 2-3 veces por semana: lunes para planificar, miércoles para ajustar, viernes para cerrar pedidos. ¡Conviértelo en hábito y verás los resultados!"}
   ]
 };
 
@@ -575,7 +593,7 @@ function mostrarTipSeccion(tab){
   var paso=0;
   var ov=document.createElement("div");
   ov.id="tipsec-ov";
-  ov.style.cssText="position:fixed;top:0;left:50%;transform:translateX(-50%);width:min(520px,100vw);height:100vh;background:rgba(0,0,0,.82);z-index:800;display:flex;align-items:center;justify-content:center;padding:24px";
+  ov.style.cssText="position:fixed;top:0;left:0;width:100%;height:100vh;background:rgba(0,0,0,.82);z-index:800;display:flex;align-items:center;justify-content:center;padding:24px";
   function renderOv(){
     var t=tips[paso];
     var pct=Math.round((paso+1)/tips.length*100);
@@ -597,7 +615,6 @@ function mostrarTipSeccion(tab){
             :'<button onclick="document.getElementById(\'tipsec-ov\').remove()" style="flex:2;padding:13px;background:var(--rojo);color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer">¡Entendido! ✓</button>'
           )+
         '</div>'+
-        '<button onclick="document.getElementById(\'tipsec-ov\').remove()" style="margin-top:14px;background:none;border:none;color:#aaa;font-size:12px;cursor:pointer;width:100%">Saltar tutorial</button>'+
       '</div>';
     ov._next=function(){paso++;renderOv();};
     ov._prev=function(){paso--;renderOv();};
@@ -693,6 +710,7 @@ function renderInicio(){
   }
   renderInsignias();
   renderDeseosSec();
+  renderBannerInstalacion();
   var up=mp.slice().reverse().slice(0,3);
   document.getElementById("ultimos-pedidos").innerHTML=up.length?up.map(function(p){
     return '<div class="ped" onclick="verDetallePed(\''+p.id+'\')" style="cursor:pointer">'+
@@ -759,29 +777,29 @@ function _logrosDefinicion(){
     {ico:"💼",nm:"Profesional",            desc:"100 pedidos completados",                 ok:n>=100,   bonoPts:6},
     {ico:"👑",nm:"Cliente élite",          desc:"150 pedidos completados",                 ok:n>=150,   bonoPts:7},
     {ico:"🦅",nm:"Águila",                 desc:"200 pedidos completados",                 ok:n>=200,   bonoPts:8},
-    {ico:"🌟",nm:"Estrella",               desc:"300 pedidos completados",                 ok:n>=300,   bonoPts:8},
-    {ico:"🏆",nm:"Leyenda",                desc:"500 pedidos completados",                 ok:n>=500,   bonoPts:10},
-    {ico:"💯",nm:"Centenario",             desc:"750 pedidos completados",                 ok:n>=750,   bonoPts:10},
-    {ico:"🌈",nm:"Mil pedidos",            desc:"1.000 pedidos completados",               ok:n>=1000,  bonoPts:12},
-    {ico:"🔱",nm:"Élite absoluto",         desc:"2.000 pedidos completados",               ok:n>=2000,  bonoPts:15},
+    {ico:"🌟",nm:"Estrella",               desc:"300 pedidos completados",                 ok:n>=300,   bonoPts:15},
+    {ico:"🏆",nm:"Leyenda",                desc:"500 pedidos completados",                 ok:n>=500,   bonoPts:25},
+    {ico:"💯",nm:"Centenario",             desc:"750 pedidos completados",                 ok:n>=750,   bonoPts:40},
+    {ico:"🌈",nm:"Mil pedidos",            desc:"1.000 pedidos completados",               ok:n>=1000,  bonoPts:60},
+    {ico:"🔱",nm:"Élite absoluto",         desc:"2.000 pedidos completados",               ok:n>=2000,  bonoPts:100},
 
     // ── COMPRAS EN DÓLARES ──
     {ico:"💵",nm:"Primeros $100",          desc:"$100 en compras totales",                 ok:total>=100,  bonoPts:3},
-    {ico:"💴",nm:"$250 en ventas",         desc:"$250 en compras totales",                 ok:total>=250,  bonoPts:3},
-    {ico:"💰",nm:"$500 en compras",        desc:"$500 en compras totales",                 ok:total>=500,  bonoPts:4},
-    {ico:"🏦",nm:"Gran comprador",         desc:"$1.000 en compras",                       ok:total>=1000, bonoPts:5},
-    {ico:"💎",nm:"$2.500 en compras",      desc:"$2.500 en compras",                       ok:total>=2500, bonoPts:6},
-    {ico:"🥂",nm:"Comprador premium",      desc:"$5.000 en compras",                       ok:total>=5000, bonoPts:7},
-    {ico:"🚢",nm:"$10.000 en compras",     desc:"$10.000 en compras",                      ok:total>=10000,bonoPts:8},
-    {ico:"✈️",nm:"$25.000 en compras",     desc:"$25.000 en compras",                      ok:total>=25000,bonoPts:10},
-    {ico:"🏰",nm:"$50.000 en compras",     desc:"$50.000 en compras",                      ok:total>=50000,bonoPts:12},
+    {ico:"💴",nm:"$250 en ventas",         desc:"$250 en compras totales",                 ok:total>=250,  bonoPts:4},
+    {ico:"💰",nm:"$500 en compras",        desc:"$500 en compras totales",                 ok:total>=500,  bonoPts:5},
+    {ico:"🏦",nm:"Gran comprador",         desc:"$1.000 en compras",                       ok:total>=1000, bonoPts:8},
+    {ico:"💎",nm:"$2.500 en compras",      desc:"$2.500 en compras",                       ok:total>=2500, bonoPts:12},
+    {ico:"🥂",nm:"Comprador premium",      desc:"$5.000 en compras",                       ok:total>=5000, bonoPts:20},
+    {ico:"🚢",nm:"$10.000 en compras",     desc:"$10.000 en compras",                      ok:total>=10000,bonoPts:35},
+    {ico:"✈️",nm:"$25.000 en compras",     desc:"$25.000 en compras",                      ok:total>=25000,bonoPts:60},
+    {ico:"🏰",nm:"$50.000 en compras",     desc:"$50.000 en compras",                      ok:total>=50000,bonoPts:100},
 
     // ── PEDIDO INDIVIDUAL GRANDE ──
     {ico:"📊",nm:"Pedido de $100",         desc:"Un solo pedido de $100 o más",            ok:maxPed>=100,  bonoPts:3},
-    {ico:"📈",nm:"Pedido de $250",         desc:"Un solo pedido de $250 o más",            ok:maxPed>=250,  bonoPts:4},
-    {ico:"🎰",nm:"Pedido de $500",         desc:"Un solo pedido de $500 o más",            ok:maxPed>=500,  bonoPts:5},
-    {ico:"💣",nm:"Pedido de $1.000",       desc:"Un solo pedido de $1.000 o más",          ok:maxPed>=1000, bonoPts:6},
-    {ico:"🌋",nm:"Pedido de $2.500",       desc:"Un solo pedido de $2.500 o más",          ok:maxPed>=2500, bonoPts:8},
+    {ico:"📈",nm:"Pedido de $250",         desc:"Un solo pedido de $250 o más",            ok:maxPed>=250,  bonoPts:5},
+    {ico:"🎰",nm:"Pedido de $500",         desc:"Un solo pedido de $500 o más",            ok:maxPed>=500,  bonoPts:8},
+    {ico:"💣",nm:"Pedido de $1.000",       desc:"Un solo pedido de $1.000 o más",          ok:maxPed>=1000, bonoPts:15},
+    {ico:"🌋",nm:"Pedido de $2.500",       desc:"Un solo pedido de $2.500 o más",          ok:maxPed>=2500, bonoPts:30},
 
     // ── UNIDADES PEDIDAS ──
     {ico:"📦",nm:"50 unidades",            desc:"50 unidades pedidas en total",            ok:items>=50,   bonoPts:2},
@@ -821,8 +839,8 @@ function _logrosDefinicion(){
     {ico:"💫",nm:"2.500 puntos",           desc:"Acumula 2.500 puntos",                    ok:pts>=2500,  bonoPts:4},
     {ico:"🏆",nm:"5.000 puntos",           desc:"Acumula 5.000 puntos",                    ok:pts>=5000,  bonoPts:6},
     {ico:"🌟",nm:"10.000 puntos",          desc:"Acumula 10.000 puntos",                   ok:pts>=10000, bonoPts:7},
-    {ico:"👁️",nm:"25.000 puntos",          desc:"Acumula 25.000 puntos",                   ok:pts>=25000, bonoPts:8},
-    {ico:"🔮",nm:"50.000 puntos",          desc:"Acumula 50.000 puntos",                   ok:pts>=50000, bonoPts:10},
+    {ico:"👁️",nm:"25.000 puntos",          desc:"Acumula 25.000 puntos",                   ok:pts>=25000, bonoPts:20},
+    {ico:"🔮",nm:"50.000 puntos",          desc:"Acumula 50.000 puntos",                   ok:pts>=50000, bonoPts:35},
 
     // ── CANJES ──
     {ico:"🎁",nm:"Primer canje",           desc:"Canjea 1 premio",                         ok:canjes>=1, bonoPts:3},
@@ -861,14 +879,14 @@ function _logrosDefinicion(){
     {ico:"🎯",nm:"Sin desperdiciar",       desc:"0 pedidos cancelados con 5+ completados", ok:canc.length===0&&n>=5,bonoPts:3},
 
     // ── HITOS ESPECIALES ──
-    {ico:"🦄",nm:"Unicornio",              desc:"50 pedidos, $5.000 y 5.000 pts",          ok:n>=50&&total>=5000&&pts>=5000,   bonoPts:10},
-    {ico:"🐉",nm:"Dragón",                 desc:"100 pedidos, $15.000 y 15.000 pts",       ok:n>=100&&total>=15000&&pts>=15000,bonoPts:15},
-    {ico:"🌞",nm:"Sol PyroShield",         desc:"200 pedidos, $50.000 en compras",         ok:n>=200&&total>=50000,            bonoPts:15},
-    {ico:"🔑",nm:"Llave de oro",           desc:"Completa 50 pedidos en 1 año",            ok:pedEsteAnio>=50,                 bonoPts:10},
-    {ico:"💥",nm:"Pedido legendario",      desc:"Un pedido de $5.000 o más",              ok:maxPed>=5000,                    bonoPts:12},
-    {ico:"🎖️",nm:"Medalla de honor",       desc:"3 canjes + 10 pedidos + 6 meses activo", ok:canjes>=3&&n>=10&&meses>=6,      bonoPts:10},
+    {ico:"🦄",nm:"Unicornio",              desc:"50 pedidos, $5.000 y 5.000 pts",          ok:n>=50&&total>=5000&&pts>=5000,   bonoPts:25},
+    {ico:"🐉",nm:"Dragón",                 desc:"100 pedidos, $15.000 y 15.000 pts",       ok:n>=100&&total>=15000&&pts>=15000,bonoPts:50},
+    {ico:"🌞",nm:"Sol PyroShield",         desc:"200 pedidos, $50.000 en compras",         ok:n>=200&&total>=50000,            bonoPts:80},
+    {ico:"🔑",nm:"Llave de oro",           desc:"Completa 50 pedidos en 1 año",            ok:pedEsteAnio>=50,                 bonoPts:25},
+    {ico:"💥",nm:"Pedido legendario",      desc:"Un pedido de $5.000 o más",              ok:maxPed>=5000,                    bonoPts:50},
+    {ico:"🎖️",nm:"Medalla de honor",       desc:"3 canjes + 10 pedidos + 6 meses activo", ok:canjes>=3&&n>=10&&meses>=6,      bonoPts:25},
     {ico:"🌺",nm:"Floreciente",            desc:"5 categorías distintas pedidas",          ok:prods>=5&&new Set(comp.reduce(function(a,p){return a.concat((p.items||[]).map(function(i){var pr=PRODUCTOS.find(function(x){return x.id===i.id;});return pr?pr.cat:null;}).filter(Boolean));},[])).size>=3,bonoPts:6},
-    {ico:"🧲",nm:"Imán de puntos",         desc:"Acumula 100.000 puntos en total",         ok:pts>=100000,bonoPts:15}
+    {ico:"🧲",nm:"Imán de puntos",         desc:"Acumula 100.000 puntos en total",         ok:pts>=100000,bonoPts:80}
   ];
 }
 
@@ -1732,15 +1750,17 @@ function renderModoEntrega(){
   var ex=document.getElementById("entrega-extra");
   if(!sel||!ex)return;
   if(sel.value==="entrega"){
-    var ests=(USER.establecimientos||[]).map(function(e,i){return'<option value="'+i+'">'+e.nm+" — "+e.dir+'</option>';}).join("");
+    var establecs=USER.establecimientos||[];
+    var ests=establecs.map(function(e,i){return'<option value="'+i+'">'+e.nm+" — "+e.dir+'</option>';}).join("");
+    var sinDirs=establecs.length===0;
     var hoy=new Date().toISOString().split("T")[0];
-    ex.innerHTML='<label class="form-label">Establecimiento</label>'+
-      '<select class="form-select" id="cart-est">'+ests+'<option value="nuevo">+ Agregar dirección</option></select>'+
-      '<div id="nueva-dir-box" style="display:none">'+
+    ex.innerHTML='<label class="form-label">Dirección de entrega</label>'+
+      (sinDirs?'':('<select class="form-select" id="cart-est">'+ests+'<option value="nuevo">+ Agregar nueva dirección</option></select>'))+
+      '<div id="nueva-dir-box" style="'+(sinDirs?'':'display:none')+'">'+
         '<label class="form-label">Nombre del local</label>'+
-        '<input class="form-input" id="nueva-dir-nm" placeholder="Ej: Sucursal Norte">'+
-        '<label class="form-label">Dirección</label>'+
-        '<input class="form-input" id="nueva-dir-dir" placeholder="Av. principal y calle...">'+
+        '<input class="form-input" id="nueva-dir-nm" placeholder="Ej: Mi local principal">'+
+        '<label class="form-label">Dirección completa</label>'+
+        '<input class="form-input" id="nueva-dir-dir" placeholder="Av. principal y calle, referencia...">'+
       '</div>'+
       '<label class="form-label">Fecha de entrega (opcional)</label>'+
       '<select class="form-select" id="cart-fecha-opt" onchange="toggleFechaEntrega()">'+
@@ -1756,12 +1776,14 @@ function renderModoEntrega(){
         '<option value="08:00 - 12:00">08:00 - 12:00</option>'+
         '<option value="13:00 - 17:00">13:00 - 17:00</option>'+
       '</select>';
-    // Listener para nueva dirección
-    var estSel=document.getElementById("cart-est");
-    if(estSel)estSel.addEventListener("change",function(){
-      var box=document.getElementById("nueva-dir-box");
-      if(box)box.style.display=(this.value==="nuevo")?"block":"none";
-    });
+    // Listener para nueva dirección (solo si hay establecimientos existentes)
+    if(!sinDirs){
+      var estSel=document.getElementById("cart-est");
+      if(estSel)estSel.addEventListener("change",function(){
+        var box=document.getElementById("nueva-dir-box");
+        if(box)box.style.display=(this.value==="nuevo")?"block":"none";
+      });
+    }
   } else if(sel.value==="retiro"){
     ex.innerHTML='<p style="font-size:12px;color:var(--g3);margin-bottom:12px">📍 Portete #3007 y Gallegos Lara, Guayaquil</p>';
   } else {
@@ -4062,6 +4084,8 @@ window.addEventListener("load",function(){
   mostrarBotonBiometria();
   // Auto-login si el usuario marcó "Recordarme"
   setTimeout(intentarAutoLogin, 300);
+  // Detectar si la sesión actual es PWA instalada y registrar
+  setTimeout(registrarInstalacionActual, 1500);
 });
 
 // ════════ FEATURE 11/12/13/14/25/82/83/84/87 — Dashboard Admin ════════
@@ -4406,5 +4430,141 @@ function restaurarMetaDesdeNube(){
       if(!Object.keys(localC).length)localStorage.setItem("pyro_costos",JSON.stringify(m.costos));
     }
   }).catch(function(){});
+}
+
+// ════════════════════ PWA INSTALL GAMIFICADO ════════════════════
+var _deferredInstallPrompt=null;
+
+// Detecta tipo de dispositivo
+function _esMobile(){return/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);}
+
+// Detecta si está corriendo como PWA instalada
+function _esInstalado(){
+  return window.matchMedia('(display-mode: standalone)').matches||
+    window.navigator.standalone===true||
+    document.referrer.includes('android-app://');
+}
+
+// Claves localStorage para tracking de instalaciones
+function _keyInstMobile(ruc){return"pyro_inst_mobile_"+ruc;}
+function _keyInstDesktop(ruc){return"pyro_inst_desktop_"+ruc;}
+
+// Registra instalación actual
+function registrarInstalacionActual(){
+  if(!USER||USER.esAdmin)return;
+  if(!_esInstalado())return;
+  var tipo=_esMobile()?"mobile":"desktop";
+  var key=tipo==="mobile"?_keyInstMobile(USER.ruc):_keyInstDesktop(USER.ruc);
+  if(!localStorage.getItem(key)){
+    localStorage.setItem(key,"1");
+    // Otorgar 20 puntos por instalación
+    var pid="INST"+Date.now().toString().slice(-6);
+    var tipoLabel=tipo==="mobile"?"celular":"computadora";
+    PEDIDOS.push({
+      id:pid,ruc:USER.ruc,razon:USER.razon,
+      fecha:new Date().toLocaleDateString(),fechaISO:new Date().toISOString(),
+      esCanje:true,esBienvenida:false,canjePts:0,
+      canjeNm:"🎁 Premio por instalar app en tu "+tipoLabel+" — 20 pts",
+      estado:"finalizado",total:0,puntos:20,esInstalacion:true
+    });
+    registrarLogPuntos(USER.ruc,"confirmado",20,"Premio instalación PWA en "+tipoLabel);
+    guardarPedidos();
+    setTimeout(function(){
+      mostrarOverlayInstalacion(tipo);
+    },800);
+  }
+}
+
+function mostrarOverlayInstalacion(tipo){
+  var tipoLabel=tipo==="mobile"?"celular":"computadora";
+  var ov=document.createElement("div");
+  ov.id="inst-ov";
+  ov.style.cssText="position:fixed;top:0;left:0;width:100%;height:100vh;background:rgba(0,0,0,.85);z-index:9000;display:flex;align-items:center;justify-content:center;padding:24px";
+  ov.innerHTML=
+    '<div style="background:#fff;border-radius:24px;padding:36px 28px;width:100%;max-width:380px;text-align:center">'+
+      '<div style="font-size:56px;margin-bottom:12px">🎉</div>'+
+      '<div style="font-size:22px;font-weight:800;color:var(--verde);margin-bottom:8px">¡Genial! Instalaste la app</div>'+
+      '<div style="font-size:15px;color:#555;margin-bottom:6px;line-height:1.5">Instalaste PyroShield en tu <b>'+tipoLabel+'</b>.</div>'+
+      '<div style="background:var(--verdec);border-radius:14px;padding:14px;margin-bottom:20px">'+
+        '<div style="font-size:24px;font-weight:800;color:var(--verde)">+20 puntos</div>'+
+        '<div style="font-size:13px;color:var(--verde)">acreditados en tu cuenta 🏆</div>'+
+      '</div>'+
+      '<button class="btn btn-p btn-full" style="font-size:16px" onclick="document.getElementById(\'inst-ov\').remove();renderInicio();">¡Reclamar puntos! 🔥</button>'+
+    '</div>';
+  document.body.appendChild(ov);
+}
+
+// Banner en inicio: invita a instalar en el otro dispositivo
+function renderBannerInstalacion(){
+  var el=document.getElementById("banner-instalacion");
+  if(!el||!USER||USER.esAdmin)return;
+  var tieneMobile=!!localStorage.getItem(_keyInstMobile(USER.ruc));
+  var tieneDesktop=!!localStorage.getItem(_keyInstDesktop(USER.ruc));
+  var esMobile=_esMobile();
+  // Si ya tiene ambas instalaciones, ocultar
+  if(tieneMobile&&tieneDesktop){el.style.display="none";return;}
+  // Determinar qué le falta
+  var falta=esMobile?"computadora":"celular";
+  var faltaIco=esMobile?"💻":"📱";
+  el.style.display="";
+  el.innerHTML=
+    '<div style="background:linear-gradient(135deg,#fff7e0,#ffe0a0);border:2px solid var(--oro);border-radius:16px;padding:14px 16px;margin-bottom:16px">'+
+      '<div style="display:flex;align-items:center;gap:12px">'+
+        '<span style="font-size:32px">'+faltaIco+'</span>'+
+        '<div style="flex:1">'+
+          '<div style="font-size:13px;font-weight:800;color:var(--negro);margin-bottom:2px">¡Tienes 20 puntos esperándote!</div>'+
+          '<div style="font-size:12px;color:#666;line-height:1.4">Instala la app en tu <b>'+falta+'</b> y reclámalos ahora.</div>'+
+        '</div>'+
+      '</div>'+
+      '<button class="btn btn-p btn-full" style="margin-top:10px;font-size:13px" onclick="mostrarGuiaInstalacion(\''+falta+'\')">'+
+        '📲 Cómo instalar en mi '+falta+' →'+
+      '</button>'+
+    '</div>';
+}
+
+function mostrarGuiaInstalacion(dispositivo){
+  var esCel=dispositivo==="celular";
+  var pasos=esCel?[
+    {ico:"📱",t:"Abre este portal en tu celular",d:"Desde tu celular, abre el navegador (Chrome en Android o Safari en iPhone) y entra a: alejosl0801.github.io/PORTAL_DISTRIBUIDORES"},
+    {ico:"⚙️",t:"Android: toca el menú ⋮",d:"En Chrome, toca los 3 puntos (⋮) arriba a la derecha. Luego toca 'Instalar app' o 'Agregar a pantalla de inicio'."},
+    {ico:"📤",t:"iPhone: toca el botón Compartir",d:"En Safari, toca el ícono de compartir (□↑) en la barra inferior. Luego toca 'Agregar a pantalla de inicio' y confirma."},
+    {ico:"🎁",t:"¡Listo! Abre la app instalada",d:"Una vez instalada, ábrela desde el ícono en tu pantalla. Recibirás 20 puntos automáticamente. ¡Disfruta tu premio!"}
+  ]:[
+    {ico:"💻",t:"Abre este portal en tu computadora",d:"Desde tu PC o Mac, abre Chrome y entra a: alejosl0801.github.io/PORTAL_DISTRIBUIDORES e inicia sesión."},
+    {ico:"⬇️",t:"Busca el ícono de instalar",d:"En la barra de direcciones de Chrome, busca el ícono de instalación (⊕ o una pantalla con flecha). Haz clic en él."},
+    {ico:"✅",t:"Confirma la instalación",d:"Aparecerá un popup que dice 'Instalar PyroShield'. Haz clic en 'Instalar'. La app se abrirá como ventana independiente."},
+    {ico:"🎁",t:"¡Listo! Abre la app instalada",d:"Ábrela desde el acceso directo en tu escritorio. Recibirás 20 puntos automáticamente al abrirla instalada."}
+  ];
+  // Mostrar overlay con los pasos
+  var paso=0;
+  var ov=document.createElement("div");
+  ov.id="guia-inst-ov";
+  ov.style.cssText="position:fixed;top:0;left:0;width:100%;height:100vh;background:rgba(0,0,0,.85);z-index:9000;display:flex;align-items:center;justify-content:center;padding:24px";
+  function renderPaso(){
+    var p=pasos[paso];
+    var pct=Math.round((paso+1)/pasos.length*100);
+    ov.innerHTML=
+      '<div style="background:#fff;border-radius:24px;padding:36px 28px;width:100%;max-width:380px;text-align:center">'+
+        '<div style="font-size:52px;margin-bottom:12px">'+p.ico+'</div>'+
+        '<div style="font-size:11px;font-weight:700;color:var(--oro);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px">Paso '+(paso+1)+' de '+pasos.length+'</div>'+
+        '<div style="font-size:19px;font-weight:800;margin-bottom:10px">'+escHtml(p.t)+'</div>'+
+        '<div style="font-size:14px;color:#555;line-height:1.6;margin-bottom:20px">'+escHtml(p.d)+'</div>'+
+        '<div style="background:#eee;border-radius:6px;height:6px;margin-bottom:20px">'+
+          '<div style="background:var(--rojo);height:6px;border-radius:6px;width:'+pct+'%"></div>'+
+        '</div>'+
+        '<div style="display:flex;gap:10px">'+
+          (paso>0?'<button onclick="document.getElementById(\'guia-inst-ov\')._prev()" style="flex:1;padding:12px;border:1.5px solid #ddd;border-radius:12px;font-size:14px;font-weight:600;background:#fff;cursor:pointer">← Atrás</button>':'')+
+          (paso<pasos.length-1
+            ?'<button onclick="document.getElementById(\'guia-inst-ov\')._next()" style="flex:2;padding:12px;background:var(--rojo);color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer">Siguiente →</button>'
+            :'<button onclick="document.getElementById(\'guia-inst-ov\').remove()" style="flex:2;padding:12px;background:var(--verde);color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer">¡Ya la instalé! ✓</button>'
+          )+
+        '</div>'+
+        '<button onclick="document.getElementById(\'guia-inst-ov\').remove()" style="margin-top:12px;background:none;border:none;color:#aaa;font-size:12px;cursor:pointer;width:100%">Cerrar</button>'+
+      '</div>';
+    ov._next=function(){paso++;renderPaso();};
+    ov._prev=function(){paso--;renderPaso();};
+  }
+  renderPaso();
+  document.body.appendChild(ov);
 }
 
