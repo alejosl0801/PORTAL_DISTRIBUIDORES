@@ -195,8 +195,7 @@ function misPedidos(){return PEDIDOS.filter(function(p){return p.ruc===USER.ruc;
 
 function puntosConfirmados(){
   return misPedidos().reduce(function(s,p){
-    // Solo cuentan pedidos entregados o finalizados, no cancelados ni pendientes
-    if(p.esCanje)return s;
+    if(p.esCanje&&!p.esInstalacion&&!p.esBienvenida)return s;
     var confirmado=(p.estado==="entregado"||p.estado==="finalizado");
     return s+(confirmado?(p.puntos||0):0);
   },0);
@@ -396,12 +395,19 @@ function toggleVerPass(){
   if(inp.type==="password"){inp.type="text";if(btn)btn.textContent="🙈";}
   else{inp.type="password";if(btn)btn.textContent="👁️";}
 }
+var _loginAttempts=0;var _loginBlocked=false;
 function hacerLogin(){
+  if(_loginBlocked){toast("⛔ Demasiados intentos fallidos. Espera 30 segundos.");return;}
   var u=document.getElementById("login-user").value.trim();
   var pw=document.getElementById("login-pass").value.trim();
   var err=document.getElementById("login-err");
   err.style.display="none";
-  if(!loginConCredenciales(u,pw)){err.style.display="block";return;}
+  if(!loginConCredenciales(u,pw)){
+    _loginAttempts++;
+    if(_loginAttempts>=5){_loginBlocked=true;setTimeout(function(){_loginBlocked=false;_loginAttempts=0;},30000);err.textContent="Demasiados intentos. Espera 30 segundos.";}
+    err.style.display="block";return;
+  }
+  _loginAttempts=0;
   // Modo mantenimiento: solo ADMIN puede entrar
   if(typeof MODO_MANTENIMIENTO!=="undefined"&&MODO_MANTENIMIENTO&&!USER.esAdmin){
     USER=null;
@@ -531,7 +537,7 @@ function otorgarBienvenida(){
   var bid="B"+now.getTime().toString().slice(-5);
   PEDIDOS.push({
     id:bid,ruc:USER.ruc,razon:USER.razon,
-    fecha:now.toLocaleDateString(),fechaISO:now.toISOString(),
+    fecha:now.toLocaleDateString("es-EC"),fechaISO:now.toISOString(),
     esCanje:true,esBienvenida:true,canjePts:0,
     canjeNm:"Combo KFC 3 presas + papas + cola",
     estado:"pendiente",total:0,puntos:0
@@ -557,6 +563,7 @@ function mostrarOverlayBienvenida(){
 }
 function logout(){
   USER=null;CARRITO=[];
+  if(_notifInterval){clearInterval(_notifInterval);_notifInterval=null;}
   try{localStorage.removeItem("pyro_sesion");}catch(e){}
   mostrar("s-login");
   document.getElementById("login-user").value="";
@@ -1823,7 +1830,7 @@ function renderBorradores(){
       var d=new Date(b.ts);
       var label=b.nombre==="Autoguardado"?"💾 Autoguardado":"Borrador "+(i+1);
       return '<div class="borrador-item">'+
-        '<span style="font-size:12px">'+label+' — '+d.toLocaleDateString()+'</span>'+
+        '<span style="font-size:12px">'+label+' — '+d.toLocaleDateString("es-EC")+'</span>'+
         '<div style="display:flex;gap:6px">'+
           '<button class="btn btn-sm btn-p" onclick="cargarBorrador('+i+')">Cargar</button>'+
           '<button class="btn btn-sm btn-s" onclick="eliminarBorrador('+i+')">✕</button>'+
@@ -1928,7 +1935,7 @@ function confirmarPedido(){
     var horaVal=document.getElementById("cart-hora")?document.getElementById("cart-hora").value:"";
     entregaInfo={establecimiento:est,fecha:fechaVal,hora:horaVal};
   }
-  var ped={id:pid,ruc:USER.ruc,razon:USER.razon,fecha:now.toLocaleDateString(),fechaISO:now.toISOString(),pago:pago,modo:modo,notas:notas,items:items,subtotal:subtotal,iva:iva,total:total,puntos:ptsTotal,estado:"pendiente",entregaInfo:entregaInfo,esCanje:false};
+  var ped={id:pid,ruc:USER.ruc,razon:USER.razon,fecha:now.toLocaleDateString("es-EC"),fechaISO:now.toISOString(),pago:pago,modo:modo,notas:notas,items:items,subtotal:subtotal,iva:iva,total:total,puntos:ptsTotal,estado:"pendiente",entregaInfo:entregaInfo,esCanje:false};
   PEDIDOS.push(ped);
   if(navigator.vibrate)navigator.vibrate([30,20,60]);
   guardarPedidos();
@@ -1973,7 +1980,7 @@ function estadoLabel(e){
     entrega:"🚚 En proceso",
     entregado:"📦 Entregado",
     facturado:"🚚 En proceso",
-    finalizado:"📦 Entregado",
+    finalizado:"✔️ Finalizado",
     cancelado:"✕ Cancelado"
   };
   return m[e]||e;
@@ -2141,7 +2148,7 @@ function editarPedido(pid){
       var prod=PRODUCTOS.find(function(x){return x.id===it.id;});
       if(!prod)return;
       var exist=CARRITO.find(function(c){return c.id===it.id;});
-      if(exist)exist.cant+=it.cant;
+      if(exist)exist.cant=it.cant;
       else CARRITO.push({id:it.id,cant:it.cant});
     });
     PEDIDOS=PEDIDOS.filter(function(x){return x.id!==pid;});
@@ -2239,11 +2246,11 @@ function verDetallePed(pid){
       '</div>':'')+
     ((p.modo==="entrega"&&p.entregaInfo&&p.entregaInfo.establecimiento)?
       '<div style="margin-top:8px;font-size:13px;color:var(--g4)"><b>Entrega a:</b> '+
-      (p.entregaInfo.establecimiento.nm||"")+' — '+(p.entregaInfo.establecimiento.dir||"")+
+      escHtml(p.entregaInfo.establecimiento.nm||"")+' — '+escHtml(p.entregaInfo.establecimiento.dir||"")+
       (p.entregaInfo.fecha?'<br><b>Fecha solicitada:</b> '+p.entregaInfo.fecha:'')+
       (p.entregaInfo.hora?'<br><b>Horario:</b> '+p.entregaInfo.hora:'')+
       '</div>':'')+
-    (p.notas?'<div style="margin-top:8px;font-size:13px;color:var(--g4)"><b>Notas:</b> '+p.notas+'</div>':'')+
+    (p.notas?'<div style="margin-top:8px;font-size:13px;color:var(--g4)"><b>Notas:</b> '+escHtml(p.notas)+'</div>':'')+
     (p.puntos?'<div style="margin-top:8px;font-size:13px;color:#B8860B;font-weight:700">🏆 '+fmtPts(p.puntos)+' puntos '+(p.estado==="entregado"||p.estado==="finalizado"?"acreditados":"pendientes de entrega")+'</div>':'')+
     (p.calificacion?'<div style="margin-top:8px;font-size:13px">Calificación: '+"⭐".repeat(p.calificacion.estrellas)+'<br><i>'+(p.calificacion.comentario||"")+'</i></div>':'')+
     (!p.esCanje?renderTrackingPedido(p.estado):'')+
@@ -2406,7 +2413,7 @@ function canjear(pts,nm){
   confirmar("¿Canjear <b>"+fmtPts(pts)+" puntos</b> por <b>"+nm+"</b>?<br><small>Se coordinará con tu próximo pedido.</small>",function(){
     if(saldoPuntos()<pts){toast("⚠️ Ya no tienes suficientes puntos");renderRecompensas();return;}
     var pid="C"+Date.now().toString().slice(-5);
-    PEDIDOS.push({id:pid,ruc:USER.ruc,razon:USER.razon,fecha:new Date().toLocaleDateString(),fechaISO:new Date().toISOString(),esCanje:true,canjePts:pts,canjeNm:nm,estado:"pendiente",total:0,puntos:0});
+    PEDIDOS.push({id:pid,ruc:USER.ruc,razon:USER.razon,fecha:new Date().toLocaleDateString("es-EC"),fechaISO:new Date().toISOString(),esCanje:true,canjePts:pts,canjeNm:nm,estado:"pendiente",total:0,puntos:0});
     guardarPedidos();
     registrarLogPuntos(USER.ruc,"canjeados",pts,"Canje: "+nm);
     renderRecompensas();
@@ -3010,7 +3017,9 @@ function generarWA(pid){
   window.open("https://wa.me/"+tel+"?text="+encodeURIComponent(msg),"_blank");
 }
 
+var _azurBusy=false;
 function generarAzur(pid){
+  if(_azurBusy){toast("⏳ Factura en proceso, espera...");return;}
   var p=PEDIDOS.find(function(x){return x.id===pid;});
   if(!p)return;
   if(!AZUR_TOKEN){toast("⚠️ Configura el token de Azur primero");return;}
@@ -3029,10 +3038,12 @@ function generarAzur(pid){
   var pagoMap={"Efectivo":"01","Transferencia":"20","Cheque":"20","Cheque / Crédito 30 días":"20","Cheque / Crédito 60 días":"20","Cheque / Crédito 90 días":"20"};
   var codigoPago=pagoMap[p.pago]||"20";
   var payload={api_key:AZUR_TOKEN,codigoDoc:"01",emisor:{manejo_interno_secuencia:"SI",fecha_emision:fechaAzur},comprador:{tipo_identificacion:tipoIdent,identificacion:p.ruc,razon_social:dist.razon||p.razon,direccion:(dist.establecimientos&&dist.establecimientos[0]&&dist.establecimientos[0].dir)?dist.establecimientos[0].dir:"S/N",telefono:dist.tel||null,celular:null,correo:dist.correo||null},items:itemsAzur,pagos:[{tipo:codigoPago,total:parseFloat(p.total.toFixed(2))}],informacion_adicional:[{nombre:"Pedido Portal",detalle:"#"+p.id},{nombre:"Forma de Pago",detalle:p.pago}]};
+  _azurBusy=true;
   toast("⏳ Enviando a Azur...");
   fetch(AZUR_API+"factura/emision",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)})
   .then(function(r){return r.json();})
   .then(function(data){
+    _azurBusy=false;
     if(data.creado==="true"||data.creado===true){
       p.azurFactura=data.claveacceso; p.azurEstado="enviado";
       guardarPedidos(); toastGold("🧾 Factura enviada a Azur ✅"); admVerPedido(pid);
@@ -3041,7 +3052,7 @@ function generarAzur(pid){
       toast("⚠️ Azur: "+errores.substring(0,90));
     }
   })
-  .catch(function(e){toast("⚠️ Error de conexión con Azur");});
+  .catch(function(e){_azurBusy=false;toast("⚠️ Error de conexión con Azur");});
 }
 
 function tipoDocLabel(d){
@@ -3348,6 +3359,24 @@ function buscarSRI(){
     .catch(function(e){toast("⚠️ No se pudo consultar el SRI. Llena los datos a mano.");});
 }
 
+function confirmarLimpiarDatos(){
+  if(!confirm("¿Limpiar TODOS los datos de prueba? Se eliminarán pedidos, stock y sesiones. Esta acción no se puede deshacer."))return;
+  ["pyro_pedidos","pyro_stock","pyro_sesion","pyro_dist_extra"].forEach(function(k){try{localStorage.removeItem(k);}catch(e){}});
+  var keys=[];try{for(var i=0;i<localStorage.length;i++)keys.push(localStorage.key(i));}catch(e){}
+  keys.filter(function(k){return k&&(k.startsWith("pyro_cart_")||k.startsWith("pyro_borradores_")||k.startsWith("pyro_tut_")||k.startsWith("pyro_log_puntos_")||k.startsWith("pyro_avatar_")||k.startsWith("pyro_pwa_")||k.startsWith("pyro_biometria_"));}).forEach(function(k){try{localStorage.removeItem(k);}catch(e){}});
+  toast("✅ Datos de prueba eliminados. Recargando...");
+  setTimeout(function(){window.location.reload();},1200);
+}
+
+function copiarNuevoCred(){
+  var rucEl=document.getElementById("nd-cred-ruc");
+  var passEl=document.getElementById("nd-cred-pass");
+  if(!rucEl||!passEl)return;
+  var txt="Usuario: "+rucEl.textContent+"\nContraseña: "+passEl.textContent;
+  if(navigator.clipboard){navigator.clipboard.writeText(txt).then(function(){toast("📋 Credenciales copiadas");}).catch(function(){toast("⚠️ No se pudo copiar");});}
+  else{toast("📋 "+txt);}
+}
+
 function guardarNuevoDist(){
   var btnNd=document.querySelector("#modal-nuevo-dist .btn-p");
   if(btnNd)btnNd.disabled=true;
@@ -3377,7 +3406,11 @@ function guardarNuevoDist(){
   guardarDistribuidores();
   cerrarModal("modal-nuevo-dist");
   renderAdmDist();
-  toast("✅ "+r+" registrado");
+  var credRucEl=document.getElementById("nd-cred-ruc");
+  var credPassEl=document.getElementById("nd-cred-pass");
+  if(credRucEl)credRucEl.textContent=ruc;
+  if(credPassEl)credPassEl.textContent=pw;
+  abrir("modal-cred-nuevo");
   ["nd-razon","nd-empresa","nd-encargado","nd-ruc","nd-tel","nd-correo","nd-pass","nd-dir"].forEach(function(x){var el=document.getElementById(x);if(el)el.value="";});
   if(document.getElementById("nd-tipodoc"))document.getElementById("nd-tipodoc").value="ruc";
   if(document.getElementById("nd-sinvol"))document.getElementById("nd-sinvol").checked=false;
@@ -4397,7 +4430,7 @@ function renderAnalisisABC(){
 function dibujarGraficasCanvas(){
   var cont=document.getElementById("adm-charts-canvas");
   if(!cont)return;
-  var isDark=document.body.classList.contains("dark");
+  var isDark=document.documentElement.getAttribute("data-theme")==="dark";
   var textColor=isDark?"#ccc":"#444";
   var bgCard=isDark?"#2a2a2a":"#f5f5f5";
   cont.innerHTML=
@@ -4788,7 +4821,7 @@ function registrarInstalacionActual(){
     var tipoLabel=tipo==="mobile"?"celular":"computadora";
     PEDIDOS.push({
       id:pid,ruc:USER.ruc,razon:USER.razon,
-      fecha:new Date().toLocaleDateString(),fechaISO:new Date().toISOString(),
+      fecha:new Date().toLocaleDateString("es-EC"),fechaISO:new Date().toISOString(),
       esCanje:true,esBienvenida:false,canjePts:0,
       canjeNm:"🎁 Premio por instalar app en tu "+tipoLabel+" — 20 pts",
       estado:"finalizado",total:0,puntos:20,esInstalacion:true
@@ -4962,7 +4995,7 @@ function abrirPerfil(){
         _filaPerfilDato("📍 Ciudad",USER.ciudad||"—")+
       '</div>'+
       '<button class="btn btn-s btn-full" style="margin-bottom:10px" onclick="mostrarCambioPassOpcional()">🔐 Cambiar contraseña</button>'+
-      '<button class="btn btn-s btn-full" onclick="toggleDarkMode()">🌙 Modo oscuro</button>'+
+      '<button class="btn btn-s btn-full" onclick="cambiarTema()">🌙 Modo oscuro</button>'+
       '<button onclick="document.getElementById(\'perfil-ov\').remove()" style="display:block;width:100%;margin-top:14px;padding:12px;border:none;background:var(--g1);border-radius:12px;font-size:14px;font-weight:600;cursor:pointer;color:var(--g4)">Cerrar</button>'+
     '</div>';
   document.body.appendChild(ov);

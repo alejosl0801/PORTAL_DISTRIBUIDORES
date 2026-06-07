@@ -1,4 +1,4 @@
-var CACHE_NAME = 'pyro-v7';
+var CACHE_NAME = 'pyro-v8';
 var CACHE_FILES = [
   './manifest.json',
   './img/logo.jpg'
