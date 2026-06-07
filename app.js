@@ -4476,6 +4476,14 @@ function renderBannerInstalacion(){
   // Determinar qué le falta
   var falta=esMobile?"computadora":"celular";
   var faltaIco=esMobile?"💻":"📱";
+  var esIphone=/iPhone|iPad|iPod/i.test(navigator.userAgent);
+  var subtexto=(!esMobile&&esIphone)
+    ?"Instala la app en tu <b>computadora</b> (Chrome) y reclámalos ahora."
+    :esMobile
+      ?"Instala la app en tu <b>computadora</b> (Chrome) y reclámalos ahora."
+      :esIphone
+        ?"Instala la app en tu <b>iPhone</b> usando <b>Safari</b> y reclámalos ahora."
+        :"Instala la app en tu <b>celular</b> (Android: Chrome) y reclámalos ahora.";
   el.style.display="";
   el.innerHTML=
     '<div style="background:linear-gradient(135deg,#fff7e0,#ffe0a0);border:2px solid var(--oro);border-radius:16px;padding:14px 16px;margin-bottom:16px">'+
@@ -4483,7 +4491,7 @@ function renderBannerInstalacion(){
         '<span style="font-size:32px">'+faltaIco+'</span>'+
         '<div style="flex:1">'+
           '<div style="font-size:13px;font-weight:800;color:var(--negro);margin-bottom:2px">¡Tienes 20 puntos esperándote!</div>'+
-          '<div style="font-size:12px;color:#666;line-height:1.4">Instala la app en tu <b>'+falta+'</b> y reclámalos ahora.</div>'+
+          '<div style="font-size:12px;color:#666;line-height:1.4">'+subtexto+'</div>'+
         '</div>'+
       '</div>'+
       '<button class="btn btn-p btn-full" style="margin-top:10px;font-size:13px" onclick="mostrarGuiaInstalacion(\''+falta+'\')">'+
@@ -4493,18 +4501,27 @@ function renderBannerInstalacion(){
 }
 
 function mostrarGuiaInstalacion(dispositivo){
+  var esIphone=/iPhone|iPad|iPod/i.test(navigator.userAgent);
   var esCel=dispositivo==="celular";
-  var pasos=esCel?[
-    {ico:"📱",t:"Abre este portal en tu celular",d:"Desde tu celular, abre el navegador (Chrome en Android o Safari en iPhone) y entra a: alejosl0801.github.io/PORTAL_DISTRIBUIDORES"},
-    {ico:"⚙️",t:"Android: toca el menú ⋮",d:"En Chrome, toca los 3 puntos (⋮) arriba a la derecha. Luego toca 'Instalar app' o 'Agregar a pantalla de inicio'."},
-    {ico:"📤",t:"iPhone: toca el botón Compartir",d:"En Safari, toca el ícono de compartir (□↑) en la barra inferior. Luego toca 'Agregar a pantalla de inicio' y confirma."},
-    {ico:"🎁",t:"¡Listo! Abre la app instalada",d:"Una vez instalada, ábrela desde el ícono en tu pantalla. Recibirás 20 puntos automáticamente. ¡Disfruta tu premio!"}
-  ]:[
-    {ico:"💻",t:"Abre este portal en tu computadora",d:"Desde tu PC o Mac, abre Chrome y entra a: alejosl0801.github.io/PORTAL_DISTRIBUIDORES e inicia sesión."},
-    {ico:"⬇️",t:"Busca el ícono de instalar",d:"En la barra de direcciones de Chrome, busca el ícono de instalación (⊕ o una pantalla con flecha). Haz clic en él."},
+  var pasosAndroid=[
+    {ico:"📱",t:"Abre en Chrome (Android)",d:"En tu celular Android, abre Chrome y entra a: alejosl0801.github.io/PORTAL_DISTRIBUIDORES"},
+    {ico:"⚙️",t:"Toca el menú ⋮",d:"Toca los 3 puntos (⋮) arriba a la derecha de Chrome. Luego toca 'Instalar app' o 'Agregar a pantalla de inicio'."},
+    {ico:"✅",t:"Confirma la instalación",d:"Toca 'Instalar' en el popup. La app aparecerá en tu pantalla de inicio como cualquier otra app."},
+    {ico:"🎁",t:"¡Listo! Abre la app instalada",d:"Ábrela desde tu pantalla de inicio. Recibirás 20 puntos automáticamente. ¡Disfruta tu premio!"}
+  ];
+  var pasosIphone=[
+    {ico:"🍎",t:"Abre en Safari (iPhone/iPad)",d:"En tu iPhone o iPad, abre Safari — NO Chrome. Entra a: alejosl0801.github.io/PORTAL_DISTRIBUIDORES\n\n⚠️ Solo funciona en Safari, no en Chrome."},
+    {ico:"📤",t:"Toca el botón Compartir",d:"Toca el ícono de compartir (□↑) en la barra inferior de Safari. Si no lo ves, desliza la barra hacia arriba."},
+    {ico:"🏠",t:"Toca 'Agregar a pantalla de inicio'",d:"Desplázate en el menú y toca 'Agregar a pantalla de inicio'. Dale un nombre y toca 'Agregar' arriba a la derecha."},
+    {ico:"🎁",t:"¡Listo! Abre la app instalada",d:"Ábrela desde tu pantalla de inicio. Recibirás 20 puntos automáticamente. ¡Disfruta tu premio!"}
+  ];
+  var pasosDesktop=[
+    {ico:"💻",t:"Abre en Chrome (PC o Mac)",d:"Desde tu PC o Mac, abre Chrome y entra a: alejosl0801.github.io/PORTAL_DISTRIBUIDORES e inicia sesión."},
+    {ico:"⬇️",t:"Busca el ícono de instalar",d:"En la barra de direcciones de Chrome verás un ícono de instalación (⊕ o una pantalla con flecha ↓). Haz clic en él."},
     {ico:"✅",t:"Confirma la instalación",d:"Aparecerá un popup que dice 'Instalar PyroShield'. Haz clic en 'Instalar'. La app se abrirá como ventana independiente."},
     {ico:"🎁",t:"¡Listo! Abre la app instalada",d:"Ábrela desde el acceso directo en tu escritorio. Recibirás 20 puntos automáticamente al abrirla instalada."}
   ];
+  var pasos=esCel?(esIphone?pasosIphone:pasosAndroid):pasosDesktop;
   // Mostrar overlay con los pasos
   var paso=0;
   var ov=document.createElement("div");
