@@ -1,4 +1,4 @@
-var CACHE_NAME = 'pyro-v6';
+var CACHE_NAME = 'pyro-v7';
 var CACHE_FILES = [
   './manifest.json',
   './img/logo.jpg'
@@ -30,9 +30,14 @@ self.addEventListener('activate', function(e) {
 
 self.addEventListener('fetch', function(e) {
   var url = e.request.url;
+  var host = self.location.hostname;
 
-  // Network-first para APIs externas
-  if (url.indexOf('azur.com.ec') !== -1 || url.indexOf('googleapis.com') !== -1 || url.indexOf('google.com') !== -1 || url.indexOf('script.google.com') !== -1) {
+  // Network-first para APIs externas y proxies
+  if (url.indexOf('azur.com.ec') !== -1 ||
+      url.indexOf('workers.dev') !== -1 ||
+      url.indexOf('googleapis.com') !== -1 ||
+      url.indexOf('google.com') !== -1 ||
+      url.indexOf('script.google.com') !== -1) {
     e.respondWith(
       fetch(e.request).catch(function() {
         return caches.match(e.request);
@@ -42,13 +47,14 @@ self.addEventListener('fetch', function(e) {
   }
 
   // index.html nunca se cachea — siempre red para que los ?v= nuevos carguen
-  if (url.indexOf('index.html') !== -1 || url.endsWith('/') && (url.indexOf('alejosl0801.github.io') !== -1 || url.indexOf('localhost') !== -1)) {
+  if (url.indexOf('index.html') !== -1 ||
+      (url.endsWith('/') && (url.indexOf(host) !== -1 || url.indexOf('localhost') !== -1))) {
     e.respondWith(fetch(e.request).catch(function(){return caches.match(e.request);}));
     return;
   }
 
   // Network-first para archivos propios del portal (siempre descarga lo más nuevo)
-  if (url.indexOf('alejosl0801.github.io') !== -1 || url.indexOf('localhost') !== -1 || url.indexOf('127.0.0.1') !== -1) {
+  if (url.indexOf(host) !== -1 || url.indexOf('localhost') !== -1 || url.indexOf('127.0.0.1') !== -1) {
     e.respondWith(
       fetch(e.request).then(function(resp) {
         var respClone = resp.clone();

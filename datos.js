@@ -53,7 +53,7 @@ var AZUR_API = "https://azur-proxy.alejosl0801.workers.dev/";
 // ════════════════════ PROMOCIONES ════════════════════
 var PROMOS = [
   {
-    id: "p3", estado: "activa",
+    id: "p3", estado: "finalizada",
     titulo: "Promo de la Semana",
     fechaVence: "2026-06-06",
     items: [

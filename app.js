@@ -443,7 +443,7 @@ function finalizarLogin(u,pw){
     }
   }
   // Alerta pedidos pendientes >30 días
-  if(!USER.esAdmin&&USER.rol!=="impresion"){setTimeout(function(){var ahora=new Date();var viejos=PEDIDOS.filter(function(p){if(p.ruc!==USER.ruc||p.estado!=="pendiente")return false;var f=parseFechaPed(p);return f&&(ahora-f)>30*24*60*60*1000;});if(viejos.length)toast("⏰ Tienes "+viejos.length+" pedido(s) en 'pendiente' hace más de 30 días — contacta a PyroShield");},2500);}
+  if(!USER.esAdmin&&USER.rol!=="impresion"){setTimeout(function(){var ahora=new Date();var viejos=PEDIDOS.filter(function(p){if(p.ruc!==USER.ruc||p.estado!=="pendiente")return false;var f=parseFechaPed(p);return f&&(ahora-f)>30*24*60*60*1000;});if(viejos.length)toast("⏰ Tienes "+viejos.length+" pedidos en 'pendiente' hace más de 30 días — contacta a PyroShield");},2500);}
   if(USER.esAdmin){
     backupAutomatico(false);
     sincronizarDesdeNube(null);
@@ -564,7 +564,7 @@ function logout(){
 function mostrar(id){document.querySelectorAll(".screen").forEach(function(s){s.classList.remove("active");});document.getElementById(id).classList.add("active");window.scrollTo(0,0);}
 
 function mostrarSaludoFlash(){
-  var nm=USER.empresa||USER.razon.split(" ").slice(0,2).join(" ");
+  var nm=USER.empresa||(USER.razon||"").split(" ").slice(0,2).join(" ");
   var d=document.createElement("div");
   d.className="saludo-flash";
   d.textContent="¡Hola "+nm+"! Es un gusto tenerte de vuelta 🔥";
@@ -908,29 +908,26 @@ function renderInsignias(){
       '</div>'
     :'')+
     // Botón ver todos
-    '<button class="btn btn-s btn-full" onclick="abrirModalLogros()" style="font-size:13px">🏅 Ver los 65 logros</button>';
+    '<button type="button" class="btn btn-s btn-full" onclick="abrirModalLogros()" style="font-size:13px">🏅 Ver los '+_logrosDefinicion().length+' logros</button>';
 }
 
 function abrirModalLogros(){
   var ins=_logrosDefinicion();
+  // Niveles 1-9 tal como están ordenados en _logrosDefinicion()
+  // Nivel 1: índices 0-5 (6 logros), Nivel 2: 6-13 (8), Nivel 3: 14-18 (5),
+  // Nivel 4: 19-28 (10), Nivel 5: 29-43 (15), Nivel 6: 44-57 (14),
+  // Nivel 7: 58-65 (8), Nivel 8: 66-70 (5), Nivel 9: 71-75 (5)
+  var total=ins.length;
   var categorias=[
-    {nm:"🥇 Primeras veces",desde:0,hasta:9},
-    {nm:"📦 Por pedidos",desde:10,hasta:22},
-    {nm:"💰 Por compras ($)",desde:23,hasta:31},
-    {nm:"🎯 Pedido grande",desde:32,hasta:36},
-    {nm:"🚛 Unidades pedidas",desde:37,hasta:41},
-    {nm:"🗺️ Variedad productos",desde:42,hasta:46},
-    {nm:"📋 Items por pedido",desde:47,hasta:49},
-    {nm:"📅 Constancia mensual",desde:50,hasta:54},
-    {nm:"⚡ Constancia semanal",desde:55,hasta:58},
-    {nm:"🏆 Puntos acumulados",desde:59,hasta:65},
-    {nm:"🎁 Canjes",desde:66,hasta:68},
-    {nm:"🗓️ Pedidos este año",desde:69,hasta:72},
-    {nm:"🎲 Hábitos",desde:73,hasta:82},
-    {nm:"🏷️ Descuentos vol.",desde:83,hasta:85},
-    {nm:"❤️ Favoritos",desde:86,hasta:88},
-    {nm:"⚙️ Gestión",desde:89,hasta:92},
-    {nm:"🦄 Hitos especiales",desde:93,hasta:99}
+    {nm:"⭐ Nivel 1 — Inmediatos",desde:0,hasta:5},
+    {nm:"🥇 Nivel 2 — Primeras acciones",desde:6,hasta:13},
+    {nm:"🔑 Nivel 3 — Catálogo y variedad",desde:14,hasta:18},
+    {nm:"💵 Nivel 4 — Volumen inicial",desde:19,hasta:28},
+    {nm:"📈 Nivel 5 — Crecimiento",desde:29,hasta:43},
+    {nm:"💰 Nivel 6 — Intermedio",desde:44,hasta:57},
+    {nm:"🏦 Nivel 7 — Avanzado",desde:58,hasta:65},
+    {nm:"💎 Nivel 8 — Experto",desde:66,hasta:70},
+    {nm:"👑 Nivel 9 — Élite",desde:71,hasta:total-1}
   ];
   var html='<div class="mhandle"></div>'+
     '<h3 style="margin-bottom:4px">🏅 Mis logros</h3>'+
@@ -1505,7 +1502,7 @@ function animarVueloCarrito(id){
   var destEl=document.getElementById("bnav-carrito");
   if(!qb||!destEl)return;
   var p=PRODUCTOS.find(function(x){return x.id===id;});
-  var emoji=(p&&p.img)?'🛒':'🛒';
+  var emoji='🛒';
   var srcRect=qb.getBoundingClientRect();
   var dstRect=destEl.getBoundingClientRect();
   var el=document.createElement("div");
@@ -1593,7 +1590,7 @@ function renderCarrito(){
       '</div>'+
     '</div>';
   }).join("");
-  if(omitidos.length)html='<div style="background:var(--amarc);border:1.5px solid var(--amar);border-radius:10px;padding:10px 14px;margin-bottom:10px;font-size:12px;color:#8a6600">⚠️ '+omitidos.length+' producto(s) agotado(s) fueron omitidos: '+omitidos.join(", ")+'</div>'+html;
+  if(omitidos.length)html='<div style="background:var(--amarc);border:1.5px solid var(--amar);border-radius:10px;padding:10px 14px;margin-bottom:10px;font-size:12px;color:#8a6600">⚠️ '+omitidos.length+' productos agotado(s) fueron omitidos: '+omitidos.join(", ")+'</div>'+html;
   cont.innerHTML=html;
   activarSwipeCarrito();
   var iva=parseFloat((subtotal*IVA).toFixed(2));
@@ -1898,7 +1895,7 @@ function confirmarPedido(){
     subtotal+=pr*it.cant; ptsTotal+=pts;
     items.push({id:p.id,nm:p.nm,cant:it.cant,pv:p.pv,pr:pr,descPct:rv.descPct,pts:pts,costo:p.costo||0});
   });
-  if(stockError.length){alert("⚠️ Stock insuficiente:\n"+stockError.join("\n")+"\n\nAjusta las cantidades antes de confirmar.");return;}
+  if(stockError.length){if(btnConf)btnConf.disabled=false;toast("⚠️ Stock insuficiente: "+stockError.join(", "));return;}
   if(!items.length){toast("⚠️ No hay productos válidos en el carrito");return;}
   var iva=parseFloat((subtotal*IVA).toFixed(2)), total=parseFloat((subtotal+iva).toFixed(2));
   var pid="P"+Date.now()+Math.floor(Math.random()*1000);
@@ -2014,7 +2011,7 @@ function renderHistorial(){
       '<div class="ped-top"><div><div class="ped-id">'+(p.esBienvenida?"🎁 Bienvenida":(p.esCanje?"Canje":"Pedido"))+' #'+p.id+'</div><div style="font-size:12px;color:var(--g3)">'+p.fecha+'</div></div>'+
       '<span class="est-chip '+estadoClass(p.estado)+'">'+estadoLabel(p.estado)+'</span></div>'+
       '<div class="ped-total">'+fmt$(p.total)+'</div>'+
-      (p.esCanje?'<div class="ped-items">🎁 '+p.canjeNm+'</div>':'<div class="ped-items">'+(p.items?p.items.length:0)+' producto(s) · '+p.pago+'</div>')+
+      (p.esCanje?'<div class="ped-items">🎁 '+p.canjeNm+'</div>':'<div class="ped-items">'+(p.items?p.items.length:0)+' productos · '+p.pago+'</div>')+
       ptsHtml+califShow+
       '<div class="ped-acc">'+accBtns+'</div>'+
     '</div>';
@@ -2073,7 +2070,7 @@ function repetirPedido(pid){
     else CARRITO.push({id:it.id,cant:it.cant});
   });
   guardarCarrito(); actualizarBadge();
-  if(omitidos.length)toast("⚠️ "+omitidos.length+" producto(s) no disponibles omitidos");
+  if(omitidos.length)toast("⚠️ "+omitidos.length+" productos no disponibles omitidos");
   else toast("✏️ Pedido cargado al carrito.");
   irTab("carrito");
 }
@@ -2607,14 +2604,7 @@ function admVerPedido(pid){
   abrir("modal-pedido-det");
 }
 
-function parseFechaPed(p){
-  if(p.fechaISO)return new Date(p.fechaISO);
-  if(p.fecha&&p.fecha.indexOf("/")!==-1){
-    var partes=p.fecha.split("/");
-    return new Date(parseInt(partes[2],10),parseInt(partes[1],10)-1,parseInt(partes[0],10));
-  }
-  return new Date(p.fecha);
-}
+function parseFechaPed(p){try{if(p.fechaISO)return new Date(p.fechaISO);var parts=(p.fecha||"").split("/");if(parts.length===3)return new Date(parseInt(parts[2],10),parseInt(parts[1],10)-1,parseInt(parts[0],10));return new Date(p.fecha||0);}catch(e){return new Date(0);}}
 
 function renderResumenDist(ruc){
   var peds=PEDIDOS.filter(function(p){return p.ruc===ruc&&!p.esCanje;});
@@ -2917,12 +2907,12 @@ function tipoDocLabel(d){
 function renderAdmAlertas(){
   var alertas=[];var ahora=new Date();
   var pedViejos=PEDIDOS.filter(function(p){if(p.estado!=="pendiente"||p.esCanje||p.esBienvenida)return false;var f=parseFechaPed(p);return f&&(ahora-f)>30*24*60*60*1000;});
-  if(pedViejos.length)alertas.push({tipo:"rojo",ico:"⏰",msg:pedViejos.length+" pedido(s) en 'pendiente' hace más de 30 días",accion:"admTab('pedidos')"});
+  if(pedViejos.length)alertas.push({tipo:"rojo",ico:"⏰",msg:pedViejos.length+" pedidos en 'pendiente' hace más de 30 días",accion:"admTab('pedidos')"});
   var umbrales={};try{umbrales=JSON.parse(localStorage.getItem("pyro_umbrales")||"{}");}catch(e){}
   var stockCrit=PRODUCTOS.filter(function(p){var u=umbrales[p.id]!=null?umbrales[p.id]:20;return p.stock<=u&&p.stock>0;});
-  if(stockCrit.length)alertas.push({tipo:"amar",ico:"📦",msg:stockCrit.length+" producto(s) con stock bajo umbral",accion:"admTab('stock')"});
+  if(stockCrit.length)alertas.push({tipo:"amar",ico:"📦",msg:stockCrit.length+" productos con stock bajo umbral",accion:"admTab('stock')"});
   var agotados=PRODUCTOS.filter(function(p){return p.stock<=0;});
-  if(agotados.length)alertas.push({tipo:"rojo",ico:"🚨",msg:agotados.length+" producto(s) agotados",accion:"admTab('stock')"});
+  if(agotados.length)alertas.push({tipo:"rojo",ico:"🚨",msg:agotados.length+" productos agotados",accion:"admTab('stock')"});
   var inactivos=DISTRIBUIDORES.filter(function(d){
     if(d.esAdmin||d.rol==="impresion")return false;
     var misPeds=PEDIDOS.filter(function(p){return p.ruc===d.ruc&&!p.esCanje;});
@@ -2954,8 +2944,9 @@ function exportarExcelDist(){
     +rows.map(function(r){return'<Row>'+r.map(function(c){return'<Cell><Data ss:Type="String">'+String(c).replace(/&/g,"&amp;").replace(/</g,"&lt;")+'</Data></Cell>';}).join("")+'</Row>';}).join("")
     +'</Table></Worksheet></Workbook>';
   var blob=new Blob([xml],{type:"application/vnd.ms-excel"});
-  var a=document.createElement("a");a.href=URL.createObjectURL(blob);
+  var a=document.createElement("a");var u=URL.createObjectURL(blob);a.href=u;
   a.download="distribuidores_pyroshield_"+new Date().toISOString().slice(0,10)+".xls";a.click();
+  setTimeout(function(){URL.revokeObjectURL(u);},1000);
 }
 function renderAdmDist(){
   if(USER&&USER.rol==="impresion")return;
@@ -3160,7 +3151,7 @@ function guardarPreciosEsp(ruc){
     } else {
       var val=parseFloat(v);
       if(val<(p.costo||0)){
-        errores.push(p.nombre+": mínimo $"+p.costo.toFixed(2));
+        errores.push((p.nm||p.id)+": mínimo $"+(p.costo||0).toFixed(2));
       } else {
         d.preciosEsp[p.id]=val;
       }
@@ -3243,8 +3234,8 @@ function guardarNuevoDist(){
 }
 
 // ════════════════════ ADMIN STOCK ════════════════════
-function cargarUmbrales(){try{return JSON.parse(localStorage.getItem("pyro_umbral")||"{}");}catch(e){return{};}}
-function guardarUmbral(id,val){var u=cargarUmbrales();u[id]=val;try{localStorage.setItem("pyro_umbral",JSON.stringify(u));}catch(e){}}
+function cargarUmbrales(){try{return JSON.parse(localStorage.getItem("pyro_umbrales")||"{}");}catch(e){return{};}}
+function guardarUmbral(id,val){var u=cargarUmbrales();u[id]=val;try{localStorage.setItem("pyro_umbrales",JSON.stringify(u));}catch(e){}}
 
 function renderAdmStock(){
   if(USER&&USER.rol==="impresion")return;
@@ -3303,7 +3294,7 @@ function renderAdmStock(){
   cont.innerHTML=topHtml+html;
   // Notificación de productos bajo umbral
   if(bajosUmbral.length&&typeof Notification!=="undefined"&&Notification.permission==="granted"){
-    new Notification("PyroShield — Stock bajo umbral",{body:bajosUmbral.length+" producto(s) bajo umbral: "+bajosUmbral.slice(0,3).join(", ")+(bajosUmbral.length>3?"…":""),icon:"img/logo.jpg"});
+    new Notification("PyroShield — Stock bajo umbral",{body:bajosUmbral.length+" productos bajo umbral: "+bajosUmbral.slice(0,3).join(", ")+(bajosUmbral.length>3?"…":""),icon:"img/logo.jpg"});
   }
 }
 
@@ -3333,6 +3324,7 @@ function ajustarStock(id,val){
 function exportarExcelStock(){
   function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
   var costos=cargarCostos();
+  var umbComp=cargarUmbrales();
   var cabeceras=["ID","Nombre","Categoría","Subcategoría","Stock","Estado","Costo Unitario"];
   var filas=[];
   Object.keys(CATS).forEach(function(ck){
@@ -3340,7 +3332,7 @@ function exportarExcelStock(){
     cat.subs.forEach(function(sn){
       PRODUCTOS.filter(function(p){return p.cat===ck&&p.sub===sn;}).forEach(function(p){
         var costoAct=costos[p.id]!=null?costos[p.id]:p.costo;
-        filas.push([p.id,p.nm,cat.nombre,sn,p.stock,p.ago?"Agotado":p.stock<20?"Bajo":"OK",costoAct]);
+        var umbStock=umbComp[p.id]||20;filas.push([p.id,p.nm,cat.nombre,sn,p.stock,p.ago?"Agotado":p.stock<umbStock?"Bajo":"OK",costoAct]);
       });
     });
   });
@@ -3665,7 +3657,7 @@ function iniciarNotificacionesAdmin(){
     var canjesPend=PEDIDOS.filter(function(p){return p.estado==="pendiente"&&p.esCanje;}).length;
     if(pendientes>0||canjesPend>0){
       var msg=[];
-      if(pendientes>0)msg.push(pendientes+" pedido(s) pendiente(s)");
+      if(pendientes>0)msg.push(pendientes+" pedidos pendiente(s)");
       if(canjesPend>0)msg.push(canjesPend+" canje(s) pendiente(s)");
       new Notification("PyroShield — Pendientes sin procesar",{body:"Tienes "+msg.join(" y ")+" de procesar.",icon:"img/logo.jpg"});
     }
@@ -4059,8 +4051,6 @@ window.addEventListener("load",function(){
 });
 
 // ════════ FEATURE 11/12/13/14/25/82/83/84/87 — Dashboard Admin ════════
-function parseFechaPed(p){try{if(p.fechaISO)return new Date(p.fechaISO);var parts=(p.fecha||"").split("/");if(parts.length===3)return new Date(parseInt(parts[2]),parseInt(parts[1])-1,parseInt(parts[0]));return new Date(p.fecha||0);}catch(e){return new Date(0);}}
-function getCostoProducto(id){var p=PRODUCTOS.find(function(x){return x.id===id;});if(!p)return 0;try{var c=JSON.parse(localStorage.getItem("pyro_costos")||"{}");return c[id]!=null?c[id]:p.costo;}catch(e){return p.costo;}}
 
 function renderGraficoVentas6Meses(){
   var meses=["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
@@ -4163,7 +4153,7 @@ function abrirEditarDescVol(id){
   var el=document.getElementById("descvol-prod-nm");
   if(el)el.textContent=p.nm+" ("+id+")";
   _renderDescVolRows(p.descVol||[]);
-  abrirModal("modal-descvol");
+  abrir("modal-descvol");
 }
 function _renderDescVolRows(tiers){
   var c=document.getElementById("descvol-rows");if(!c)return;

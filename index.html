@@ -2,11 +2,13 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<meta name="description" content="Portal exclusivo para distribuidores PyroShield">
 <title>PyroShield — Portal Distribuidores</title>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&family=Barlow:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<link rel="stylesheet" href="./style.css?v=20260607">
+<link rel="stylesheet" href="./style.css?v=20260708">
 <link rel="manifest" href="manifest.json">
 <link rel="icon" type="image/jpeg" href="./img/logo.jpg">
 <meta name="theme-color" content="#C0392B">
@@ -250,7 +252,6 @@
 </div>
 
 <!-- Tutorial reemplazado por tips por sección (mostrarTipSeccion) -->
-<div id="tutorial" style="display:none"></div>
 
 <!-- MODALES -->
 <div class="ov" id="modal-contacto">
@@ -366,7 +367,7 @@
     </div>
     <div id="calif-ok-msg" style="display:none;text-align:center;font-size:14px;color:var(--verde);font-weight:600;padding:10px">¡Gracias! Nos alegra que todo haya salido perfecto 🔥</div>
     <button class="btn btn-p btn-full" style="margin-top:8px" onclick="enviarCalif()">Enviar calificación</button>
-    <button class="btn btn-full" style="margin-top:8px;background:var(--g1);color:var(--g3)" onclick="cerrar('modal-calif')">Ahora no</button>
+    <button type="button" class="btn btn-full" style="margin-top:8px;background:var(--g1);color:var(--g3)" onclick="cerrarModal('modal-calif')">Ahora no</button>
   </div>
 </div>
 
@@ -427,8 +428,8 @@
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="./datos.js?v=20260607"></script>
-<script src="./app.js?v=20260607"></script>
+<script src="./datos.js?v=20260708"></script>
+<script src="./app.js?v=20260708"></script>
 </div><!-- /app-shell -->
 </body>
 </html>
