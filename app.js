@@ -113,7 +113,7 @@ var TUT_TIPS={
   recompensas:[
     {ico:"🏆",t:"Aquí el dinero trabaja para ti",d:"Cada pedido que confirmas genera puntos automáticamente. Los puntos se acreditan cuando el pedido es entregado. No tienes que hacer NADA extra — solo pedir como siempre."},
     {ico:"💳",t:"Premios reales, no puntos vacíos",d:"Tus puntos se canjean por: 🍗 Combo KFC (650 pts), 💳 Tarjeta $15 (1.500 pts), 💳 Tarjeta $30 (3.000 pts), 💳 Tarjeta $50 (5.000 pts). Dinero real de vuelta a tu bolsillo."},
-    {ico:"🎯",t:"Los logros: tu máquina de puntos extra",d:"Completa logros (como hacer tu 1er pedido o comprar $500) y recibe puntos adicionales permanentes. Hay 100 logros disponibles. Cada uno es un pequeño tesoro esperándote."},
+    {ico:"🎯",t:"Los logros: tu máquina de puntos extra",d:"Completa logros (como hacer tu 1er pedido o comprar $500) y recibe puntos adicionales permanentes. Hay 65 logros disponibles. Cada uno es un pequeño tesoro esperándote."},
     {ico:"⚡",t:"Estrategia ganadora: pide en volumen",d:"Un pedido de $500 te genera más puntos que diez pedidos de $50 — Y activa descuentos por volumen. Doble beneficio: más margen de ganancia + más puntos. Así piensan los distribuidores top."},
     {ico:"🎁",t:"Tu próximo premio está más cerca de lo que crees",d:"Mira la barra de progreso de cada premio. ¿A cuántos puntos estás? Tal vez solo necesitas UN pedido más. Canjea, disfruta, y vuelve a acumular. Es un ciclo que no para."}
   ],
@@ -767,7 +767,7 @@ function _logrosDefinicion(){
 
     // ── NIVEL 2: Primeras acciones clave ──
     {ico:"🥇",nm:"Primer pedido",          desc:"Completa tu primer pedido",               ok:n>=1,            bonoPts:3},
-    {ico:"📦",nm:"Primera entrega",        desc:"Pide con envío a tu local",               ok:tieneEntrega,    bonoPts:3},
+    {ico:"🚚",nm:"Primera entrega",        desc:"Pide con envío a tu local",               ok:tieneEntrega,    bonoPts:3},
     {ico:"🏪",nm:"Primer retiro",          desc:"Pide con retiro en bodega",               ok:tieneRetiro,     bonoPts:3},
     {ico:"🏷️",nm:"Cazador de descuentos",  desc:"Usa descuento por volumen en 1 pedido",   ok:pedConDesc>=1,   bonoPts:2},
     {ico:"📲",nm:"Siempre conectado",       desc:"10 pedidos totales (incluye pendientes)", ok:ttodos>=10,      bonoPts:2},
@@ -789,7 +789,7 @@ function _logrosDefinicion(){
     {ico:"📊",nm:"Pedido de $100",         desc:"Un solo pedido de $100 o más",            ok:maxPed>=100,     bonoPts:6},
     {ico:"📦",nm:"50 unidades",            desc:"50 unidades pedidas en total",            ok:items>=50,       bonoPts:5},
     {ico:"🔥",nm:"En racha",               desc:"5 pedidos completados",                   ok:n>=5,            bonoPts:5},
-    {ico:"🎯",nm:"Sin desperdiciar",       desc:"0 cancelados con 5+ pedidos completados", ok:canc.length===0&&n>=5, bonoPts:5},
+    {ico:"✨",nm:"Sin desperdiciar",       desc:"0 cancelados con 5+ pedidos completados", ok:canc.length===0&&n>=5, bonoPts:5},
     {ico:"⚡",nm:"2 semanas activo",       desc:"Pedidos en 2 semanas distintas",          ok:semanas>=2,      bonoPts:4},
     {ico:"📅",nm:"2 meses activo",         desc:"Pedidos en 2 meses distintos",            ok:meses>=2,        bonoPts:4},
     {ico:"🎄",nm:"5 pedidos este año",     desc:"5 pedidos en el año en curso",            ok:pedEsteAnio>=5,  bonoPts:5},
@@ -802,7 +802,7 @@ function _logrosDefinicion(){
     {ico:"📈",nm:"Pedido de $250",         desc:"Un solo pedido de $250 o más",            ok:maxPed>=250,     bonoPts:12},
     {ico:"🏗️",nm:"200 unidades",           desc:"200 unidades pedidas en total",           ok:items>=200,      bonoPts:8},
     {ico:"🗺️",nm:"Gran explorador",        desc:"Pide 8 productos distintos",              ok:prods>=8,        bonoPts:7},
-    {ico:"🎯",nm:"Pedido masivo",          desc:"Pedido con 10 o más productos distintos", ok:maxItems>=10,    bonoPts:7},
+    {ico:"🧩",nm:"Pedido masivo",          desc:"Pedido con 10 o más productos distintos", ok:maxItems>=10,    bonoPts:7},
     {ico:"⭐",nm:"Cliente activo",         desc:"15 pedidos completados",                  ok:n>=15,           bonoPts:10},
     {ico:"🔋",nm:"4 semanas activo",       desc:"Pedidos en 4 semanas distintas",          ok:semanas>=4,      bonoPts:7},
     {ico:"🗓️",nm:"3 meses seguidos",       desc:"Pedidos en 3 meses distintos",            ok:meses>=3,        bonoPts:7},
@@ -836,9 +836,9 @@ function _logrosDefinicion(){
     {ico:"🏦",nm:"Gran comprador",         desc:"$1.000 en compras totales",               ok:total>=1000,     bonoPts:56},
     {ico:"💣",nm:"Pedido de $1.000",       desc:"Un solo pedido de $1.000 o más",          ok:maxPed>=1000,    bonoPts:45},
     {ico:"🏭",nm:"1.000 unidades",         desc:"1.000 unidades pedidas en total",         ok:items>=1000,     bonoPts:30},
-    {ico:"🏅",nm:"Cliente fiel",           desc:"50 pedidos completados",                  ok:n>=50,           bonoPts:35},
+    {ico:"🎗️",nm:"Cliente fiel",           desc:"50 pedidos completados",                  ok:n>=50,           bonoPts:35},
     {ico:"🌿",nm:"9 meses activo",         desc:"Pedidos en 9 meses distintos",            ok:meses>=9,        bonoPts:25},
-    {ico:"🏅",nm:"30 pedidos este año",    desc:"30 pedidos en el año en curso",           ok:pedEsteAnio>=30, bonoPts:22},
+    {ico:"📆",nm:"30 pedidos este año",    desc:"30 pedidos en el año en curso",           ok:pedEsteAnio>=30, bonoPts:22},
     {ico:"🏆",nm:"5.000 puntos",           desc:"Acumula 5.000 puntos",                    ok:pts>=5000,       bonoPts:20},
     {ico:"🎖️",nm:"Medalla de honor",       desc:"3 canjes + 10 pedidos + 6 meses activo", ok:canjes>=3&&n>=10&&meses>=6, bonoPts:35},
 
@@ -908,7 +908,7 @@ function renderInsignias(){
       '</div>'
     :'')+
     // Botón ver todos
-    '<button class="btn btn-s btn-full" onclick="abrirModalLogros()" style="font-size:13px">🏅 Ver los 100 logros</button>';
+    '<button class="btn btn-s btn-full" onclick="abrirModalLogros()" style="font-size:13px">🏅 Ver los 65 logros</button>';
 }
 
 function abrirModalLogros(){
@@ -933,7 +933,7 @@ function abrirModalLogros(){
     {nm:"🦄 Hitos especiales",desde:93,hasta:99}
   ];
   var html='<div class="mhandle"></div>'+
-    '<h3 style="margin-bottom:4px">🏅 Mis 100 logros</h3>'+
+    '<h3 style="margin-bottom:4px">🏅 Mis logros</h3>'+
     '<p style="font-size:12px;color:var(--g3);margin-bottom:14px">Cada logro desbloqueado suma puntos extra a tu saldo permanentemente</p>';
   categorias.forEach(function(cat){
     var grupo=ins.slice(cat.desde,cat.hasta+1);
