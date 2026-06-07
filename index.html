@@ -8,7 +8,7 @@
 <title>PyroShield — Portal Distribuidores</title>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&family=Barlow:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<link rel="stylesheet" href="./style.css?v=20260708">
+<link rel="stylesheet" href="./style.css?v=20260709">
 <link rel="manifest" href="manifest.json">
 <link rel="icon" type="image/jpeg" href="./img/logo.jpg">
 <meta name="theme-color" content="#C0392B">
@@ -69,6 +69,7 @@
     </div>
     <div class="topbar-r">
       <div class="topbar-pts"><span class="v" id="topbar-pts-v">0</span><span class="l">pts</span></div>
+      <button id="topbar-avatar-btn" onclick="abrirPerfil()" style="width:36px;height:36px;border-radius:50%;border:2px solid var(--oro);background:var(--rojo);color:#fff;font-weight:800;font-size:13px;cursor:pointer;overflow:hidden;padding:0;display:flex;align-items:center;justify-content:center" title="Mi perfil"><span id="topbar-avatar-txt">👤</span></button>
       <button class="btn-logout" onclick="logout()">Salir</button>
     </div>
   </div>
@@ -428,8 +429,8 @@
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="./datos.js?v=20260708"></script>
-<script src="./app.js?v=20260708"></script>
+<script src="./datos.js?v=20260709"></script>
+<script src="./app.js?v=20260709"></script>
 </div><!-- /app-shell -->
 </body>
 </html>
