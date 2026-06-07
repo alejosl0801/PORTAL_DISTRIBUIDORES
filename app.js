@@ -755,138 +755,101 @@ function _logrosDefinicion(){
   var pedEsteAnio=comp.filter(function(p){return parseFechaPed(p).getFullYear()===ahora.getFullYear();}).length;
   var totalPuntosPed=comp.reduce(function(s,p){return s+(p.puntos||0);},0);
   var pedConDesc=comp.filter(function(p){return(p.items||[]).some(function(i){return i.descVol>0||i.descPct>0;});}).length;
+  var cats3=new Set(comp.reduce(function(a,p){return a.concat((p.items||[]).map(function(i){var pr=PRODUCTOS.find(function(x){return x.id===i.id;});return pr?pr.cat:null;}).filter(Boolean));},[])).size;
   return [
-    // ── PRIMERAS VECES ──
-    {ico:"🥇",nm:"Primer pedido",         desc:"Completa tu primer pedido",              ok:n>=1,     bonoPts:3},
-    {ico:"🎯",nm:"Primer canje",           desc:"Canjea un premio por primera vez",        ok:canjes>=1,bonoPts:3},
-    {ico:"❤️",nm:"Primer favorito",        desc:"Guarda un producto como favorito",         ok:favs.length>=1,bonoPts:2},
-    {ico:"📝",nm:"Primer borrador",        desc:"Guarda un borrador de carrito",            ok:borradores.length>=1,bonoPts:2},
-    {ico:"📦",nm:"Primera entrega",        desc:"Pide con envío a tu local",               ok:tieneEntrega,bonoPts:3},
-    {ico:"🏪",nm:"Primer retiro",          desc:"Pide con retiro en bodega",               ok:tieneRetiro,bonoPts:3},
-    {ico:"💬",nm:"Primera nota",           desc:"Agrega notas en un pedido",               ok:notas>=1, bonoPts:2},
-    {ico:"🔍",nm:"Explorador",             desc:"Busca en el catálogo",                    ok:true,     bonoPts:1},
-    {ico:"🌙",nm:"Noctámbulo",             desc:"Abre el portal después de las 9pm",        ok:(ahora.getHours()>=21||ahora.getHours()<6),bonoPts:1},
-    {ico:"☀️",nm:"Madrugador",             desc:"Abre el portal antes de las 8am",          ok:(ahora.getHours()<8),bonoPts:1},
+    // ── NIVEL 1: Inmediatos / primer contacto ──
+    {ico:"🔍",nm:"Explorador",             desc:"Abre el portal PyroShield",               ok:true,            bonoPts:1},
+    {ico:"🌙",nm:"Noctámbulo",             desc:"Entra al portal después de las 9pm",       ok:(ahora.getHours()>=21||ahora.getHours()<6), bonoPts:1},
+    {ico:"☀️",nm:"Madrugador",             desc:"Entra al portal antes de las 8am",         ok:(ahora.getHours()<8), bonoPts:1},
+    {ico:"❤️",nm:"Primer favorito",        desc:"Guarda un producto como favorito",         ok:favs.length>=1,  bonoPts:2},
+    {ico:"📝",nm:"Primer borrador",        desc:"Guarda un borrador de carrito",            ok:borradores.length>=1, bonoPts:2},
+    {ico:"💬",nm:"Primera nota",           desc:"Agrega notas en un pedido",               ok:notas>=1,        bonoPts:2},
 
-    // ── PEDIDOS ──
-    {ico:"🔥",nm:"En racha",               desc:"5 pedidos completados",                   ok:n>=5,     bonoPts:3},
-    {ico:"⭐",nm:"Cliente activo",         desc:"15 pedidos completados",                  ok:n>=15,    bonoPts:4},
-    {ico:"💪",nm:"Constante",              desc:"30 pedidos completados",                  ok:n>=30,    bonoPts:5},
-    {ico:"🏅",nm:"Cliente fiel",           desc:"50 pedidos completados",                  ok:n>=50,    bonoPts:5},
-    {ico:"🚀",nm:"Imparable",              desc:"75 pedidos completados",                  ok:n>=75,    bonoPts:6},
-    {ico:"💼",nm:"Profesional",            desc:"100 pedidos completados",                 ok:n>=100,   bonoPts:6},
-    {ico:"👑",nm:"Cliente élite",          desc:"150 pedidos completados",                 ok:n>=150,   bonoPts:7},
-    {ico:"🦅",nm:"Águila",                 desc:"200 pedidos completados",                 ok:n>=200,   bonoPts:8},
-    {ico:"🌟",nm:"Estrella",               desc:"300 pedidos completados",                 ok:n>=300,   bonoPts:15},
-    {ico:"🏆",nm:"Leyenda",                desc:"500 pedidos completados",                 ok:n>=500,   bonoPts:25},
-    {ico:"💯",nm:"Centenario",             desc:"750 pedidos completados",                 ok:n>=750,   bonoPts:40},
-    {ico:"🌈",nm:"Mil pedidos",            desc:"1.000 pedidos completados",               ok:n>=1000,  bonoPts:60},
-    {ico:"🔱",nm:"Élite absoluto",         desc:"2.000 pedidos completados",               ok:n>=2000,  bonoPts:100},
-
-    // ── COMPRAS EN DÓLARES ──
-    {ico:"💵",nm:"Primeros $100",          desc:"$100 en compras totales",                 ok:total>=100,  bonoPts:3},
-    {ico:"💴",nm:"$250 en ventas",         desc:"$250 en compras totales",                 ok:total>=250,  bonoPts:4},
-    {ico:"💰",nm:"$500 en compras",        desc:"$500 en compras totales",                 ok:total>=500,  bonoPts:5},
-    {ico:"🏦",nm:"Gran comprador",         desc:"$1.000 en compras",                       ok:total>=1000, bonoPts:8},
-    {ico:"💎",nm:"$2.500 en compras",      desc:"$2.500 en compras",                       ok:total>=2500, bonoPts:12},
-    {ico:"🥂",nm:"Comprador premium",      desc:"$5.000 en compras",                       ok:total>=5000, bonoPts:20},
-    {ico:"🚢",nm:"$10.000 en compras",     desc:"$10.000 en compras",                      ok:total>=10000,bonoPts:35},
-    {ico:"✈️",nm:"$25.000 en compras",     desc:"$25.000 en compras",                      ok:total>=25000,bonoPts:60},
-    {ico:"🏰",nm:"$50.000 en compras",     desc:"$50.000 en compras",                      ok:total>=50000,bonoPts:100},
-
-    // ── PEDIDO INDIVIDUAL GRANDE ──
-    {ico:"📊",nm:"Pedido de $100",         desc:"Un solo pedido de $100 o más",            ok:maxPed>=100,  bonoPts:3},
-    {ico:"📈",nm:"Pedido de $250",         desc:"Un solo pedido de $250 o más",            ok:maxPed>=250,  bonoPts:5},
-    {ico:"🎰",nm:"Pedido de $500",         desc:"Un solo pedido de $500 o más",            ok:maxPed>=500,  bonoPts:8},
-    {ico:"💣",nm:"Pedido de $1.000",       desc:"Un solo pedido de $1.000 o más",          ok:maxPed>=1000, bonoPts:15},
-    {ico:"🌋",nm:"Pedido de $2.500",       desc:"Un solo pedido de $2.500 o más",          ok:maxPed>=2500, bonoPts:30},
-
-    // ── UNIDADES PEDIDAS ──
-    {ico:"📦",nm:"50 unidades",            desc:"50 unidades pedidas en total",            ok:items>=50,   bonoPts:2},
-    {ico:"🏗️",nm:"200 unidades",           desc:"200 unidades pedidas en total",           ok:items>=200,  bonoPts:3},
-    {ico:"🚛",nm:"500 unidades",           desc:"500 unidades pedidas en total",           ok:items>=500,  bonoPts:4},
-    {ico:"🏭",nm:"1.000 unidades",         desc:"1.000 unidades pedidas en total",         ok:items>=1000, bonoPts:6},
-    {ico:"🌊",nm:"5.000 unidades",         desc:"5.000 unidades pedidas en total",         ok:items>=5000, bonoPts:8},
-
-    // ── VARIEDAD DE PRODUCTOS ──
-    {ico:"🔑",nm:"Explorador de catálogo", desc:"Pide 3 productos distintos",              ok:prods>=3,  bonoPts:3},
-    {ico:"🗺️",nm:"Gran explorador",        desc:"Pide 8 productos distintos",              ok:prods>=8,  bonoPts:4},
-    {ico:"🌍",nm:"Catálogo completo",      desc:"Pide 15 productos distintos",             ok:prods>=15, bonoPts:6},
-    {ico:"🎨",nm:"Coleccionista",          desc:"Pide 25 productos distintos",             ok:prods>=25, bonoPts:7},
-    {ico:"🦋",nm:"Diversificado",          desc:"Pide 40 productos distintos",             ok:prods>=40, bonoPts:8},
-
-    // ── ITEMS POR PEDIDO ──
-    {ico:"📋",nm:"Pedido completo",        desc:"Pedido con 5 o más productos distintos",  ok:maxItems>=5,  bonoPts:2},
-    {ico:"🎯",nm:"Pedido masivo",          desc:"Pedido con 10 o más productos distintos", ok:maxItems>=10, bonoPts:3},
-    {ico:"🎪",nm:"Pedido épico",           desc:"Pedido con 15 o más productos distintos", ok:maxItems>=15, bonoPts:5},
-
-    // ── CONSTANCIA MENSUAL ──
-    {ico:"📅",nm:"2 meses activo",         desc:"Pedidos en 2 meses distintos",            ok:meses>=2,  bonoPts:3},
-    {ico:"🗓️",nm:"3 meses seguidos",       desc:"Pedidos en 3 meses distintos",            ok:meses>=3,  bonoPts:4},
-    {ico:"🌱",nm:"Medio año",              desc:"Pedidos en 6 meses distintos",            ok:meses>=6,  bonoPts:6},
-    {ico:"🌿",nm:"9 meses activo",         desc:"Pedidos en 9 meses distintos",            ok:meses>=9,  bonoPts:8},
-    {ico:"🌳",nm:"Un año completo",        desc:"Pedidos en 12 meses distintos",           ok:meses>=12, bonoPts:10},
-
-    // ── CONSTANCIA SEMANAL ──
-    {ico:"⚡",nm:"2 semanas activo",       desc:"Pedidos en 2 semanas distintas",          ok:semanas>=2,  bonoPts:2},
-    {ico:"🔋",nm:"4 semanas activo",       desc:"Pedidos en 4 semanas distintas",          ok:semanas>=4,  bonoPts:3},
-    {ico:"🔌",nm:"8 semanas activo",       desc:"Pedidos en 8 semanas distintas",          ok:semanas>=8,  bonoPts:4},
-    {ico:"⚙️",nm:"12 semanas activo",      desc:"Pedidos en 12 semanas distintas",         ok:semanas>=12, bonoPts:6},
-
-    // ── PUNTOS ACUMULADOS ──
-    {ico:"🌀",nm:"500 puntos",             desc:"Acumula 500 puntos",                      ok:pts>=500,   bonoPts:3},
-    {ico:"🌠",nm:"1.000 puntos",           desc:"Acumula 1.000 puntos",                    ok:pts>=1000,  bonoPts:3},
-    {ico:"💫",nm:"2.500 puntos",           desc:"Acumula 2.500 puntos",                    ok:pts>=2500,  bonoPts:4},
-    {ico:"🏆",nm:"5.000 puntos",           desc:"Acumula 5.000 puntos",                    ok:pts>=5000,  bonoPts:6},
-    {ico:"🌟",nm:"10.000 puntos",          desc:"Acumula 10.000 puntos",                   ok:pts>=10000, bonoPts:7},
-    {ico:"👁️",nm:"25.000 puntos",          desc:"Acumula 25.000 puntos",                   ok:pts>=25000, bonoPts:20},
-    {ico:"🔮",nm:"50.000 puntos",          desc:"Acumula 50.000 puntos",                   ok:pts>=50000, bonoPts:35},
-
-    // ── CANJES ──
-    {ico:"🎁",nm:"Primer canje",           desc:"Canjea 1 premio",                         ok:canjes>=1, bonoPts:3},
-    {ico:"🎀",nm:"3 canjes",               desc:"Canjea 3 premios",                        ok:canjes>=3, bonoPts:4},
-    {ico:"🎊",nm:"5 canjes",               desc:"Canjea 5 premios",                        ok:canjes>=5, bonoPts:6},
-
-    // ── PEDIDOS EN EL AÑO ──
-    {ico:"🎄",nm:"5 pedidos este año",     desc:"5 pedidos en el año en curso",            ok:pedEsteAnio>=5,  bonoPts:3},
-    {ico:"🎆",nm:"10 pedidos este año",    desc:"10 pedidos en el año en curso",           ok:pedEsteAnio>=10, bonoPts:4},
-    {ico:"🎇",nm:"20 pedidos este año",    desc:"20 pedidos en el año en curso",           ok:pedEsteAnio>=20, bonoPts:6},
-    {ico:"🏅",nm:"30 pedidos este año",    desc:"30 pedidos en el año en curso",           ok:pedEsteAnio>=30, bonoPts:8},
-
-    // ── HÁBITOS Y COMPORTAMIENTO ──
+    // ── NIVEL 2: Primeras acciones clave ──
+    {ico:"🥇",nm:"Primer pedido",          desc:"Completa tu primer pedido",               ok:n>=1,            bonoPts:3},
+    {ico:"📦",nm:"Primera entrega",        desc:"Pide con envío a tu local",               ok:tieneEntrega,    bonoPts:3},
+    {ico:"🏪",nm:"Primer retiro",          desc:"Pide con retiro en bodega",               ok:tieneRetiro,     bonoPts:3},
+    {ico:"🏷️",nm:"Cazador de descuentos",  desc:"Usa descuento por volumen en 1 pedido",   ok:pedConDesc>=1,   bonoPts:2},
+    {ico:"📲",nm:"Siempre conectado",       desc:"10 pedidos totales (incluye pendientes)", ok:ttodos>=10,      bonoPts:2},
     {ico:"🐦",nm:"Pedido de viernes",      desc:"Confirma un pedido un viernes",           ok:tieneViernesPed, bonoPts:2},
     {ico:"📌",nm:"Varios canales pago",    desc:"Usa 2 formas de pago distintas",          ok:tiposP>=2,       bonoPts:2},
-    {ico:"🗒️",nm:"Anotador",              desc:"Agrega notas en 3 pedidos",               ok:notas>=3,        bonoPts:2},
-    {ico:"📐",nm:"Pedido mixto",           desc:"10 o más ítems distintos en 1 pedido",   ok:maxItems>=10,    bonoPts:2},
-    {ico:"🔂",nm:"Punto de puntos",        desc:"Genera 1.000 pts en pedidos",             ok:totalPuntosPed>=1000, bonoPts:3},
-    {ico:"⚖️",nm:"Puntos masivos",         desc:"Genera 5.000 pts en pedidos",             ok:totalPuntosPed>=5000, bonoPts:6},
-    {ico:"🏋️",nm:"Puntos élite",           desc:"Genera 15.000 pts en pedidos",            ok:totalPuntosPed>=15000,bonoPts:8},
-
-    // ── DESCUENTOS ──
-    {ico:"🏷️",nm:"Cazador de descuentos",  desc:"Aprovecha descuento por volumen 1 vez",  ok:pedConDesc>=1, bonoPts:2},
-    {ico:"🎣",nm:"Maestro del descuento",  desc:"Aprovecha descuento 5 veces",             ok:pedConDesc>=5, bonoPts:3},
-    {ico:"🦈",nm:"Rey del volumen",        desc:"Aprovecha descuento 15 veces",            ok:pedConDesc>=15,bonoPts:4},
-
-    // ── FAVORITOS ──
-    {ico:"💜",nm:"3 favoritos",            desc:"Guarda 3 productos favoritos",            ok:favs.length>=3,  bonoPts:2},
-    {ico:"💛",nm:"10 favoritos",           desc:"Guarda 10 productos favoritos",           ok:favs.length>=10, bonoPts:2},
-    {ico:"🌹",nm:"Mi lista personal",      desc:"Guarda 20 productos favoritos",           ok:favs.length>=20, bonoPts:3},
-
-    // ── GESTIÓN ──
     {ico:"🗑️",nm:"Orden y limpieza",       desc:"Cancela un pedido y genera uno nuevo",    ok:canc.length>=1&&n>=1, bonoPts:2},
-    {ico:"⏱️",nm:"Rápido como rayo",       desc:"2 o más pedidos confirmados hoy",         ok:pedHoy>=2,  bonoPts:3},
-    {ico:"📲",nm:"Siempre conectado",       desc:"10 pedidos totales (incluye pendientes)", ok:ttodos>=10, bonoPts:2},
-    {ico:"🎯",nm:"Sin desperdiciar",       desc:"0 pedidos cancelados con 5+ completados", ok:canc.length===0&&n>=5,bonoPts:3},
 
-    // ── HITOS ESPECIALES ──
-    {ico:"🦄",nm:"Unicornio",              desc:"50 pedidos, $5.000 y 5.000 pts",          ok:n>=50&&total>=5000&&pts>=5000,   bonoPts:25},
-    {ico:"🐉",nm:"Dragón",                 desc:"100 pedidos, $15.000 y 15.000 pts",       ok:n>=100&&total>=15000&&pts>=15000,bonoPts:50},
-    {ico:"🌞",nm:"Sol PyroShield",         desc:"200 pedidos, $50.000 en compras",         ok:n>=200&&total>=50000,            bonoPts:80},
-    {ico:"🔑",nm:"Llave de oro",           desc:"Completa 50 pedidos en 1 año",            ok:pedEsteAnio>=50,                 bonoPts:25},
-    {ico:"💥",nm:"Pedido legendario",      desc:"Un pedido de $5.000 o más",              ok:maxPed>=5000,                    bonoPts:50},
-    {ico:"🎖️",nm:"Medalla de honor",       desc:"3 canjes + 10 pedidos + 6 meses activo", ok:canjes>=3&&n>=10&&meses>=6,      bonoPts:25},
-    {ico:"🌺",nm:"Floreciente",            desc:"5 categorías distintas pedidas",          ok:prods>=5&&new Set(comp.reduce(function(a,p){return a.concat((p.items||[]).map(function(i){var pr=PRODUCTOS.find(function(x){return x.id===i.id;});return pr?pr.cat:null;}).filter(Boolean));},[])).size>=3,bonoPts:6},
-    {ico:"🧲",nm:"Imán de puntos",         desc:"Acumula 100.000 puntos en total",         ok:pts>=100000,bonoPts:80}
+    // ── NIVEL 3: Catálogo y variedad ──
+    {ico:"🔑",nm:"Explorador de catálogo", desc:"Pide 3 productos distintos",              ok:prods>=3,        bonoPts:3},
+    {ico:"📋",nm:"Pedido completo",        desc:"Pedido con 5 o más productos distintos",  ok:maxItems>=5,     bonoPts:3},
+    {ico:"💜",nm:"3 favoritos",            desc:"Guarda 3 productos favoritos",            ok:favs.length>=3,  bonoPts:2},
+    {ico:"🗒️",nm:"Anotador",              desc:"Agrega notas en 3 pedidos",               ok:notas>=3,        bonoPts:2},
+    {ico:"🌺",nm:"Floreciente",            desc:"Pide de 3 categorías distintas",          ok:prods>=5&&cats3>=3, bonoPts:6},
+
+    // ── NIVEL 4: Volumen inicial ──
+    {ico:"💵",nm:"Primeros $100",          desc:"$100 en compras totales",                 ok:total>=100,      bonoPts:3},
+    {ico:"📊",nm:"Pedido de $100",         desc:"Un solo pedido de $100 o más",            ok:maxPed>=100,     bonoPts:3},
+    {ico:"📦",nm:"50 unidades",            desc:"50 unidades pedidas en total",            ok:items>=50,       bonoPts:3},
+    {ico:"🔥",nm:"En racha",               desc:"5 pedidos completados",                   ok:n>=5,            bonoPts:4},
+    {ico:"🎯",nm:"Sin desperdiciar",       desc:"0 cancelados con 5+ pedidos completados", ok:canc.length===0&&n>=5, bonoPts:3},
+    {ico:"⚡",nm:"2 semanas activo",       desc:"Pedidos en 2 semanas distintas",          ok:semanas>=2,      bonoPts:3},
+    {ico:"📅",nm:"2 meses activo",         desc:"Pedidos en 2 meses distintos",            ok:meses>=2,        bonoPts:3},
+    {ico:"🎄",nm:"5 pedidos este año",     desc:"5 pedidos en el año en curso",            ok:pedEsteAnio>=5,  bonoPts:3},
+    {ico:"🌀",nm:"500 puntos",             desc:"Acumula 500 puntos",                      ok:pts>=500,        bonoPts:3},
+    {ico:"🎁",nm:"Primer canje",           desc:"Canjea tu primer premio",                 ok:canjes>=1,       bonoPts:3},
+
+    // ── NIVEL 5: Crecimiento ──
+    {ico:"💴",nm:"$250 en compras",        desc:"$250 en compras totales",                 ok:total>=250,      bonoPts:7},
+    {ico:"📈",nm:"Pedido de $250",         desc:"Un solo pedido de $250 o más",            ok:maxPed>=250,     bonoPts:6},
+    {ico:"🏗️",nm:"200 unidades",           desc:"200 unidades pedidas en total",           ok:items>=200,      bonoPts:5},
+    {ico:"🗺️",nm:"Gran explorador",        desc:"Pide 8 productos distintos",              ok:prods>=8,        bonoPts:5},
+    {ico:"🎯",nm:"Pedido masivo",          desc:"Pedido con 10 o más productos distintos", ok:maxItems>=10,    bonoPts:5},
+    {ico:"⭐",nm:"Cliente activo",         desc:"15 pedidos completados",                  ok:n>=15,           bonoPts:6},
+    {ico:"🔋",nm:"4 semanas activo",       desc:"Pedidos en 4 semanas distintas",          ok:semanas>=4,      bonoPts:5},
+    {ico:"🗓️",nm:"3 meses seguidos",       desc:"Pedidos en 3 meses distintos",            ok:meses>=3,        bonoPts:5},
+    {ico:"🎆",nm:"10 pedidos este año",    desc:"10 pedidos en el año en curso",           ok:pedEsteAnio>=10, bonoPts:5},
+    {ico:"🌠",nm:"1.000 puntos",           desc:"Acumula 1.000 puntos",                    ok:pts>=1000,       bonoPts:5},
+    {ico:"🎀",nm:"3 canjes",               desc:"Canjea 3 premios",                        ok:canjes>=3,       bonoPts:5},
+    {ico:"🔂",nm:"Generador de puntos",    desc:"Genera 1.000 pts acumulados en pedidos",  ok:totalPuntosPed>=1000, bonoPts:5},
+    {ico:"💛",nm:"10 favoritos",           desc:"Guarda 10 productos favoritos",           ok:favs.length>=10, bonoPts:3},
+    {ico:"🎣",nm:"Maestro del descuento",  desc:"Usa descuento por volumen 5 veces",       ok:pedConDesc>=5,   bonoPts:4},
+    {ico:"⏱️",nm:"Rápido como rayo",       desc:"2 o más pedidos confirmados en un día",   ok:pedHoy>=2,       bonoPts:4},
+
+    // ── NIVEL 6: Intermedio ──
+    {ico:"💰",nm:"$500 en compras",        desc:"$500 en compras totales",                 ok:total>=500,      bonoPts:14},
+    {ico:"🎰",nm:"Pedido de $500",         desc:"Un solo pedido de $500 o más",            ok:maxPed>=500,     bonoPts:12},
+    {ico:"🚛",nm:"500 unidades",           desc:"500 unidades pedidas en total",           ok:items>=500,      bonoPts:10},
+    {ico:"🌍",nm:"Catálogo completo",      desc:"Pide 15 productos distintos",             ok:prods>=15,       bonoPts:10},
+    {ico:"🎪",nm:"Pedido épico",           desc:"Pedido con 15 o más productos distintos", ok:maxItems>=15,    bonoPts:8},
+    {ico:"💪",nm:"Constante",              desc:"30 pedidos completados",                  ok:n>=30,           bonoPts:10},
+    {ico:"🔌",nm:"8 semanas activo",       desc:"Pedidos en 8 semanas distintas",          ok:semanas>=8,      bonoPts:8},
+    {ico:"🌱",nm:"Medio año",              desc:"Pedidos en 6 meses distintos",            ok:meses>=6,        bonoPts:10},
+    {ico:"🎇",nm:"20 pedidos este año",    desc:"20 pedidos en el año en curso",           ok:pedEsteAnio>=20, bonoPts:8},
+    {ico:"💫",nm:"2.500 puntos",           desc:"Acumula 2.500 puntos",                    ok:pts>=2500,       bonoPts:8},
+    {ico:"🎊",nm:"5 canjes",               desc:"Canjea 5 premios",                        ok:canjes>=5,       bonoPts:8},
+    {ico:"⚖️",nm:"Puntos masivos",         desc:"Genera 5.000 pts acumulados en pedidos",  ok:totalPuntosPed>=5000, bonoPts:10},
+    {ico:"🌹",nm:"Mi lista personal",      desc:"Guarda 20 productos favoritos",           ok:favs.length>=20, bonoPts:5},
+    {ico:"🦈",nm:"Rey del volumen",        desc:"Usa descuento por volumen 15 veces",      ok:pedConDesc>=15,  bonoPts:7},
+
+    // ── NIVEL 7: Avanzado ──
+    {ico:"🏦",nm:"Gran comprador",         desc:"$1.000 en compras totales",               ok:total>=1000,     bonoPts:28},
+    {ico:"💣",nm:"Pedido de $1.000",       desc:"Un solo pedido de $1.000 o más",          ok:maxPed>=1000,    bonoPts:22},
+    {ico:"🏭",nm:"1.000 unidades",         desc:"1.000 unidades pedidas en total",         ok:items>=1000,     bonoPts:18},
+    {ico:"🏅",nm:"Cliente fiel",           desc:"50 pedidos completados",                  ok:n>=50,           bonoPts:20},
+    {ico:"🌿",nm:"9 meses activo",         desc:"Pedidos en 9 meses distintos",            ok:meses>=9,        bonoPts:15},
+    {ico:"🏅",nm:"30 pedidos este año",    desc:"30 pedidos en el año en curso",           ok:pedEsteAnio>=30, bonoPts:14},
+    {ico:"🏆",nm:"5.000 puntos",           desc:"Acumula 5.000 puntos",                    ok:pts>=5000,       bonoPts:14},
+    {ico:"🎖️",nm:"Medalla de honor",       desc:"3 canjes + 10 pedidos + 6 meses activo", ok:canjes>=3&&n>=10&&meses>=6, bonoPts:20},
+
+    // ── NIVEL 8: Experto ──
+    {ico:"💎",nm:"$2.500 en compras",      desc:"$2.500 en compras totales",               ok:total>=2500,     bonoPts:70},
+    {ico:"🌋",nm:"Pedido de $2.500",       desc:"Un solo pedido de $2.500 o más",          ok:maxPed>=2500,    bonoPts:55},
+    {ico:"🚀",nm:"Imparable",              desc:"75 pedidos completados",                  ok:n>=75,           bonoPts:35},
+    {ico:"🌳",nm:"Un año completo",        desc:"Pedidos en 12 meses distintos",           ok:meses>=12,       bonoPts:30},
+    {ico:"🌟",nm:"10.000 puntos",          desc:"Acumula 10.000 puntos",                   ok:pts>=10000,      bonoPts:25},
+
+    // ── NIVEL 9: Élite ──
+    {ico:"🥂",nm:"Comprador premium",      desc:"$5.000 en compras totales",               ok:total>=5000,     bonoPts:140},
+    {ico:"💼",nm:"Profesional",            desc:"100 pedidos completados",                 ok:n>=100,          bonoPts:60},
+    {ico:"👑",nm:"Cliente élite",          desc:"150 pedidos completados",                 ok:n>=150,          bonoPts:80},
+    {ico:"🦅",nm:"Águila PyroShield",      desc:"200 pedidos completados",                 ok:n>=200,          bonoPts:100},
+    {ico:"🦄",nm:"Unicornio",              desc:"50 pedidos + $5.000 + 5.000 pts",         ok:n>=50&&total>=5000&&pts>=5000, bonoPts:50}
   ];
 }
 
