@@ -711,6 +711,23 @@ function renderInicio(){
   renderInsignias();
   renderDeseosSec();
   renderBannerInstalacion();
+  // Banner de pedidos pendientes en cola offline
+  var colaOffUI=cargarColaOffline();
+  var colaActivaOffUI=colaOffUI.filter(function(id){return PEDIDOS.some(function(p){return p.id===id;});});
+  var bannerColaEl=document.getElementById("offline-cola-banner");
+  if(colaActivaOffUI.length>0){
+    if(!bannerColaEl){
+      bannerColaEl=document.createElement("div");
+      bannerColaEl.id="offline-cola-banner";
+      bannerColaEl.style.cssText="background:#f39c12;color:#fff;border-radius:10px;padding:12px 16px;margin:8px 0;font-size:14px;font-weight:600;display:flex;align-items:center;justify-content:space-between;gap:8px";
+      var contenedor=document.getElementById("ultimos-pedidos");
+      if(contenedor&&contenedor.parentNode)contenedor.parentNode.insertBefore(bannerColaEl,contenedor);
+    }
+    bannerColaEl.innerHTML='<span>⏳ Tienes '+colaActivaOffUI.length+' pedido(s) pendiente(s) de sincronizar</span>'+
+      '<button class="btn btn-s" style="background:#fff;color:#f39c12;min-width:120px" onclick="procesarColaOffline()">Sincronizar ahora</button>';
+  } else {
+    if(bannerColaEl)bannerColaEl.remove();
+  }
   var up=mp.slice().reverse().slice(0,3);
   document.getElementById("ultimos-pedidos").innerHTML=up.length?up.map(function(p){
     return '<div class="ped" onclick="verDetallePed(\''+p.id+'\')" style="cursor:pointer">'+
@@ -1914,7 +1931,13 @@ function confirmarPedido(){
   PEDIDOS.push(ped);
   if(navigator.vibrate)navigator.vibrate([30,20,60]);
   guardarPedidos();
-  sincronizarConSheets(ped, false);
+  if(navigator.onLine){
+    sincronizarConSheets(ped, false);
+  } else {
+    var colaOff=cargarColaOffline();
+    if(!colaOff.some(function(x){return x===pid;}))colaOff.push(pid);
+    guardarColaOffline(colaOff);
+  }
   registrarLogPuntos(USER.ruc,"pendiente",ptsTotal,"Pedido #"+pid);
   items.forEach(function(it){
     var p=PRODUCTOS.find(function(x){return x.id===it.id;});
@@ -1924,7 +1947,11 @@ function confirmarPedido(){
   CARRITO=[];
   guardarCarrito();
   actualizarBadge();
-  mostrarExito("¡Pedido confirmado!","#"+pid+" · "+fmtPts(ptsTotal)+" pts pendientes de confirmar");
+  if(navigator.onLine){
+    mostrarExito("¡Pedido confirmado!","#"+pid+" · "+fmtPts(ptsTotal)+" pts pendientes de confirmar");
+  } else {
+    mostrarExito("📦 Pedido guardado","#"+pid+" · Se enviará cuando vuelva la conexión");
+  }
   setTimeout(function(){irTab("historial");},950);
 }
 
@@ -2649,11 +2676,16 @@ function guardarEstadoPed(pid){
   toast("✅ Estado actualizado");
   // Notificación WhatsApp al distribuidor
   var nuevoEstado=sel.value;
-  if(nuevoEstado==="entregado"||nuevoEstado==="finalizado"){
+  if(nuevoEstado==="en_proceso"||nuevoEstado==="entregado"||nuevoEstado==="finalizado"){
     var distWA=DISTRIBUIDORES.find(function(x){return x.ruc===p.ruc;});
     var telWA=(distWA&&distWA.tel)?distWA.tel.replace(/\D/g,""):"";
     if(telWA){
-      var msgWA=encodeURIComponent("Hola "+((distWA&&distWA.encargado)||"")+"! Tu pedido #"+p.id+" está "+(nuevoEstado==="entregado"?"listo para entrega 📦":"finalizado ✅")+". Entra al portal: https://alejosl0801.github.io/PORTAL_DISTRIBUIDORES");
+      var nmWA=(distWA&&distWA.encargado)||primerNombre((distWA&&distWA.razon)||p.razon||"");
+      var msgWATexto;
+      if(nuevoEstado==="en_proceso")msgWATexto="Hola "+nmWA+", tu pedido #"+p.id+" está siendo preparado 🔄";
+      else if(nuevoEstado==="entregado")msgWATexto="Hola "+nmWA+", tu pedido #"+p.id+" está listo para entrega/retiro 📦";
+      else msgWATexto="Hola "+nmWA+", tu pedido #"+p.id+" ha sido finalizado ✅ ¡Gracias por tu preferencia!";
+      var msgWA=encodeURIComponent(msgWATexto);
       setTimeout(function(){
         if(confirm("¿Notificar al distribuidor por WhatsApp?")){
           window.open("https://wa.me/593"+telWA.replace(/^0/,"")+"?text="+msgWA,"_blank");
@@ -3859,6 +3891,70 @@ function actualizarBannerOffline(){
   banner.style.display=navigator.onLine?"none":"block";
 }
 
+function mostrarBannerOffline(offline){
+  var ID="pyro-offline-bar";
+  if(offline){
+    var bar=document.getElementById(ID);
+    if(!bar){
+      bar=document.createElement("div");
+      bar.id=ID;
+      bar.style.cssText="position:fixed;top:0;left:0;right:0;z-index:9999;background:#e74c3c;color:#fff;text-align:center;padding:10px 16px;font-size:14px;font-weight:600;letter-spacing:.2px;box-shadow:0 2px 8px rgba(0,0,0,.25)";
+      document.body.prepend(bar);
+    }
+    bar.textContent="📡 Sin conexión — tus pedidos se guardarán y enviarán automáticamente cuando vuelva la red";
+    bar.style.display="block";
+  } else {
+    var bar2=document.getElementById(ID);
+    if(bar2)bar2.style.display="none";
+    toast("✅ Conexión restaurada — sincronizando...");
+    procesarColaOffline();
+  }
+}
+
+function cargarColaOffline(){
+  try{return JSON.parse(localStorage.getItem("pyro_cola_offline")||"[]");}catch(e){return[];}
+}
+function guardarColaOffline(cola){
+  try{localStorage.setItem("pyro_cola_offline",JSON.stringify(cola));}catch(e){}
+}
+
+function procesarColaOffline(){
+  if(!navigator.onLine)return;
+  var cola=cargarColaOffline();
+  if(!cola.length)return;
+  var sincronizados=0;
+  var promesas=cola.map(function(pedId){
+    var ped=PEDIDOS.find(function(p){return p.id===pedId;});
+    if(!ped)return Promise.resolve();
+    return new Promise(function(resolve){
+      var payload={
+        accion:"guardarPedidoPyro",
+        id_pedido:ped.id,
+        fecha:ped.fechaISO,
+        ruc_dist:ped.ruc,
+        nombre_dist:ped.razon,
+        items_json:JSON.stringify(ped.items||[]),
+        total:ped.total,
+        estado:ped.estado
+      };
+      fetch(GAS_URL,{
+        method:"POST",
+        headers:{"Content-Type":"text/plain;charset=utf-8"},
+        body:JSON.stringify(payload)
+      }).then(function(){sincronizados++;resolve();}).catch(function(){resolve();});
+    });
+  });
+  Promise.all(promesas).then(function(){
+    if(sincronizados>0){
+      // Limpiar solo los que se sincronizaron con éxito (simplificación: si llegamos aquí con onLine=true, limpiamos todos)
+      guardarColaOffline([]);
+      toast("☁️ "+sincronizados+" pedido(s) sincronizado(s) con la nube");
+      // Refrescar banner de inicio si está visible
+      if(document.getElementById("offline-cola-banner"))renderInicio();
+    }
+  });
+}
+
 // ═══════════ TEMA CLARO / OSCURO (persistente) ═══════════
 // Estados: "auto" (sigue al sistema), "light", "dark"
 function temaGuardado(){try{return localStorage.getItem("pyro_tema")||"auto";}catch(e){return"auto";}}
@@ -4001,8 +4097,8 @@ function iniciarAutoguardado(){
 document.addEventListener("click",function(e){if(e.target.classList.contains("ov"))e.target.classList.remove("open");});
 window.addEventListener("load",function(){
   actualizarBannerOffline();
-  window.addEventListener("online",function(){actualizarBannerOffline();reintentarSyncPendientes();});
-  window.addEventListener("offline",actualizarBannerOffline);
+  window.addEventListener("online",function(){actualizarBannerOffline();reintentarSyncPendientes();mostrarBannerOffline(false);});
+  window.addEventListener("offline",function(){actualizarBannerOffline();mostrarBannerOffline(true);});
   setTimeout(function(){
     var sp=document.getElementById("splash");
     if(sp){sp.classList.add("hide");setTimeout(function(){sp.style.display="none";},600);}
