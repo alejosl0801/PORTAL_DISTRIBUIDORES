@@ -495,7 +495,7 @@ function primerIngresoGuardarPass(){
   var v1=p1?p1.value:"",v2=p2?p2.value:"";
   if(v1.length<6){toast("⚠️ La contraseña debe tener al menos 6 caracteres");return;}
   if(v1!==v2){toast("⚠️ Las contraseñas no coinciden");return;}
-  USER.pass=v1;
+  USER.pass=sha256(v1);
   USER.passModificado=true;
   guardarDistribuidores();
   try{localStorage.setItem("pyro_sesion",JSON.stringify({ruc:USER.ruc}));}catch(e){}
@@ -2002,14 +2002,78 @@ function limpiarFiltroFecha(){
   renderHistorial();
 }
 
+var H_BUSQ="";
+var H_FECHA_RAPIDA="todo";
+function filtrarHistorial(){
+  H_BUSQ=(document.getElementById("hist-busq")||{value:""}).value||"";
+  renderHistorial();
+}
+function setHFiltroEstado(f){
+  H_FILTRO=f;
+  renderHistorial();
+}
+function setHFechaRapida(f){
+  H_FECHA_RAPIDA=f;
+  renderHistorial();
+}
 function renderHistorial(){
   var mp=misPedidos().slice().reverse();
+  // Filtro de estado
   if(H_FILTRO==="pendiente")mp=mp.filter(function(p){return p.estado==="pendiente";});
   else if(H_FILTRO==="proceso")mp=mp.filter(function(p){return["en_proceso","autorizado","entrega","facturado"].indexOf(p.estado)!==-1;});
   else if(H_FILTRO==="finalizado")mp=mp.filter(function(p){return p.estado==="entregado"||p.estado==="finalizado";});
+  else if(H_FILTRO==="cancelado")mp=mp.filter(function(p){return p.estado==="cancelado";});
+  // Filtro de fecha rápida
+  var ahora3=new Date();
+  if(H_FECHA_RAPIDA==="mes"){
+    var inicioMes=new Date(ahora3.getFullYear(),ahora3.getMonth(),1);
+    mp=mp.filter(function(p){return parseFechaPed(p)>=inicioMes;});
+  } else if(H_FECHA_RAPIDA==="3meses"){
+    var hace3=new Date(ahora3);hace3.setMonth(hace3.getMonth()-3);
+    mp=mp.filter(function(p){return parseFechaPed(p)>=hace3;});
+  }
+  // Filtro de fecha manual
   if(H_DESDE){var d0=new Date(H_DESDE+"T00:00:00");mp=mp.filter(function(p){return parseFechaPed(p)>=d0;});}
   if(H_HASTA){var d1=new Date(H_HASTA+"T23:59:59");mp=mp.filter(function(p){return parseFechaPed(p)<=d1;});}
-  document.getElementById("hist-lista").innerHTML=mp.length?mp.map(function(p){
+  // Filtro de búsqueda por texto
+  var busqN=(H_BUSQ||"").toLowerCase().trim();
+  if(busqN){
+    mp=mp.filter(function(p){
+      if((p.id||"").toLowerCase().indexOf(busqN)!==-1)return true;
+      if((p.estado||"").toLowerCase().indexOf(busqN)!==-1)return true;
+      if(p.items&&p.items.some(function(it){return(it.nm||"").toLowerCase().indexOf(busqN)!==-1||(it.id||"").toLowerCase().indexOf(busqN)!==-1;}))return true;
+      return false;
+    });
+  }
+  // Toolbar de filtros
+  var estadosFiltro=[
+    {f:"todos",l:"Todos"},
+    {f:"pendiente",l:"⏳ Pendiente"},
+    {f:"proceso",l:"🔄 En proceso"},
+    {f:"finalizado",l:"✔️ Finalizado"},
+    {f:"cancelado",l:"✕ Cancelado"}
+  ];
+  var fechasFiltro=[
+    {f:"todo",l:"Todo"},
+    {f:"mes",l:"Este mes"},
+    {f:"3meses",l:"Últimos 3 meses"}
+  ];
+  var toolbarHtml=
+    '<div style="margin-bottom:10px">'+
+      '<input id="hist-busq" class="form-input" style="font-size:13px;padding:8px 12px;margin-bottom:8px" placeholder="🔍 Buscar por pedido, producto o estado..." value="'+escHtml(H_BUSQ)+'" oninput="filtrarHistorial()">'+
+      '<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:6px">'+
+        estadosFiltro.map(function(o){
+          return '<button class="fbtn'+(H_FILTRO===o.f?" active":"")+'" onclick="setHFiltroEstado(\''+o.f+'\')" style="font-size:11px;padding:4px 10px">'+o.l+'</button>';
+        }).join("")+
+      '</div>'+
+      '<div style="display:flex;flex-wrap:wrap;gap:4px">'+
+        fechasFiltro.map(function(o){
+          return '<button class="fbtn'+(H_FECHA_RAPIDA===o.f?" active":"")+'" onclick="setHFechaRapida(\''+o.f+'\')" style="font-size:11px;padding:4px 10px">'+o.l+'</button>';
+        }).join("")+
+      '</div>'+
+    '</div>';
+  var histEl=document.getElementById("hist-lista");
+  var pedidosHtml=mp.length?mp.map(function(p){
     var confirmados=(p.estado==="entregado"||p.estado==="finalizado");
     var ptsHtml=p.esBienvenida?
       '<div class="ped-pts" style="color:#B8860B">🎁 Regalo de bienvenida</div>'+
@@ -2043,6 +2107,7 @@ function renderHistorial(){
       '<div class="ped-acc">'+accBtns+'</div>'+
     '</div>';
   }).join(""):'<div class="empty"><div class="ico">📭</div><p>No hay pedidos en esta categoría</p></div>';
+  histEl.innerHTML=toolbarHtml+pedidosHtml;
 }
 
 function cancelarPedido(pid){
@@ -2088,17 +2153,63 @@ function editarPedido(pid){
 function repetirPedido(pid){
   var p=PEDIDOS.find(function(x){return x.id===pid;});
   if(!p||!p.items)return;
-  var omitidos=[];
-  p.items.forEach(function(it){
+  // Cerrar modal previo si existe
+  var prev=document.getElementById("repetir-ped-ov");
+  if(prev)prev.remove();
+  // Construir items para el modal
+  var itemsHtml=p.items.map(function(it,idx){
     var prod=PRODUCTOS.find(function(x){return x.id===it.id;});
+    var agotado=!prod||prod.ago;
+    var bgColor=agotado?"var(--g1,#f5f5f5)":"var(--blanco,#fff)";
+    return '<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--g2,#eee);opacity:'+(agotado?'.5':'1')+';background:'+bgColor+';border-radius:8px;margin-bottom:4px;padding:10px 12px">'+
+      '<div style="flex:1;min-width:0">'+
+        '<div style="font-size:13px;font-weight:600;margin-bottom:2px">'+escHtml(it.nm)+'</div>'+
+        (agotado?'<span style="font-size:11px;color:var(--rojo,#e03c31);font-weight:700">⚠️ Sin stock</span>':
+          '<span style="font-size:11px;color:var(--verde,#27ae60)">✓ Disponible ('+((prod&&prod.stock)||0)+' en stock)</span>')+
+      '</div>'+
+      '<input type="number" id="rep-cant-'+idx+'" min="0" max="'+(prod?prod.stock:0)+'" value="'+(agotado?0:it.cant)+'" '+(agotado?'disabled':'')+
+        ' style="width:64px;padding:6px 8px;border:1.5px solid var(--g2,#ddd);border-radius:10px;font-size:14px;font-weight:700;text-align:center;background:'+(agotado?"var(--g1,#f5f5f5)":"var(--blanco,#fff)")+'">'+
+    '</div>';
+  }).join("");
+  var ov=document.createElement("div");
+  ov.id="repetir-ped-ov";
+  ov.style.cssText="position:fixed;top:0;left:0;width:100%;height:100vh;background:rgba(0,0,0,0.8);z-index:9000;display:flex;align-items:center;justify-content:center;padding:20px;overflow-y:auto";
+  ov.innerHTML=
+    '<div style="background:var(--bg,#fff);border-radius:20px;padding:24px 20px;width:100%;max-width:440px;max-height:90vh;overflow-y:auto;box-shadow:0 16px 60px rgba(0,0,0,.5)">'+
+      '<div style="font-size:18px;font-weight:800;margin-bottom:4px">↩ Repetir pedido</div>'+
+      '<div style="font-size:12px;color:var(--g3);margin-bottom:16px">Ajusta las cantidades y carga al carrito</div>'+
+      itemsHtml+
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px">'+
+        '<button class="btn btn-s" onclick="document.getElementById(\'repetir-ped-ov\').remove()">Cancelar</button>'+
+        '<button class="btn btn-p" onclick="confirmarRepetirPedido(\''+pid+'\')">🛒 Cargar al carrito</button>'+
+      '</div>'+
+    '</div>';
+  document.body.appendChild(ov);
+}
+
+function confirmarRepetirPedido(pid){
+  var p=PEDIDOS.find(function(x){return x.id===pid;});
+  if(!p||!p.items)return;
+  var omitidos=[];
+  var cargados=0;
+  p.items.forEach(function(it,idx){
+    var prod=PRODUCTOS.find(function(x){return x.id===it.id;});
+    var inp=document.getElementById("rep-cant-"+idx);
+    var cant=inp?parseInt(inp.value,10)||0:0;
     if(!prod||prod.ago){omitidos.push(it.nm);return;}
+    if(cant<=0)return;
+    if(cant>prod.stock)cant=prod.stock;
     var exist=CARRITO.find(function(c){return c.id===it.id;});
-    if(exist)exist.cant+=it.cant;
-    else CARRITO.push({id:it.id,cant:it.cant});
+    if(exist)exist.cant+=cant;
+    else CARRITO.push({id:it.id,cant:cant});
+    cargados++;
   });
+  var ov=document.getElementById("repetir-ped-ov");
+  if(ov)ov.remove();
   guardarCarrito(); actualizarBadge();
-  if(omitidos.length)toast("⚠️ "+omitidos.length+" productos no disponibles omitidos");
-  else toast("✏️ Pedido cargado al carrito.");
+  if(!cargados){toast("⚠️ No se cargaron productos al carrito");return;}
+  if(omitidos.length)toast("⚠️ "+omitidos.length+" productos sin stock fueron omitidos");
+  else toast("✅ "+cargados+" producto(s) cargados al carrito.");
   irTab("carrito");
 }
 
@@ -2269,21 +2380,22 @@ function renderRecompensas(){
   var logPts=[];try{logPts=JSON.parse(localStorage.getItem("pyro_log_puntos_"+USER.ruc)||"[]");}catch(e){}
   var logEl=document.getElementById("rec-log-puntos");
   if(logEl){
-    var logHtml2;
-    if(logPts.length){
-      logHtml2='<div class="sec-titulo" style="margin-top:16px">📜 Historial de puntos</div>'
-        +'<div style="background:var(--g1);border-radius:12px;overflow:hidden">'
-        +logPts.map(function(e,i){
+    var logHtml2='<div class="sec-titulo" style="margin-top:16px">📜 Historial de puntos</div>';
+    var ultimos=logPts.slice(0,20);
+    if(ultimos.length){
+      logHtml2+='<div style="background:var(--g1);border-radius:12px;overflow:hidden">'
+        +ultimos.map(function(e,i){
           var col2=e.tipo==="canjeados"?"var(--rojo)":e.tipo==="confirmado"?"var(--verde)":"var(--amar)";
-          var signo2=e.tipo==="canjeados"?"-":"+";
+          var signo2=e.tipo==="canjeados"?"−":"+";
+          var fechaFmt=escHtml(e.fecha||"")+(e.hora?" · "+escHtml(e.hora):"");
           return '<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;'+(i>0?"border-top:1px solid var(--g2)":"")+'">'
-            +'<div><div style="font-size:13px;font-weight:600">'+escHtml(e.detalle)+'</div>'
-            +'<div style="font-size:11px;color:var(--g3)">'+escHtml(e.fecha)+" "+escHtml(e.hora)+'</div></div>'
-            +'<div style="font-weight:800;color:'+col2+'">'+signo2+e.pts+' pts</div>'
+            +'<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+escHtml(e.detalle)+'</div>'
+            +'<div style="font-size:11px;color:var(--g3)">'+fechaFmt+'</div></div>'
+            +'<div style="font-weight:800;color:'+col2+';white-space:nowrap;margin-left:10px">'+signo2+fmtPts(e.pts)+' pts</div>'
             +'</div>';
         }).join("")+'</div>';
     } else {
-      logHtml2='<div style="font-size:13px;color:var(--g3);text-align:center;padding:12px">Sin movimientos aún</div>';
+      logHtml2+='<div style="background:var(--g1);border-radius:12px;padding:18px;font-size:13px;color:var(--g3);text-align:center">Aún no tienes movimientos de puntos</div>';
     }
     logEl.innerHTML=logHtml2;
   }
@@ -2487,14 +2599,19 @@ function renderAdmPedidos(){
     '<div class="adm-stat"><div class="v">'+canjesPend+'</div><div class="l">Canjes pendientes</div></div>'+
     '<div class="adm-stat"><div class="v">'+canjesEntregados+' canjes entregados</div><div class="l">me costaron '+fmt$(costoCanjes)+'</div></div>';
   var extraEl=document.getElementById("adm-dashboard-extra");
-  if(extraEl)extraEl.innerHTML=
-    renderAdmAlertas()+
-    renderGraficoVentas6Meses()+
-    renderTop5MesActual()+
-    renderDistribuidoresInactivos()+
-    renderTicketPromedioDist()+
-    renderTop5Distribuidores()+
-    '<button class="btn btn-s btn-full" style="margin-bottom:14px" onclick="generarReporteMensual()">📊 Reporte mensual PDF</button>';
+  if(extraEl){
+    extraEl.innerHTML=
+      renderAdmAlertas()+
+      renderGraficoVentas6Meses()+
+      renderTop5MesActual()+
+      renderDistribuidoresInactivos()+
+      renderTicketPromedioDist()+
+      renderTop5Distribuidores()+
+      '<div id="adm-charts-canvas" style="margin-bottom:14px"></div>'+
+      '<button class="btn btn-s btn-full" style="margin-bottom:14px" onclick="generarReporteMensual()">📊 Reporte mensual PDF</button>';
+    // Dibujar gráficas Canvas después de que el DOM se actualice
+    setTimeout(function(){dibujarGraficasCanvas();},50);
+  }
 
   // Barra de filtros de estado (chips)
   var filtros=[
@@ -3129,7 +3246,7 @@ function guardarEditarDist(ruc){
   d.tel=document.getElementById("ed-tel").value.trim();
   d.correo=document.getElementById("ed-correo").value.trim();
   var newPass=document.getElementById("ed-pass").value.trim();
-  if(newPass){d.pass=newPass;d.passModificado=true;}
+  if(newPass){d.pass=sha256(newPass);d.passModificado=true;}
   d.sinDescVol=document.getElementById("ed-sinvol").checked;
   if(!d.entrega)d.entrega={};
   d.entrega.habilitada=document.getElementById("ed-entrega").checked;
@@ -3251,7 +3368,7 @@ function guardarNuevoDist(){
   if(tipoDoc==="ruc"&&soloNum.length!==13){toast("⚠️ El RUC debe tener 13 dígitos");if(btnNd)btnNd.disabled=false;return;}
   var existe=DISTRIBUIDORES.find(function(d){return d.ruc.toLowerCase()===ruc.toLowerCase();});
   if(existe){toast("⚠️ Ya existe un distribuidor con ese documento");if(btnNd)btnNd.disabled=false;return;}
-  var nd={ruc:ruc,tipoDoc:tipoDoc,razon:r,pass:pw,tel:tel,correo:co,entrega:{habilitada:ent,montoMin:min},sinDescVol:sinVol,_nuevo:true};
+  var nd={ruc:ruc,tipoDoc:tipoDoc,razon:r,pass:sha256(pw),tel:tel,correo:co,entrega:{habilitada:ent,montoMin:min},sinDescVol:sinVol,_nuevo:true};
   if(emp)nd.empresa=emp;
   if(enc)nd.encargado=enc;
   if(dir)nd.establecimientos=[{nm:"Local principal",dir:dir,obs:""}];
@@ -3424,9 +3541,59 @@ function importarStock(event){
 
 // ════════════════════ EXPORTAR EXCEL PEDIDOS ════════════════════
 function exportarExcel(){
+  // Mostrar modal de filtros antes de exportar
+  var distLista=DISTRIBUIDORES.filter(function(d){return!d.esAdmin;}).sort(function(a,b){return(a.razon||"").localeCompare(b.razon||"");});
+  var distOpts='<option value="">Todos los distribuidores</option>'+distLista.map(function(d){return'<option value="'+escHtml(d.ruc)+'">'+escHtml(d.empresa||d.razon)+'</option>';}).join("");
+  var ov=document.createElement("div");
+  ov.id="export-filter-ov";
+  ov.style.cssText="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;z-index:9999;padding:20px;box-sizing:border-box";
+  ov.innerHTML='<div style="background:var(--blanco,#fff);border-radius:18px;padding:24px;max-width:420px;width:100%;box-shadow:0 12px 50px rgba(0,0,0,.4)">'+
+    '<h3 style="margin:0 0 16px;font-size:17px">📥 Exportar pedidos — Filtros</h3>'+
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">'+
+      '<div><label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px">Desde</label>'+
+      '<input type="date" id="exp-desde" style="width:100%;padding:8px 10px;border:1.5px solid var(--g2,#ddd);border-radius:8px;font-size:13px;box-sizing:border-box"></div>'+
+      '<div><label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px">Hasta</label>'+
+      '<input type="date" id="exp-hasta" style="width:100%;padding:8px 10px;border:1.5px solid var(--g2,#ddd);border-radius:8px;font-size:13px;box-sizing:border-box"></div>'+
+    '</div>'+
+    '<label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px">Estado</label>'+
+    '<select id="exp-estado" style="width:100%;padding:8px 10px;border:1.5px solid var(--g2,#ddd);border-radius:8px;font-size:13px;margin-bottom:12px;box-sizing:border-box">'+
+      '<option value="">Todos</option>'+
+      '<option value="pendiente">Pendiente</option>'+
+      '<option value="en_proceso">En proceso</option>'+
+      '<option value="entregado">Entregado</option>'+
+      '<option value="facturado">Facturado</option>'+
+      '<option value="finalizado">Finalizado</option>'+
+      '<option value="cancelado">Cancelado</option>'+
+    '</select>'+
+    '<label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px">Distribuidor</label>'+
+    '<select id="exp-dist" style="width:100%;padding:8px 10px;border:1.5px solid var(--g2,#ddd);border-radius:8px;font-size:13px;margin-bottom:18px;box-sizing:border-box">'+distOpts+'</select>'+
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">'+
+      '<button onclick="document.getElementById(\'export-filter-ov\').remove()" style="padding:11px;border:1.5px solid var(--g2,#ddd);border-radius:10px;background:transparent;font-size:14px;cursor:pointer">Cancelar</button>'+
+      '<button onclick="exportarExcelFiltrado()" style="padding:11px;border:none;border-radius:10px;background:#C0392B;color:#fff;font-size:14px;font-weight:700;cursor:pointer">Exportar</button>'+
+    '</div>'+
+  '</div>';
+  document.body.appendChild(ov);
+}
+
+function exportarExcelFiltrado(){
+  var desde=document.getElementById("exp-desde")?document.getElementById("exp-desde").value:"";
+  var hasta=document.getElementById("exp-hasta")?document.getElementById("exp-hasta").value:"";
+  var estadoFiltro=document.getElementById("exp-estado")?document.getElementById("exp-estado").value:"";
+  var distFiltro=document.getElementById("exp-dist")?document.getElementById("exp-dist").value:"";
+  var ov=document.getElementById("export-filter-ov");if(ov)ov.remove();
   var estadosMap={pendiente:"Pendiente",en_proceso:"En proceso",autorizado:"En proceso",entrega:"En proceso",entregado:"Entregado",facturado:"Facturado",finalizado:"Finalizado",cancelado:"Cancelado"};
+  var pedsFiltrados=PEDIDOS.slice().reverse().filter(function(p){
+    if(desde){var fd=parseFechaPed(p);if(fd<new Date(desde))return false;}
+    if(hasta){var fd2=parseFechaPed(p);var hastaD=new Date(hasta);hastaD.setHours(23,59,59,999);if(fd2>hastaD)return false;}
+    if(estadoFiltro){
+      var estNorm=(p.estado==="autorizado"||p.estado==="entrega")?"en_proceso":p.estado;
+      if(estNorm!==estadoFiltro)return false;
+    }
+    if(distFiltro&&p.ruc!==distFiltro)return false;
+    return true;
+  });
   var cabeceras=["ID","Fecha","Tipo","Distribuidor","RUC","Estado","Forma de pago","Modo entrega","Productos / Premio","Subtotal","IVA 15%","Total","Puntos","Notas"];
-  var filas=PEDIDOS.slice().reverse().map(function(p){
+  var filas=pedsFiltrados.map(function(p){
     var dist=DISTRIBUIDORES.find(function(d){return d.ruc===p.ruc;})||{};
     var nombre=(dist.empresa||p.razon||"").trim();
     if(p.esCanje){return [p.id,p.fecha,"Canje",nombre,p.ruc,estadosMap[p.estado]||p.estado,"—","—",p.canjeNm||"",0,0,0,p.canjePts||0,""];}
