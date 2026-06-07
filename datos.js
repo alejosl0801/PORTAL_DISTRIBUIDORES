@@ -110,8 +110,8 @@ function promoDelProducto(pid){
 // ⚠️ POR CONFIRMAR: email "efreinreyesv539@gmail.com" → ¿posible typo de "efrain"?
 var DISTRIBUIDORES = [
   {ruc:"ADMIN",pass:"d0f0c1955aa832124e11c72a66f97da8cca523d3a1000e797df6f61586797f7d",razon:"Administrador PyroShield",esAdmin:true},
-  {ruc:"FABIOLA",pass:"Fab!Pyro#8",razon:"Fabiola Impresiones",rol:"impresion",esAdmin:false},
-  {ruc:"0906872742001",pass:"Jrg!Sum#74",razon:"AVILES BRIONES JORGE ENRIQUE",empresa:"Sumiseg",encargado:"Jorge",tel:"0993704934",correo:"docs.sumiseg@outlook.com",
+  {ruc:"FABIOLA",pass:"14c6b50752f6d7830b82c8e57c044ffc8a94767d6e3fc7358492d217e116577a",razon:"Fabiola Impresiones",rol:"impresion",esAdmin:false},
+  {ruc:"0906872742001",pass:"573a96dd77f2faf2ab1c23d725639545124319e6619c50fe54563a6909648b73",razon:"AVILES BRIONES JORGE ENRIQUE",empresa:"Sumiseg",encargado:"Jorge",tel:"0993704934",correo:"docs.sumiseg@outlook.com",
    entrega:{habilitada:true,montoMin:30},
    establecimientos:[{nm:"Local principal",dir:"AV. QUITO #1810 Y AYACUCHO",obs:""}],
    preciosEsp:{
@@ -125,9 +125,9 @@ var DISTRIBUIDORES = [
     "PIT112":17.80,"NIP112":6.88,"BRAZOPOR":11.71,"HACHA":11.78,"SPANNER":5.98
    }
   },
-  {ruc:"0953657509001",pass:"Kar!Sol#53",razon:"SOLIS MINA KAREN ZULAY",tel:"",correo:"",entrega:{habilitada:false,montoMin:30},establecimientos:[{nm:"Local",dir:"CAPITAN NAJERA 2802 Y PASAJE ANDRES MARIN",obs:""}]},
-  {ruc:"0919853390001",pass:"Chr!Fra#85",razon:"FRANCO PEREZ CHRISTIAN LENIN",tel:"0987583223",correo:"intriseg_17@outlook.com",entrega:{habilitada:false,montoMin:30},establecimientos:[]},
-  {ruc:"0930371331001",pass:"Irs!Mar#73",razon:"MARTINEZ PALACIOS IRIS NATHALI",tel:"",correo:"",entrega:{habilitada:false,montoMin:30},establecimientos:[]},
+  {ruc:"0953657509001",pass:"85d494013b74adf5bbd7c16d24db0f2cf857bdccc5e0947cd117797e167b5a56",razon:"SOLIS MINA KAREN ZULAY",tel:"",correo:"",entrega:{habilitada:false,montoMin:30},establecimientos:[{nm:"Local",dir:"CAPITAN NAJERA 2802 Y PASAJE ANDRES MARIN",obs:""}]},
+  {ruc:"0919853390001",pass:"e90fd3e35b87d2200a6912f80e2b99e256c5aa87e9f69519c090878306a43722",razon:"FRANCO PEREZ CHRISTIAN LENIN",tel:"0987583223",correo:"intriseg_17@outlook.com",entrega:{habilitada:false,montoMin:30},establecimientos:[]},
+  {ruc:"0930371331001",pass:"6c18803bf8c49c59abcec714b59df939526b0bc959bec7c1368b58a66ccaccbc",razon:"MARTINEZ PALACIOS IRIS NATHALI",tel:"",correo:"",entrega:{habilitada:false,montoMin:30},establecimientos:[]},
   {ruc:"0918043050001",pass:"Nxo!Sep#80",razon:"LAFFERTE ALANIZ NEXO EGIDIO",empresa:"SEPRO",tel:"",correo:"sepro.matriz@seproecuador.com",entrega:{habilitada:false,montoMin:30},establecimientos:[]},
   {ruc:"0991265147001",pass:"Seg!Ind#47",razon:"SEGUINDUSTRIAS DEL ECUADOR CIA. LTDA.",empresa:"Seguindustrias",tel:"",correo:"seguindustrias@hotmail.com",entrega:{habilitada:true,montoMin:50},establecimientos:[]},
   {ruc:"0908549173",pass:"Ral!Jim#91",razon:"JIMENEZ CHACON RAUL GONZALO",tel:"0994819051",correo:"",entrega:{habilitada:false,montoMin:30},establecimientos:[]},
