@@ -599,33 +599,72 @@ function mostrarTipSeccion(tab){
   if(localStorage.getItem(key))return;
   try{localStorage.setItem(key,"1");}catch(e){}
   var paso=0;
+  var _tutTimer=null;
   var ov=document.createElement("div");
   ov.id="tipsec-ov";
-  ov.style.cssText="position:fixed;top:0;left:0;width:100%;height:100vh;background:rgba(0,0,0,.82);z-index:800;display:flex;align-items:center;justify-content:center;padding:24px";
+  ov.style.cssText="position:fixed;top:0;left:0;width:100%;height:100vh;background:rgba(0,0,0,.88);z-index:800;display:flex;align-items:center;justify-content:center;padding:24px";
+  ov.addEventListener("click",function(e){e.stopPropagation();});
+
+  function iniciarCuenta(btnPrevId,btnNextId,esFin){
+    if(_tutTimer)clearInterval(_tutTimer);
+    var seg=3;
+    function actualizar(){
+      var bp=document.getElementById(btnPrevId);
+      var bn=document.getElementById(btnNextId);
+      if(seg>0){
+        if(bp){bp.disabled=true;bp.textContent="← Atrás ("+seg+")";}
+        if(bn){bn.disabled=true;bn.textContent=(esFin?"¡Entendido! ✓":"Siguiente →")+" ("+seg+")";}
+        seg--;
+      } else {
+        clearInterval(_tutTimer);_tutTimer=null;
+        if(bp){bp.disabled=false;bp.textContent="← Atrás";bp.style.background="#fff";bp.style.color="#555";bp.style.cursor="pointer";bp.style.borderColor="#ddd";}
+        if(bn){bn.disabled=false;bn.textContent=esFin?"¡Entendido! ✓":"Siguiente →";bn.style.background="var(--rojo,#e03c31)";bn.style.cursor="pointer";}
+      }
+    }
+    actualizar();
+    _tutTimer=setInterval(actualizar,1000);
+  }
+
   function renderOv(){
+    if(_tutTimer){clearInterval(_tutTimer);_tutTimer=null;}
     var t=tips[paso];
     var pct=Math.round((paso+1)/tips.length*100);
+    var esFin=paso===tips.length-1;
+    var btnPrevId="tut-btn-prev";
+    var btnNextId="tut-btn-next";
     ov.innerHTML=
       '<div style="background:#fff;border-radius:24px;padding:36px 28px;width:100%;max-width:380px;text-align:center;box-shadow:0 16px 60px rgba(0,0,0,.5)">'+
         '<div style="font-size:56px;margin-bottom:14px">'+t.ico+'</div>'+
-        '<div style="font-size:11px;font-weight:700;color:var(--oro);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:10px">'+
-          'Paso '+(paso+1)+' de '+tips.length+
-        '</div>'+
+        '<div style="font-size:11px;font-weight:700;color:var(--oro);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:10px">PASO '+(paso+1)+' DE '+tips.length+'</div>'+
         '<div style="font-size:20px;font-weight:800;color:var(--negro);margin-bottom:10px;line-height:1.2">'+escHtml(t.t)+'</div>'+
         '<div style="font-size:14px;color:#555;line-height:1.6;margin-bottom:22px">'+escHtml(t.d)+'</div>'+
         '<div style="background:#eee;border-radius:6px;height:6px;margin-bottom:22px">'+
           '<div style="background:var(--rojo);height:6px;border-radius:6px;width:'+pct+'%;transition:width .3s"></div>'+
         '</div>'+
         '<div style="display:flex;gap:10px">'+
-          (paso>0?'<button onclick="document.getElementById(\'tipsec-ov\')._prev()" style="flex:1;padding:13px;border:1.5px solid #ddd;border-radius:12px;font-size:14px;font-weight:600;background:#fff;cursor:pointer;color:#555">← Atrás</button>':'')+
-          (paso<tips.length-1
-            ?'<button onclick="document.getElementById(\'tipsec-ov\')._next()" style="flex:2;padding:13px;background:var(--rojo);color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer">Siguiente →</button>'
-            :'<button onclick="document.getElementById(\'tipsec-ov\').remove()" style="flex:2;padding:13px;background:var(--rojo);color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer">¡Entendido! ✓</button>'
+          (paso>0?'<button id="'+btnPrevId+'" disabled style="flex:1;padding:13px;border:1.5px solid #ddd;border-radius:12px;font-size:14px;font-weight:600;background:#f5f5f5;cursor:not-allowed;color:#aaa;transition:all .2s">← Atrás (3)</button>':'')+
+          (esFin
+            ?'<button id="'+btnNextId+'" disabled style="flex:2;padding:13px;background:#ccc;color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:not-allowed;transition:all .2s">¡Entendido! ✓ (3)</button>'
+            :'<button id="'+btnNextId+'" disabled style="flex:2;padding:13px;background:#ccc;color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:not-allowed;transition:all .2s">Siguiente → (3)</button>'
           )+
         '</div>'+
       '</div>';
-    ov._next=function(){paso++;renderOv();};
-    ov._prev=function(){paso--;renderOv();};
+    var btnNext=document.getElementById(btnNextId);
+    var btnPrev=document.getElementById(btnPrevId);
+    if(btnNext){
+      btnNext.addEventListener("click",function(){
+        if(btnNext.disabled)return;
+        if(esFin){if(_tutTimer)clearInterval(_tutTimer);ov.remove();}
+        else{paso++;renderOv();}
+      });
+    }
+    if(btnPrev){
+      btnPrev.addEventListener("click",function(){
+        if(btnPrev.disabled)return;
+        paso--;renderOv();
+      });
+    }
+    iniciarCuenta(btnPrevId,btnNextId,esFin);
   }
   renderOv();
   document.body.appendChild(ov);
