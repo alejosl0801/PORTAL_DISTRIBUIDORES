@@ -5081,6 +5081,34 @@ function cargarAvatar(){
   }
 }
 
+function _renderEstablecimientosPerfil(){
+  var ests=USER.establecimientos||[];
+  var html='<div style="margin-bottom:16px">'+
+    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">'+
+      '<div style="font-size:12px;font-weight:700;color:var(--g3);text-transform:uppercase;letter-spacing:.5px">📍 Mis establecimientos</div>'+
+      '<button onclick="abrirAgregarEstablecimiento()" style="padding:4px 10px;font-size:12px;font-weight:700;background:var(--rojo);color:#fff;border:none;border-radius:8px;cursor:pointer">+ Agregar</button>'+
+    '</div>';
+  if(!ests.length){
+    html+='<div style="font-size:13px;color:var(--g3);padding:10px;background:var(--g1);border-radius:8px;text-align:center">Sin establecimientos registrados</div>';
+  } else {
+    ests.forEach(function(est,idx){
+      html+='<div style="background:var(--g1);border-radius:10px;padding:10px 12px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:flex-start">'+
+        '<div style="flex:1;min-width:0">'+
+          '<div style="font-size:13px;font-weight:700;color:var(--negro)">'+escHtml(est.nm||"Local")+'</div>'+
+          '<div style="font-size:12px;color:var(--g3);margin-top:2px">'+escHtml(est.dir||"—")+'</div>'+
+          (est.obs?'<div style="font-size:11px;color:var(--g3);margin-top:2px;font-style:italic">'+escHtml(est.obs)+'</div>':'')+
+        '</div>'+
+        '<div style="display:flex;gap:4px;margin-left:8px">'+
+          '<button onclick="abrirEditarEstablecimiento('+idx+')" style="padding:4px 8px;font-size:12px;background:var(--g2);border:none;border-radius:6px;cursor:pointer">✏️</button>'+
+          (ests.length>1?'<button onclick="eliminarEstablecimiento('+idx+')" style="padding:4px 8px;font-size:12px;background:#fce4e4;border:none;border-radius:6px;cursor:pointer;color:#c62828">🗑️</button>':'')+
+        '</div>'+
+      '</div>';
+    });
+  }
+  html+='</div>';
+  return html;
+}
+
 function abrirPerfil(){
   if(!USER||USER.esAdmin)return;
   var b64=localStorage.getItem(_avatarKey());
@@ -5091,32 +5119,159 @@ function abrirPerfil(){
   var ov=document.createElement("div");
   ov.id="perfil-ov";
   ov.style.cssText="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.7);z-index:9000;display:flex;align-items:flex-end;justify-content:center;padding-bottom:0";
-  ov.innerHTML=
-    '<div style="background:var(--bg,#fff);border-radius:24px 24px 0 0;padding:28px 22px 36px;width:100%;max-width:500px;max-height:90vh;overflow-y:auto">'+
-      '<div style="text-align:center;margin-bottom:20px">'+
-        '<div style="display:flex;justify-content:center;margin-bottom:12px">'+avatarHtml+'</div>'+
-        '<div style="font-size:17px;font-weight:800">'+escHtml(USER.encargado||primerNombre(USER.razon))+'</div>'+
-        '<div style="font-size:13px;color:var(--g3)">'+escHtml(USER.empresa||USER.razon)+'</div>'+
-        '<div style="font-size:12px;color:var(--g3);margin-top:2px">RUC: '+escHtml(USER.ruc)+'</div>'+
-        '<label style="display:inline-block;margin-top:10px;padding:8px 16px;background:var(--g1);border-radius:20px;font-size:13px;font-weight:600;cursor:pointer;border:1.5px solid var(--g2)">'+
-          '📷 Cambiar foto'+
-          '<input type="file" accept="image/*" style="display:none" onchange="subirFotoPerfil(event)">'+
-        '</label>'+
-        (b64?'<button onclick="eliminarFotoPerfil()" style="display:block;margin:6px auto 0;background:none;border:none;color:var(--g3);font-size:12px;cursor:pointer">Eliminar foto</button>':'')+
-      '</div>'+
-      '<hr style="border:none;border-top:1px solid var(--g2);margin-bottom:16px">'+
-      '<div style="margin-bottom:14px">'+
-        '<div style="font-size:12px;font-weight:700;color:var(--g3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Mis datos</div>'+
-        _filaPerfilDato("📧 Email",USER.correo||"—")+
-        _filaPerfilDato("📱 Teléfono",USER.tel||"—")+
-        _filaPerfilDato("📍 Ciudad",USER.ciudad||"—")+
-      '</div>'+
-      '<button class="btn btn-s btn-full" style="margin-bottom:10px" onclick="mostrarCambioPassOpcional()">🔐 Cambiar contraseña</button>'+
-      '<button class="btn btn-s btn-full" onclick="cambiarTema()">🌙 Modo oscuro</button>'+
-      '<button onclick="document.getElementById(\'perfil-ov\').remove()" style="display:block;width:100%;margin-top:14px;padding:12px;border:none;background:var(--g1);border-radius:12px;font-size:14px;font-weight:600;cursor:pointer;color:var(--g4)">Cerrar</button>'+
-    '</div>';
+  function renderPerfil(){
+    ov.innerHTML=
+      '<div style="background:var(--bg,#fff);border-radius:24px 24px 0 0;padding:28px 22px 36px;width:100%;max-width:500px;max-height:90vh;overflow-y:auto">'+
+        '<div style="text-align:center;margin-bottom:20px">'+
+          '<div style="display:flex;justify-content:center;margin-bottom:12px">'+avatarHtml+'</div>'+
+          '<div style="font-size:17px;font-weight:800">'+escHtml(USER.encargado||primerNombre(USER.razon))+'</div>'+
+          '<div style="font-size:13px;color:var(--g3)">'+escHtml(USER.empresa||USER.razon)+'</div>'+
+          '<div style="font-size:12px;color:var(--g3);margin-top:2px">RUC: '+escHtml(USER.ruc)+'</div>'+
+          '<label style="display:inline-block;margin-top:10px;padding:8px 16px;background:var(--g1);border-radius:20px;font-size:13px;font-weight:600;cursor:pointer;border:1.5px solid var(--g2)">'+
+            '📷 Cambiar foto'+
+            '<input type="file" accept="image/*" style="display:none" onchange="subirFotoPerfil(event)">'+
+          '</label>'+
+          (b64?'<button onclick="eliminarFotoPerfil()" style="display:block;margin:6px auto 0;background:none;border:none;color:var(--g3);font-size:12px;cursor:pointer">Eliminar foto</button>':'')+
+        '</div>'+
+        '<hr style="border:none;border-top:1px solid var(--g2);margin-bottom:16px">'+
+        '<div style="margin-bottom:14px">'+
+          '<div style="font-size:12px;font-weight:700;color:var(--g3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Mis datos de contacto</div>'+
+          _filaPerfilEditable("👤 Nombre encargado","perfil-enc",USER.encargado||"")+
+          _filaPerfilEditable("📧 Email","perfil-correo",USER.correo||"")+
+          _filaPerfilEditable("📱 Teléfono","perfil-tel",USER.tel||"")+
+          '<button class="btn btn-p btn-full" style="margin-top:10px" onclick="guardarDatosPerfil()">💾 Guardar datos</button>'+
+        '</div>'+
+        '<hr style="border:none;border-top:1px solid var(--g2);margin-bottom:16px">'+
+        _renderEstablecimientosPerfil()+
+        '<hr style="border:none;border-top:1px solid var(--g2);margin-bottom:16px">'+
+        '<button class="btn btn-s btn-full" style="margin-bottom:10px" onclick="mostrarCambioPassOpcional()">🔐 Cambiar contraseña</button>'+
+        '<button class="btn btn-s btn-full" onclick="cambiarTema()">🌙 Modo oscuro</button>'+
+        '<button onclick="document.getElementById(\'perfil-ov\').remove()" style="display:block;width:100%;margin-top:14px;padding:12px;border:none;background:var(--g1);border-radius:12px;font-size:14px;font-weight:600;cursor:pointer;color:var(--g4)">Cerrar</button>'+
+      '</div>';
+  }
+  renderPerfil();
   document.body.appendChild(ov);
   ov.addEventListener("click",function(e){if(e.target===ov)ov.remove();});
+}
+
+function _filaPerfilEditable(label,id,val){
+  return'<div style="margin-bottom:10px">'+
+    '<div style="font-size:11px;color:var(--g3);font-weight:600;margin-bottom:3px">'+escHtml(label)+'</div>'+
+    '<input id="'+id+'" class="form-input" value="'+escHtml(val)+'" placeholder="'+escHtml(label)+'" style="font-size:14px">'+
+  '</div>';
+}
+
+function guardarDatosPerfil(){
+  var enc=(document.getElementById("perfil-enc")||{}).value||"";
+  var correo=(document.getElementById("perfil-correo")||{}).value||"";
+  var tel=(document.getElementById("perfil-tel")||{}).value||"";
+  if(!enc.trim()){toast("⚠️ El nombre del encargado no puede estar vacío");return;}
+  var dist=DISTRIBUIDORES.find(function(d){return d.ruc===USER.ruc;});
+  if(!dist){toast("⚠️ Error al encontrar tu perfil");return;}
+  dist.encargado=enc.trim();
+  dist.correo=correo.trim();
+  dist.tel=tel.trim();
+  USER.encargado=dist.encargado;
+  USER.correo=dist.correo;
+  USER.tel=dist.tel;
+  guardarDistribuidores();
+  cargarAvatar();
+  toast("✅ Datos guardados");
+}
+
+function abrirAgregarEstablecimiento(){
+  var ov2=document.createElement("div");
+  ov2.id="est-modal-ov";
+  ov2.style.cssText="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.7);z-index:9100;display:flex;align-items:center;justify-content:center;padding:24px";
+  ov2.innerHTML=
+    '<div style="background:var(--bg,#fff);border-radius:20px;padding:28px 22px;width:100%;max-width:420px">'+
+      '<h3 style="margin:0 0 16px">➕ Nuevo establecimiento</h3>'+
+      '<label class="form-label">Nombre del local</label>'+
+      '<input id="est-nm" class="form-input" placeholder="Ej: Sucursal Norte" style="margin-bottom:10px">'+
+      '<label class="form-label">Dirección</label>'+
+      '<input id="est-dir" class="form-input" placeholder="Calle, número, sector" style="margin-bottom:10px">'+
+      '<label class="form-label">Observaciones (opcional)</label>'+
+      '<input id="est-obs" class="form-input" placeholder="Ej: Horario de entrega 8am-5pm" style="margin-bottom:20px">'+
+      '<div style="display:flex;gap:8px">'+
+        '<button class="btn btn-s" style="flex:1" onclick="document.getElementById(\'est-modal-ov\').remove()">Cancelar</button>'+
+        '<button class="btn btn-p" style="flex:2" onclick="confirmarAgregarEstablecimiento()">✓ Guardar</button>'+
+      '</div>'+
+    '</div>';
+  ov2.addEventListener("click",function(e){if(e.target===ov2)ov2.remove();});
+  document.body.appendChild(ov2);
+}
+
+function confirmarAgregarEstablecimiento(){
+  var nm=(document.getElementById("est-nm")||{}).value||"";
+  var dir=(document.getElementById("est-dir")||{}).value||"";
+  var obs=(document.getElementById("est-obs")||{}).value||"";
+  if(!nm.trim()||!dir.trim()){toast("⚠️ Nombre y dirección son obligatorios");return;}
+  var dist=DISTRIBUIDORES.find(function(d){return d.ruc===USER.ruc;});
+  if(!dist)return;
+  if(!dist.establecimientos)dist.establecimientos=[];
+  dist.establecimientos.push({nm:nm.trim(),dir:dir.trim(),obs:obs.trim()});
+  USER.establecimientos=dist.establecimientos;
+  guardarDistribuidores();
+  document.getElementById("est-modal-ov").remove();
+  // Refrescar sección establecimientos en el perfil
+  var perfilOv=document.getElementById("perfil-ov");
+  if(perfilOv){var est=perfilOv.querySelector("#perfil-est-wrap");if(est)est.outerHTML=_renderEstablecimientosPerfil();}
+  toast("✅ Establecimiento guardado");
+  abrirPerfil();
+}
+
+function abrirEditarEstablecimiento(idx){
+  var dist=DISTRIBUIDORES.find(function(d){return d.ruc===USER.ruc;});
+  if(!dist||!dist.establecimientos||!dist.establecimientos[idx])return;
+  var est=dist.establecimientos[idx];
+  var ov2=document.createElement("div");
+  ov2.id="est-modal-ov";
+  ov2.style.cssText="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.7);z-index:9100;display:flex;align-items:center;justify-content:center;padding:24px";
+  ov2.innerHTML=
+    '<div style="background:var(--bg,#fff);border-radius:20px;padding:28px 22px;width:100%;max-width:420px">'+
+      '<h3 style="margin:0 0 16px">✏️ Editar establecimiento</h3>'+
+      '<label class="form-label">Nombre del local</label>'+
+      '<input id="est-nm" class="form-input" value="'+escHtml(est.nm||"")+'" style="margin-bottom:10px">'+
+      '<label class="form-label">Dirección</label>'+
+      '<input id="est-dir" class="form-input" value="'+escHtml(est.dir||"")+'" style="margin-bottom:10px">'+
+      '<label class="form-label">Observaciones (opcional)</label>'+
+      '<input id="est-obs" class="form-input" value="'+escHtml(est.obs||"")+'" style="margin-bottom:20px">'+
+      '<div style="display:flex;gap:8px">'+
+        '<button class="btn btn-s" style="flex:1" onclick="document.getElementById(\'est-modal-ov\').remove()">Cancelar</button>'+
+        '<button class="btn btn-p" style="flex:2" onclick="confirmarEditarEstablecimiento('+idx+')">💾 Guardar</button>'+
+      '</div>'+
+    '</div>';
+  ov2.addEventListener("click",function(e){if(e.target===ov2)ov2.remove();});
+  document.body.appendChild(ov2);
+}
+
+function confirmarEditarEstablecimiento(idx){
+  var nm=(document.getElementById("est-nm")||{}).value||"";
+  var dir=(document.getElementById("est-dir")||{}).value||"";
+  var obs=(document.getElementById("est-obs")||{}).value||"";
+  if(!nm.trim()||!dir.trim()){toast("⚠️ Nombre y dirección son obligatorios");return;}
+  var dist=DISTRIBUIDORES.find(function(d){return d.ruc===USER.ruc;});
+  if(!dist)return;
+  dist.establecimientos[idx]={nm:nm.trim(),dir:dir.trim(),obs:obs.trim()};
+  USER.establecimientos=dist.establecimientos;
+  guardarDistribuidores();
+  document.getElementById("est-modal-ov").remove();
+  toast("✅ Establecimiento actualizado");
+  var prev=document.getElementById("perfil-ov");if(prev)prev.remove();
+  abrirPerfil();
+}
+
+function eliminarEstablecimiento(idx){
+  confirmar("¿Eliminar este establecimiento?",function(){
+    var dist=DISTRIBUIDORES.find(function(d){return d.ruc===USER.ruc;});
+    if(!dist)return;
+    dist.establecimientos.splice(idx,1);
+    USER.establecimientos=dist.establecimientos;
+    guardarDistribuidores();
+    toast("🗑️ Establecimiento eliminado");
+    var prev=document.getElementById("perfil-ov");if(prev)prev.remove();
+    abrirPerfil();
+  });
 }
 
 function _filaPerfilDato(label,val){
