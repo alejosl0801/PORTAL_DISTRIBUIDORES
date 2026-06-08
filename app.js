@@ -598,27 +598,60 @@ function mostrarTipSeccion(tab){
   var key="pyro_tipsec_"+USER.ruc+"_"+tab;
   if(localStorage.getItem(key))return;
   try{localStorage.setItem(key,"1");}catch(e){}
-  var paso=0;
+  var paso=-1; // -1 = pantalla de bienvenida, 0..n-1 = pasos, n = recompensa
   var _tutTimer=null;
   var ov=document.createElement("div");
   ov.id="tipsec-ov";
   ov.style.cssText="position:fixed;top:0;left:0;width:100%;height:100vh;background:rgba(0,0,0,.88);z-index:800;display:flex;align-items:center;justify-content:center;padding:24px";
   ov.addEventListener("click",function(e){e.stopPropagation();});
 
-  function iniciarCuenta(btnPrevId,btnNextId,esFin){
+  function otorgarPuntosTutorial(){
+    var ya=localStorage.getItem("pyro_tut_pts_"+USER.ruc+"_"+tab);
+    if(ya)return;
+    try{localStorage.setItem("pyro_tut_pts_"+USER.ruc+"_"+tab,"1");}catch(e){}
+    var pid="TUT"+Date.now().toString().slice(-6);
+    PEDIDOS.push({id:pid,ruc:USER.ruc,razon:USER.razon,
+      fecha:new Date().toLocaleDateString("es-EC"),fechaISO:new Date().toISOString(),
+      esCanje:true,esBienvenida:false,esInstalacion:true,canjePts:0,
+      canjeNm:"🎓 Premio por completar tutorial de "+tab+" — 10 pts",
+      estado:"finalizado",total:0,puntos:10});
+    registrarLogPuntos(USER.ruc,"confirmado",10,"Tutorial completado: "+tab);
+    guardarPedidos();
+  }
+
+  function iniciarCuenta(btnId,seg0,label0){
+    if(_tutTimer)clearInterval(_tutTimer);
+    var seg=seg0;
+    function actualizar(){
+      var b=document.getElementById(btnId);if(!b)return;
+      if(seg>0){
+        b.disabled=true;b.style.background="#ccc";b.style.cursor="not-allowed";
+        b.textContent=label0+" ("+seg+")";
+        seg--;
+      } else {
+        clearInterval(_tutTimer);_tutTimer=null;
+        b.disabled=false;b.style.background="var(--rojo,#e03c31)";b.style.cursor="pointer";
+        b.textContent=label0;
+      }
+    }
+    actualizar();
+    _tutTimer=setInterval(actualizar,1000);
+  }
+
+  function iniciarCuenta2(btnPrevId,btnNextId,esFin){
     if(_tutTimer)clearInterval(_tutTimer);
     var seg=3;
     function actualizar(){
       var bp=document.getElementById(btnPrevId);
       var bn=document.getElementById(btnNextId);
       if(seg>0){
-        if(bp){bp.disabled=true;bp.textContent="← Atrás ("+seg+")";}
-        if(bn){bn.disabled=true;bn.textContent=(esFin?"¡Entendido! ✓":"Siguiente →")+" ("+seg+")";}
+        if(bp){bp.disabled=true;bp.style.background="#f5f5f5";bp.style.cursor="not-allowed";bp.textContent="← Atrás ("+seg+")";}
+        if(bn){bn.disabled=true;bn.style.background="#ccc";bn.style.cursor="not-allowed";bn.textContent=(esFin?"¡Entendido! ✓":"Siguiente →")+" ("+seg+")";}
         seg--;
       } else {
         clearInterval(_tutTimer);_tutTimer=null;
-        if(bp){bp.disabled=false;bp.textContent="← Atrás";bp.style.background="#fff";bp.style.color="#555";bp.style.cursor="pointer";bp.style.borderColor="#ddd";}
-        if(bn){bn.disabled=false;bn.textContent=esFin?"¡Entendido! ✓":"Siguiente →";bn.style.background="var(--rojo,#e03c31)";bn.style.cursor="pointer";}
+        if(bp){bp.disabled=false;bp.style.background="#fff";bp.style.color="#555";bp.style.cursor="pointer";bp.style.borderColor="#ddd";bp.textContent="← Atrás";}
+        if(bn){bn.disabled=false;bn.style.background="var(--rojo,#e03c31)";bn.style.cursor="pointer";bn.textContent=esFin?"¡Entendido! ✓":"Siguiente →";}
       }
     }
     actualizar();
@@ -627,11 +660,57 @@ function mostrarTipSeccion(tab){
 
   function renderOv(){
     if(_tutTimer){clearInterval(_tutTimer);_tutTimer=null;}
+
+    // ── Pantalla bienvenida (paso -1) ──
+    if(paso===-1){
+      ov.innerHTML=
+        '<div style="background:#fff;border-radius:24px;padding:40px 28px;width:100%;max-width:380px;text-align:center;box-shadow:0 16px 60px rgba(0,0,0,.5)">'+
+          '<div style="font-size:64px;margin-bottom:16px">🎓</div>'+
+          '<div style="font-size:22px;font-weight:800;color:var(--negro,#111);margin-bottom:10px;line-height:1.2">¡Tutorial rápido!</div>'+
+          '<div style="font-size:15px;color:#555;line-height:1.6;margin-bottom:20px">Tienes <b>'+tips.length+' pasos</b> para conocer esta sección.<br>Al completarlos recibirás:</div>'+
+          '<div style="background:linear-gradient(135deg,#B8860B,#f5c842);border-radius:16px;padding:18px 24px;margin-bottom:24px">'+
+            '<div style="font-size:42px;font-weight:900;color:#fff;line-height:1">🏆 10</div>'+
+            '<div style="font-size:14px;font-weight:700;color:#fff;margin-top:4px">PUNTOS DE BIENVENIDA</div>'+
+          '</div>'+
+          '<button id="tut-btn-start" disabled style="width:100%;padding:15px;background:#ccc;color:#fff;border:none;border-radius:14px;font-size:16px;font-weight:800;cursor:not-allowed;transition:all .2s">¡Empecemos! (3)</button>'+
+        '</div>';
+      document.getElementById("tut-btn-start").addEventListener("click",function(){
+        if(document.getElementById("tut-btn-start").disabled)return;
+        paso=0;renderOv();
+      });
+      iniciarCuenta("tut-btn-start",3,"¡Empecemos!");
+      return;
+    }
+
+    // ── Pantalla recompensa (paso === tips.length) ──
+    if(paso===tips.length){
+      otorgarPuntosTutorial();
+      ov.innerHTML=
+        '<div style="background:#fff;border-radius:24px;padding:40px 28px;width:100%;max-width:380px;text-align:center;box-shadow:0 16px 60px rgba(0,0,0,.5)">'+
+          '<div style="font-size:64px;margin-bottom:14px">🎉</div>'+
+          '<div style="font-size:22px;font-weight:800;color:var(--negro,#111);margin-bottom:10px">¡Tutorial completado!</div>'+
+          '<div style="font-size:15px;color:#555;margin-bottom:20px">Has ganado tu recompensa:</div>'+
+          '<div style="background:linear-gradient(135deg,#B8860B,#f5c842);border-radius:16px;padding:20px 24px;margin-bottom:8px">'+
+            '<div style="font-size:48px;font-weight:900;color:#fff;line-height:1">🏆 +10</div>'+
+            '<div style="font-size:15px;font-weight:700;color:#fff;margin-top:6px">PUNTOS ACREDITADOS</div>'+
+          '</div>'+
+          '<div style="font-size:12px;color:#aaa;margin-bottom:22px">Ya aparecen en tu saldo de recompensas</div>'+
+          '<button id="tut-btn-fin" disabled style="width:100%;padding:15px;background:#ccc;color:#fff;border:none;border-radius:14px;font-size:16px;font-weight:800;cursor:not-allowed;transition:all .2s">¡Ir al portal! (3)</button>'+
+        '</div>';
+      document.getElementById("tut-btn-fin").addEventListener("click",function(){
+        if(document.getElementById("tut-btn-fin").disabled)return;
+        if(_tutTimer)clearInterval(_tutTimer);
+        ov.remove();
+        renderInicio();
+      });
+      iniciarCuenta("tut-btn-fin",3,"¡Ir al portal!");
+      return;
+    }
+
+    // ── Pasos normales ──
     var t=tips[paso];
     var pct=Math.round((paso+1)/tips.length*100);
     var esFin=paso===tips.length-1;
-    var btnPrevId="tut-btn-prev";
-    var btnNextId="tut-btn-next";
     ov.innerHTML=
       '<div style="background:#fff;border-radius:24px;padding:36px 28px;width:100%;max-width:380px;text-align:center;box-shadow:0 16px 60px rgba(0,0,0,.5)">'+
         '<div style="font-size:56px;margin-bottom:14px">'+t.ico+'</div>'+
@@ -642,20 +721,19 @@ function mostrarTipSeccion(tab){
           '<div style="background:var(--rojo);height:6px;border-radius:6px;width:'+pct+'%;transition:width .3s"></div>'+
         '</div>'+
         '<div style="display:flex;gap:10px">'+
-          (paso>0?'<button id="'+btnPrevId+'" disabled style="flex:1;padding:13px;border:1.5px solid #ddd;border-radius:12px;font-size:14px;font-weight:600;background:#f5f5f5;cursor:not-allowed;color:#aaa;transition:all .2s">← Atrás (3)</button>':'')+
+          (paso>0?'<button id="tut-btn-prev" disabled style="flex:1;padding:13px;border:1.5px solid #ddd;border-radius:12px;font-size:14px;font-weight:600;background:#f5f5f5;cursor:not-allowed;color:#aaa;transition:all .2s">← Atrás (3)</button>':'')+
           (esFin
-            ?'<button id="'+btnNextId+'" disabled style="flex:2;padding:13px;background:#ccc;color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:not-allowed;transition:all .2s">¡Entendido! ✓ (3)</button>'
-            :'<button id="'+btnNextId+'" disabled style="flex:2;padding:13px;background:#ccc;color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:not-allowed;transition:all .2s">Siguiente → (3)</button>'
+            ?'<button id="tut-btn-next" disabled style="flex:2;padding:13px;background:#ccc;color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:not-allowed;transition:all .2s">Finalizar → (3)</button>'
+            :'<button id="tut-btn-next" disabled style="flex:2;padding:13px;background:#ccc;color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:not-allowed;transition:all .2s">Siguiente → (3)</button>'
           )+
         '</div>'+
       '</div>';
-    var btnNext=document.getElementById(btnNextId);
-    var btnPrev=document.getElementById(btnPrevId);
+    var btnNext=document.getElementById("tut-btn-next");
+    var btnPrev=document.getElementById("tut-btn-prev");
     if(btnNext){
       btnNext.addEventListener("click",function(){
         if(btnNext.disabled)return;
-        if(esFin){if(_tutTimer)clearInterval(_tutTimer);ov.remove();}
-        else{paso++;renderOv();}
+        paso++;renderOv();
       });
     }
     if(btnPrev){
@@ -664,7 +742,7 @@ function mostrarTipSeccion(tab){
         paso--;renderOv();
       });
     }
-    iniciarCuenta(btnPrevId,btnNextId,esFin);
+    iniciarCuenta2("tut-btn-prev","tut-btn-next",esFin);
   }
   renderOv();
   document.body.appendChild(ov);
