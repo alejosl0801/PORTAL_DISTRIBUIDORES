@@ -461,8 +461,8 @@ function finalizarLogin(u,pw){
   }
   if(!USER.esAdmin&&USER.rol!=="impresion"){
     cargarAvatar();
-    mostrarSaludoFlash();
     otorgarBienvenida();
+    if(!document.getElementById("primer-ingreso-ov")&&!document.getElementById("bienvenida-ov"))mostrarSaludoFlash();
     _ofrecerBiometria(u,pw);
     _sincTutorialesDesdeServidor(USER.ruc);
     // Flujo de primer ingreso (bienvenida + cambio de contraseña)
@@ -495,7 +495,7 @@ function _primerIngresoOv(innerHtml){
   _cerrarPrimerIngresoOv();
   var ov=document.createElement("div");
   ov.id="primer-ingreso-ov";
-  ov.style.cssText="position:fixed;top:0;left:50%;transform:translateX(-50%);width:min(480px,100vw);height:100vh;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;z-index:9998;padding:20px";
+  ov.style.cssText="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;z-index:9998;padding:20px";
   ov.innerHTML='<div style="background:var(--blanco,#fff);border-radius:22px;padding:28px 24px;max-width:340px;width:100%;text-align:center;box-shadow:0 12px 50px rgba(0,0,0,.45)">'+innerHtml+'</div>';
   document.body.appendChild(ov);
 }
@@ -573,7 +573,7 @@ function otorgarBienvenida(){
 function mostrarOverlayBienvenida(){
   var ov=document.createElement("div");
   ov.id="bienvenida-ov";
-  ov.style.cssText="position:fixed;top:0;left:50%;transform:translateX(-50%);width:min(480px,100vw);height:100vh;background:rgba(0,0,0,.65);display:flex;align-items:center;justify-content:center;z-index:9999";
+  ov.style.cssText="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.65);display:flex;align-items:center;justify-content:center;z-index:9999";
   ov.innerHTML='<div style="background:var(--bg);border-radius:20px;padding:32px 28px;max-width:320px;width:90%;text-align:center;box-shadow:0 8px 40px rgba(0,0,0,.4)">'+
     '<div style="font-size:52px;margin-bottom:12px">🎁</div>'+
     '<div style="font-size:20px;font-weight:800;color:var(--oro);margin-bottom:8px">¡Tienes un regalo de bienvenida!</div>'+
@@ -2583,7 +2583,7 @@ function mostrarOverlayCanje(){
   if(prev)prev.remove();
   var ov=document.createElement("div");
   ov.id="canje-ov";
-  ov.style.cssText="position:fixed;top:0;left:50%;transform:translateX(-50%);width:min(480px,100vw);height:100vh;background:rgba(0,0,0,.65);display:flex;align-items:center;justify-content:center;z-index:9999";
+  ov.style.cssText="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.65);display:flex;align-items:center;justify-content:center;z-index:9999";
   ov.innerHTML='<div style="background:var(--bg,#fff);border-radius:20px;padding:32px 28px;max-width:320px;width:90%;text-align:center;box-shadow:0 8px 40px rgba(0,0,0,.4)">'+
     '<div style="font-size:52px;margin-bottom:12px">🎁</div>'+
     '<div style="font-size:16px;color:var(--g4);margin-bottom:20px;line-height:1.5">Tu regalo será entregado en 0 a 7 días laborables o en tu próximo pedido</div>'+
