@@ -401,11 +401,15 @@ var _loginAttempts=0;var _loginBlocked=false;
 // Descarga del servidor qué tutoriales ya completó este RUC y los marca en localStorage
 function _sincTutorialesDesdeServidor(ruc){
   if(!ruc)return;
+  // Si el usuario acaba de reiniciar tutoriales, no restaurar desde servidor
+  if(localStorage.getItem("pyro_tut_resetado_"+ruc))return;
   try{
     fetch(GAS_URL+"?token="+encodeURIComponent(GAS_TOKEN)+"&accion=obtenerTutoriales&ruc="+encodeURIComponent(ruc))
       .then(function(r){return r.json();})
       .then(function(d){
         if(!d.ok||!Array.isArray(d.tabs))return;
+        // Doble check: si reinició mientras esperaba la respuesta, ignorar
+        if(localStorage.getItem("pyro_tut_resetado_"+ruc))return;
         d.tabs.forEach(function(tab){
           try{
             localStorage.setItem("pyro_tipsec_"+ruc+"_"+tab,"1");
@@ -632,6 +636,8 @@ function mostrarTipSeccion(tab){
     if(ya)return;
     try{localStorage.setItem(key,"1");}catch(e){}
     try{localStorage.setItem("pyro_tut_pts_"+USER.ruc+"_"+tab,"1");}catch(e){}
+    // Al completar un tutorial, limpiar el flag de reset (ya completó al menos uno)
+    try{localStorage.removeItem("pyro_tut_resetado_"+USER.ruc);}catch(e){}
     // Guardar en servidor para que no vuelva a salir en ningún dispositivo
     try{fetch(GAS_URL,{method:"POST",body:JSON.stringify({token:GAS_TOKEN,accion:"marcarTutorial",ruc:USER.ruc,tab:tab})});}catch(e){}
     var pid="TUT"+Date.now().toString().slice(-6);
@@ -5205,7 +5211,9 @@ function reiniciarTutoriales(){
   var ruc=USER.ruc;
   var keys=[];try{for(var i=0;i<localStorage.length;i++)keys.push(localStorage.key(i));}catch(e){}
   keys.filter(function(k){return k&&(k.startsWith("pyro_tipsec_"+ruc)||k.startsWith("pyro_tut_pts_"+ruc)||k==="pyro_tut_"+ruc);}).forEach(function(k){try{localStorage.removeItem(k);}catch(e){}});
-  // Borrar también en el servidor para que no se restaure al próximo login
+  // Marcar reset para que la sync del servidor no restaure los flags
+  try{localStorage.setItem("pyro_tut_resetado_"+ruc,"1");}catch(e){}
+  // Intentar borrar también en servidor (requiere GAS republicado, pero no es bloqueante)
   try{fetch(GAS_URL,{method:"POST",body:JSON.stringify({token:GAS_TOKEN,accion:"reiniciarTutoriales",ruc:ruc})});}catch(e){}
   var prev=document.getElementById("perfil-ov");if(prev)prev.remove();
   toast("✅ Tutoriales reiniciados. Navega entre secciones para verlos.");
