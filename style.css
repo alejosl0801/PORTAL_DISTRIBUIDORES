@@ -280,7 +280,7 @@ html[data-theme="dark"] body{background:#0a0a0a;}
 }
 .qty-inp {
   width:52px;padding:5px 4px;border:1.5px solid var(--g2);border-radius:8px;
-  font-size:14px;font-weight:700;text-align:center;font-family:'Barlow',sans-serif;
+  font-size:16px;font-weight:700;text-align:center;font-family:'Barlow',sans-serif;
   -moz-appearance:textfield;
 }
 .qty-inp::-webkit-outer-spin-button,.qty-inp::-webkit-inner-spin-button{-webkit-appearance:none;}
@@ -289,7 +289,7 @@ html[data-theme="dark"] body{background:#0a0a0a;}
 /* INPUT CANTIDAD EN CARRITO */
 .qty-cart-inp {
   width:52px;padding:5px 4px;border:1.5px solid var(--g2);border-radius:8px;
-  font-size:15px;font-weight:800;text-align:center;font-family:'Barlow Condensed',sans-serif;
+  font-size:16px;font-weight:800;text-align:center;font-family:'Barlow Condensed',sans-serif;
   -moz-appearance:textfield;
 }
 .qty-cart-inp::-webkit-outer-spin-button,.qty-cart-inp::-webkit-inner-spin-button{-webkit-appearance:none;}
@@ -709,9 +709,6 @@ html[data-theme="dark"] .skeleton::after{background:linear-gradient(90deg,transp
 .brasa{position:absolute;bottom:-10px;width:6px;height:6px;border-radius:50%;background:radial-gradient(circle,#ffd24d,#e03c31);pointer-events:none;z-index:0;opacity:.9}
 @keyframes brasaUp{0%{transform:translateY(0) scale(1);opacity:.9}100%{transform:translateY(-90vh) translateX(var(--bx,0)) scale(.2);opacity:0}}
 
-/* #30/#60 portal de fuego */
-.fire-portal{position:fixed;inset:0;z-index:9000;pointer-events:none;background:radial-gradient(circle,#ffd24d 0%,#e03c31 35%,#922B21 60%,#0D0D0D 100%);clip-path:circle(0% at 50% 50%);animation:firePortal .8s var(--ease-smooth) forwards}
-@keyframes firePortal{0%{clip-path:circle(0% at 50% 50%);opacity:1}70%{opacity:1}100%{clip-path:circle(150% at 50% 50%);opacity:0}}
 
 /* #31 vibration — JS */
 /* #32 reveal numbers — JS */
@@ -787,11 +784,6 @@ html.theme-fade,html.theme-fade body,html.theme-fade .content,html.theme-fade #a
 .rank-row{transition:transform .5s var(--ease-spring),background .3s}
 .rank-row.rank-up{background:rgba(26,107,58,.12)}
 
-/* #57 explosión nivel */
-.lvl-burst{position:fixed;inset:0;z-index:9001;pointer-events:none;display:flex;align-items:center;justify-content:center}
-.lvl-burst .lvl-txt{font-family:'Barlow Condensed',sans-serif;font-size:42px;font-weight:900;color:var(--oro);text-shadow:0 4px 20px rgba(232,185,35,.6);animation:lvlTxt 2s var(--ease-spring) forwards}
-@keyframes lvlTxt{0%{transform:scale(0);opacity:0}25%{transform:scale(1.15);opacity:1}80%{transform:scale(1);opacity:1}100%{transform:scale(1.05);opacity:0}}
-.lvl-part{position:absolute;width:9px;height:9px;border-radius:50%;background:var(--oro)}
 
 /* #58 factura imprime */
 .print-ov{position:fixed;inset:0;z-index:9001;background:rgba(0,0,0,.5);display:flex;justify-content:center;align-items:flex-start;pointer-events:none}

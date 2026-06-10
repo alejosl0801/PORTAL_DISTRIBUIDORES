@@ -100,10 +100,13 @@
     setTimeout(function(){
       if(ROOT.CARRITO && ROOT.CARRITO.length===0){
         ROOT.lanzarConfetti();
-        chequearSubidaNivel();
       }
     }, 60);
   });
+
+  // Stubs para funciones de nivel (no implementadas)
+  function snapshotNivel(){}
+  function chequearSubidaNivel(){}
 
   // ─────────── #2 Contador animado puntos topbar (al render inicio) ───────────
   wrap("renderInicio", function(){
