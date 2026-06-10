@@ -191,7 +191,7 @@ function primerNombre(razon){return String(razon||"").trim().split(/\s+/)[0]||""
 
 // ════════════════════ PUNTOS — LÓGICA CORREGIDA ════════════════════
 // Los puntos solo se confirman cuando el pedido está en estado "entregado" o "finalizado"
-function misPedidos(){return PEDIDOS.filter(function(p){return p.ruc===USER.ruc;});}
+function misPedidos(){if(!USER)return[];return PEDIDOS.filter(function(p){return p.ruc===USER.ruc;});}
 
 function puntosConfirmados(){
   return misPedidos().reduce(function(s,p){
@@ -211,6 +211,7 @@ function puntosPendientes(){
 
 function puntosCanjeados(){
   return misPedidos().reduce(function(s,p){
+    if(p.estado==="cancelado")return s;
     return s+(p.canjePts||0);
   },0);
 }
@@ -493,7 +494,7 @@ function primerIngresoPaso2(){
     '<div style="font-size:13px;color:var(--g4);margin-bottom:16px;line-height:1.5">Tu contraseña actual es temporal. Te recomendamos cambiarla por una segura.</div>'+
     '<input class="form-input" id="pi-pass1" type="password" placeholder="Nueva contraseña">'+
     '<input class="form-input" id="pi-pass2" type="password" placeholder="Repetir contraseña">'+
-    '<button class="btn btn-p btn-full" style="margin-top:4px" onclick="primerIngresoGuardarPass()">Guardar contraseña</button>'+
+    '<button class="btn btn-p btn-full" style="margin-top:4px" onclick="primerIngresoGuardarPass()">Guardar contraseña</button>'
   );
 }
 function primerIngresoGuardarPass(){
@@ -749,6 +750,7 @@ function mostrarTipSeccion(tab){
 
 // ════════════════════ NAV ════════════════════
 function irTab(t){
+  cerrarZoom();
   document.querySelectorAll("#s-main .tab-panel").forEach(function(x){x.classList.remove("active");});
   var el=document.getElementById("tab-"+t);if(el)el.classList.add("active");
   document.querySelectorAll("#s-main .bnav").forEach(function(b){b.classList.remove("active");});
@@ -900,8 +902,8 @@ function _logrosDefinicion(){
   return [
     // ── NIVEL 1: Inmediatos / primer contacto ──
     {ico:"🔍",nm:"Explorador",             desc:"Abre el portal PyroShield",               ok:true,            bonoPts:1},
-    {ico:"🌙",nm:"Noctámbulo",             desc:"Entra al portal después de las 9pm",       ok:(ahora.getHours()>=21||ahora.getHours()<6), bonoPts:1},
-    {ico:"☀️",nm:"Madrugador",             desc:"Entra al portal antes de las 8am",         ok:(ahora.getHours()<8), bonoPts:1},
+    {ico:"🌙",nm:"Noctámbulo",             desc:"Entra al portal después de las 9pm",       ok:(function(){var h=ahora.getHours();var logrado=(h>=21||h<6);if(logrado)try{localStorage.setItem("pyro_logro_noct_"+USER.ruc,"1");}catch(e){}return logrado||!!localStorage.getItem("pyro_logro_noct_"+(USER&&USER.ruc||""));}()), bonoPts:1},
+    {ico:"☀️",nm:"Madrugador",             desc:"Entra al portal antes de las 8am",         ok:(function(){var h=ahora.getHours();var logrado=(h<8);if(logrado)try{localStorage.setItem("pyro_logro_madrug_"+USER.ruc,"1");}catch(e){}return logrado||!!localStorage.getItem("pyro_logro_madrug_"+(USER&&USER.ruc||""));}()), bonoPts:1},
     {ico:"❤️",nm:"Primer favorito",        desc:"Guarda un producto como favorito",         ok:favs.length>=1,  bonoPts:2},
     {ico:"📝",nm:"Primer borrador",        desc:"Guarda un borrador de carrito",            ok:borradores.length>=1, bonoPts:2},
     {ico:"💬",nm:"Primera nota",           desc:"Agrega notas en un pedido",               ok:notas>=1,        bonoPts:2},
@@ -4203,9 +4205,7 @@ function renderPtsHistorial(){
 
 // ═══════════ MODO OFFLINE ═══════════
 function actualizarBannerOffline(){
-  var banner=document.getElementById("offline-banner");
-  if(!banner)return;
-  banner.style.display=navigator.onLine?"none":"block";
+  mostrarBannerOffline(!navigator.onLine);
 }
 
 function mostrarBannerOffline(offline){

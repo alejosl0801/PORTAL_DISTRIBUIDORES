@@ -1,5 +1,11 @@
-var CACHE_NAME = 'pyro-v8';
+var CACHE_NAME = 'pyro-v9';
 var CACHE_FILES = [
+  './',
+  './index.html',
+  './app.js',
+  './datos.js',
+  './style.css',
+  './anim.js',
   './manifest.json',
   './img/logo.jpg'
 ];
@@ -31,6 +37,8 @@ self.addEventListener('activate', function(e) {
 self.addEventListener('fetch', function(e) {
   var url = e.request.url;
   var host = self.location.hostname;
+  // Solo cachear GETs
+  if(e.request.method !== 'GET') return;
 
   // Network-first para APIs externas y proxies
   if (url.indexOf('azur.com.ec') !== -1 ||
@@ -46,21 +54,16 @@ self.addEventListener('fetch', function(e) {
     return;
   }
 
-  // index.html nunca se cachea — siempre red para que los ?v= nuevos carguen
-  if (url.indexOf('index.html') !== -1 ||
-      (url.endsWith('/') && (url.indexOf(host) !== -1 || url.indexOf('localhost') !== -1))) {
-    e.respondWith(fetch(e.request).catch(function(){return caches.match(e.request);}));
-    return;
-  }
-
-  // Network-first para archivos propios del portal (siempre descarga lo más nuevo)
+  // Network-first para archivos propios del portal — intenta red, guarda en caché si ok
   if (url.indexOf(host) !== -1 || url.indexOf('localhost') !== -1 || url.indexOf('127.0.0.1') !== -1) {
     e.respondWith(
       fetch(e.request).then(function(resp) {
-        var respClone = resp.clone();
-        caches.open(CACHE_NAME).then(function(cache) {
-          cache.put(e.request, respClone);
-        });
+        if(resp.ok) {
+          var respClone = resp.clone();
+          caches.open(CACHE_NAME).then(function(cache) {
+            cache.put(e.request, respClone);
+          });
+        }
         return resp;
       }).catch(function() {
         return caches.match(e.request);
@@ -69,10 +72,11 @@ self.addEventListener('fetch', function(e) {
     return;
   }
 
-  // Cache-first para fuentes externas (Google Fonts, Leaflet, etc.)
+  // Cache-first para fuentes externas (Google Fonts, etc.)
   e.respondWith(
     caches.match(e.request).then(function(cached) {
       return cached || fetch(e.request).then(function(resp) {
+        if(!resp.ok) return resp;
         return caches.open(CACHE_NAME).then(function(cache) {
           cache.put(e.request, resp.clone());
           return resp;

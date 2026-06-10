@@ -209,8 +209,7 @@
   wrap("renderCatalogo", aplicarShimmerBadges);
 
   // ─────────── #47 Estrella orbitando puntos topbar ───────────
-  function montarOrbit(){
-  }
+  function montarOrbit(){}
 
   // ─────────── #15 Shake carrito vacío ───────────
   document.addEventListener("click", function(e){
@@ -288,7 +287,7 @@
       box.appendChild(b);
       setTimeout(function(){if(b.parentNode)b.parentNode.removeChild(b);},dur*1000+100);
     }
-    setInterval(function(){ for(var i=0;i<2;i++) spawn(); }, 600);
+    var _bInt=setInterval(function(){ for(var i=0;i<2;i++) spawn(); }, 600); ROOT._animIntervals=ROOT._animIntervals||[]; ROOT._animIntervals.push(_bInt);
   }
 
   // ─────────── #50 Crossfade tema ───────────
@@ -377,13 +376,10 @@
   // ─────────── Init al cargar DOM ───────────
   function init(){
     montarBrasasLogin();
-    montarPullRefresh();
-    // si ya hay sesión y portal visible
-    if(document.getElementById("s-main") && document.getElementById("s-main").classList.contains("active")){
-      ROOT.iniciarTickerVentas(); montarOrbit();
-    }
-    // re-evaluar brasas cuando login se reactiva (logout)
-    setInterval(montarBrasasLogin, 4000);
+    // re-evaluar brasas cuando login se activa (logout→login)
+    var _brasasInt = setInterval(montarBrasasLogin, 4000);
+    ROOT._animIntervals = ROOT._animIntervals||[];
+    ROOT._animIntervals.push(_brasasInt);
   }
   if(document.readyState==="loading") document.addEventListener("DOMContentLoaded", init);
   else init();
