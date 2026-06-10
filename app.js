@@ -775,8 +775,8 @@ function mostrarTipSeccion(tab){
     }
     iniciarCuenta2("tut-btn-prev","tut-btn-next",esFin);
   }
-  renderOv();
   document.body.appendChild(ov);
+  renderOv();
 }
 
 // ════════════════════ NAV ════════════════════
