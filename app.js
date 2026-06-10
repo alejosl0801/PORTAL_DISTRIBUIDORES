@@ -397,6 +397,26 @@ function toggleVerPass(){
   else{inp.type="password";if(btn)btn.textContent="👁️";}
 }
 var _loginAttempts=0;var _loginBlocked=false;
+
+// Descarga del servidor qué tutoriales ya completó este RUC y los marca en localStorage
+function _sincTutorialesDesdeServidor(ruc){
+  if(!ruc)return;
+  try{
+    fetch(GAS_URL+"?token="+encodeURIComponent(GAS_TOKEN)+"&accion=obtenerTutoriales&ruc="+encodeURIComponent(ruc))
+      .then(function(r){return r.json();})
+      .then(function(d){
+        if(!d.ok||!Array.isArray(d.tabs))return;
+        d.tabs.forEach(function(tab){
+          try{
+            localStorage.setItem("pyro_tipsec_"+ruc+"_"+tab,"1");
+            localStorage.setItem("pyro_tut_pts_"+ruc+"_"+tab,"1");
+          }catch(e){}
+        });
+      })
+      .catch(function(){});
+  }catch(e){}
+}
+
 function hacerLogin(){
   if(_loginBlocked){toast("⛔ Demasiados intentos fallidos. Espera 30 segundos.");return;}
   var u=document.getElementById("login-user").value.trim();
@@ -444,6 +464,7 @@ function finalizarLogin(u,pw){
     mostrarSaludoFlash();
     otorgarBienvenida();
     _ofrecerBiometria(u,pw);
+    _sincTutorialesDesdeServidor(USER.ruc);
     // Flujo de primer ingreso (bienvenida + cambio de contraseña)
     var keyPrimer="pyro_primer_ingreso_"+USER.ruc;
     if(!localStorage.getItem(keyPrimer)){
@@ -609,6 +630,8 @@ function mostrarTipSeccion(tab){
     if(ya)return;
     try{localStorage.setItem(key,"1");}catch(e){}
     try{localStorage.setItem("pyro_tut_pts_"+USER.ruc+"_"+tab,"1");}catch(e){}
+    // Guardar en servidor para que no vuelva a salir en ningún dispositivo
+    try{fetch(GAS_URL,{method:"POST",body:JSON.stringify({token:GAS_TOKEN,accion:"marcarTutorial",ruc:USER.ruc,tab:tab})});}catch(e){}
     var pid="TUT"+Date.now().toString().slice(-6);
     PEDIDOS.push({id:pid,ruc:USER.ruc,razon:USER.razon,
       fecha:new Date().toLocaleDateString("es-EC"),fechaISO:new Date().toISOString(),

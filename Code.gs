@@ -7,6 +7,7 @@ var SHEET_ID = "1H3OQmaJtqVWHqVrI_hX2h8ZL_-a6RRobQww7IuGMhp0";
 var HOJA_PEDIDOS  = "PEDIDOS_PYRO";
 var HOJA_BACKUP   = "BACKUP_COMPLETO";
 var HOJA_STOCK    = "STOCK_PYRO";
+var HOJA_TUTORIALES = "TUTORIALES_COMPLETADOS";
 
 var ENCABEZADOS_PEDIDOS = [
   "id_pedido","fecha","ruc_dist","nombre_dist",
@@ -41,6 +42,8 @@ function doPost(e) {
         resultado = recibirBackupPyro(datos); break;
       case "obtenerPedidos":
         resultado = obtenerTodosPedidos(datos); break;
+      case "marcarTutorial":
+        resultado = marcarTutorialCompletado(datos); break;
       default:
         resultado = { ok: false, error: "Acción no reconocida: " + datos.accion };
     }
@@ -67,6 +70,9 @@ function doGet(e) {
   }
   if (params.accion === "obtenerMeta") {
     return _json(obtenerMetaNube());
+  }
+  if (params.accion === "obtenerTutoriales") {
+    return _json(obtenerTutorialesCompletados(params));
   }
   return _json({ ok: false, error: "Acción no reconocida" });
 }
@@ -233,6 +239,38 @@ function obtenerMetaNube() {
   } catch(e) {
     return { ok: true, meta: {} };
   }
+}
+
+// ════════════════════════════════════════════════════════════════
+// marcarTutorialCompletado — guarda ruc + tab en TUTORIALES_COMPLETADOS
+// ════════════════════════════════════════════════════════════════
+function marcarTutorialCompletado(datos) {
+  if (!datos.ruc || !datos.tab) return { ok: false, error: "Faltan campos" };
+  var hoja = obtenerHoja(HOJA_TUTORIALES, ["ruc","tab","fecha"]);
+  var ultima = hoja.getLastRow();
+  if (ultima > 1) {
+    var rows = hoja.getRange(2, 1, ultima - 1, 2).getValues();
+    for (var i = 0; i < rows.length; i++) {
+      if (rows[i][0] === datos.ruc && rows[i][1] === datos.tab) return { ok: true, duplicado: true };
+    }
+  }
+  hoja.appendRow([datos.ruc, datos.tab, new Date()]);
+  return { ok: true };
+}
+
+// ════════════════════════════════════════════════════════════════
+// obtenerTutorialesCompletados — devuelve lista de tabs completados por ruc
+// ════════════════════════════════════════════════════════════════
+function obtenerTutorialesCompletados(params) {
+  if (!params.ruc) return { ok: false, error: "Falta ruc" };
+  var ss = SpreadsheetApp.openById(SHEET_ID);
+  var hoja = ss.getSheetByName(HOJA_TUTORIALES);
+  if (!hoja || hoja.getLastRow() < 2) return { ok: true, tabs: [] };
+  var rows = hoja.getRange(2, 1, hoja.getLastRow() - 1, 2).getValues();
+  var tabs = rows
+    .filter(function(r){ return r[0] === params.ruc; })
+    .map(function(r){ return r[1]; });
+  return { ok: true, tabs: tabs };
 }
 
 // ════════════════════════════════════════════════════════════════
