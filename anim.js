@@ -221,35 +221,6 @@
     }
   });
 
-  // ─────────── #33 Long-press en Confirmar ───────────
-  function montarLongPress(){}
-  // ─────────── #13 #38 Ticker numérico total carrito ───────────
-  ROOT.animarNumero = function(el, nuevoTexto){
-    if(!el) return;
-    var to=parseFloat(String(nuevoTexto).replace(/[^0-9.]/g,""))||0;
-    var from=parseFloat(el.getAttribute("data-num")||"0")||0;
-    if(Math.abs(to-from)<0.001){el.textContent=nuevoTexto; return;}
-    var pre=String(nuevoTexto).match(/^[^\d]*/)[0];
-    var t0=Date.now(), dur=500;
-    (function tick(){
-      var k=Math.min((Date.now()-t0)/dur,1), e=1-Math.pow(1-k,3);
-      var v=from+(to-from)*e;
-      el.textContent=pre+v.toFixed(2);
-      if(k<1) requestAnimationFrame(tick); else { el.textContent=nuevoTexto; el.setAttribute("data-num",to); }
-    })();
-  };
-  function animarTotalCarrito(){
-    var tot=document.querySelector("#cart-resumen .rrow.tot span:last-child");
-    if(tot) ROOT.animarNumero(tot, tot.textContent);
-  }
-
-  // ─────────── #49 IVA slide-in ───────────
-  function animarIvaCarrito(){
-    $all("#cart-resumen .rrow").forEach(function(r){
-      if(/IVA/i.test(r.textContent)){ r.classList.remove("iva-anim"); void r.offsetWidth; r.classList.add("iva-anim"); }
-    });
-  }
-
   // ─────────── #37 Barra "añade X más para descuento" ───────────
   function montarTierBars(){
     $all("#cart-lista .prx-sig").forEach(function(sig){

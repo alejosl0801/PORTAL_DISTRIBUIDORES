@@ -3493,7 +3493,7 @@ function confirmarLimpiarDatos(){
   if(!confirm("¿Limpiar TODOS los datos de prueba? Se eliminarán pedidos, stock y sesiones. Esta acción no se puede deshacer."))return;
   ["pyro_pedidos","pyro_stock","pyro_sesion","pyro_dist_extra"].forEach(function(k){try{localStorage.removeItem(k);}catch(e){}});
   var keys=[];try{for(var i=0;i<localStorage.length;i++)keys.push(localStorage.key(i));}catch(e){}
-  keys.filter(function(k){return k&&(k.startsWith("pyro_cart_")||k.startsWith("pyro_borradores_")||k.startsWith("pyro_tut_")||k.startsWith("pyro_log_puntos_")||k.startsWith("pyro_avatar_")||k.startsWith("pyro_pwa_")||k.startsWith("pyro_biometria_"));}).forEach(function(k){try{localStorage.removeItem(k);}catch(e){}});
+  keys.filter(function(k){return k&&(k.startsWith("pyro_cart_")||k.startsWith("pyro_borradores_")||k.startsWith("pyro_tut_")||k.startsWith("pyro_tipsec_")||k.startsWith("pyro_tut_pts_")||k.startsWith("pyro_log_puntos_")||k.startsWith("pyro_avatar_")||k.startsWith("pyro_pwa_")||k.startsWith("pyro_biometria_"));}).forEach(function(k){try{localStorage.removeItem(k);}catch(e){}});
   toast("✅ Datos de prueba eliminados. Recargando...");
   setTimeout(function(){window.location.reload();},1200);
 }
@@ -5156,6 +5156,7 @@ function abrirPerfil(){
         _renderEstablecimientosPerfil()+
         '<hr style="border:none;border-top:1px solid var(--g2);margin-bottom:16px">'+
         '<button class="btn btn-s btn-full" style="margin-bottom:10px" onclick="mostrarCambioPassOpcional()">🔐 Cambiar contraseña</button>'+
+        '<button class="btn btn-s btn-full" style="margin-bottom:10px" onclick="reiniciarTutoriales()">📖 Ver tutoriales otra vez</button>'+
         '<button class="btn btn-s btn-full" onclick="cambiarTema()">🌙 Modo oscuro</button>'+
         '<button onclick="document.getElementById(\'perfil-ov\').remove()" style="display:block;width:100%;margin-top:14px;padding:12px;border:none;background:var(--g1);border-radius:12px;font-size:14px;font-weight:600;cursor:pointer;color:var(--g4)">Cerrar</button>'+
       '</div>';
@@ -5163,6 +5164,14 @@ function abrirPerfil(){
   renderPerfil();
   document.body.appendChild(ov);
   ov.addEventListener("click",function(e){if(e.target===ov)ov.remove();});
+}
+
+function reiniciarTutoriales(){
+  if(!USER)return;
+  var keys=[];try{for(var i=0;i<localStorage.length;i++)keys.push(localStorage.key(i));}catch(e){}
+  keys.filter(function(k){return k&&(k.startsWith("pyro_tipsec_"+USER.ruc)||k.startsWith("pyro_tut_pts_"+USER.ruc)||k==="pyro_tut_"+USER.ruc);}).forEach(function(k){try{localStorage.removeItem(k);}catch(e){}});
+  var prev=document.getElementById("perfil-ov");if(prev)prev.remove();
+  toast("✅ Tutoriales reiniciados. Navega entre secciones para verlos.");
 }
 
 function _filaPerfilEditable(label,id,val){
