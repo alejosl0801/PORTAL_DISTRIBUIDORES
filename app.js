@@ -2152,8 +2152,9 @@ function toggleFechasFiltro(){
   wrap.classList.toggle("open");
 }
 function aplicarFiltroFecha(){
-  H_DESDE=document.getElementById("h-desde")?document.getElementById("h-desde").value:null;
-  H_HASTA=document.getElementById("h-hasta")?document.getElementById("h-hasta").value:null;
+  var d=document.getElementById("h-desde"),h=document.getElementById("h-hasta");
+  H_DESDE=d?d.value:null;
+  H_HASTA=h?h.value:null;
   renderHistorial();
 }
 function limpiarFiltroFecha(){
@@ -4972,7 +4973,7 @@ function registrarInstalacionActual(){
   var tipo=_esMobile()?"mobile":"desktop";
   var key=tipo==="mobile"?_keyInstMobile(USER.ruc):_keyInstDesktop(USER.ruc);
   if(!localStorage.getItem(key)){
-    localStorage.setItem(key,"1");
+    try{localStorage.setItem(key,"1");}catch(e){}
     // Otorgar 20 puntos por instalación
     var pid="INST"+Date.now().toString().slice(-6);
     var tipoLabel=tipo==="mobile"?"celular":"computadora";
