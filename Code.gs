@@ -44,6 +44,8 @@ function doPost(e) {
         resultado = obtenerTodosPedidos(datos); break;
       case "marcarTutorial":
         resultado = marcarTutorialCompletado(datos); break;
+      case "reiniciarTutoriales":
+        resultado = reiniciarTutorialesRuc(datos); break;
       default:
         resultado = { ok: false, error: "Acción no reconocida: " + datos.accion };
     }
@@ -271,6 +273,22 @@ function obtenerTutorialesCompletados(params) {
     .filter(function(r){ return r[0] === params.ruc; })
     .map(function(r){ return r[1]; });
   return { ok: true, tabs: tabs };
+}
+
+// ════════════════════════════════════════════════════════════════
+// reiniciarTutorialesRuc — borra todas las filas de un RUC en TUTORIALES_COMPLETADOS
+// ════════════════════════════════════════════════════════════════
+function reiniciarTutorialesRuc(datos) {
+  if (!datos.ruc) return { ok: false, error: "Falta ruc" };
+  var ss = SpreadsheetApp.openById(SHEET_ID);
+  var hoja = ss.getSheetByName(HOJA_TUTORIALES);
+  if (!hoja || hoja.getLastRow() < 2) return { ok: true };
+  var rows = hoja.getRange(2, 1, hoja.getLastRow() - 1, 1).getValues();
+  // Recorrer de abajo hacia arriba para no desajustar índices al borrar
+  for (var i = rows.length - 1; i >= 0; i--) {
+    if (rows[i][0] === datos.ruc) hoja.deleteRow(i + 2);
+  }
+  return { ok: true };
 }
 
 // ════════════════════════════════════════════════════════════════

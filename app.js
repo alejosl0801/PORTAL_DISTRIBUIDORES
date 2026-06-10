@@ -5202,8 +5202,11 @@ function abrirPerfil(){
 
 function reiniciarTutoriales(){
   if(!USER)return;
+  var ruc=USER.ruc;
   var keys=[];try{for(var i=0;i<localStorage.length;i++)keys.push(localStorage.key(i));}catch(e){}
-  keys.filter(function(k){return k&&(k.startsWith("pyro_tipsec_"+USER.ruc)||k.startsWith("pyro_tut_pts_"+USER.ruc)||k==="pyro_tut_"+USER.ruc);}).forEach(function(k){try{localStorage.removeItem(k);}catch(e){}});
+  keys.filter(function(k){return k&&(k.startsWith("pyro_tipsec_"+ruc)||k.startsWith("pyro_tut_pts_"+ruc)||k==="pyro_tut_"+ruc);}).forEach(function(k){try{localStorage.removeItem(k);}catch(e){}});
+  // Borrar también en el servidor para que no se restaure al próximo login
+  try{fetch(GAS_URL,{method:"POST",body:JSON.stringify({token:GAS_TOKEN,accion:"reiniciarTutoriales",ruc:ruc})});}catch(e){}
   var prev=document.getElementById("perfil-ov");if(prev)prev.remove();
   toast("✅ Tutoriales reiniciados. Navega entre secciones para verlos.");
 }
