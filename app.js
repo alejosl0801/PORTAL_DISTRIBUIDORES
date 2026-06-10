@@ -585,6 +585,7 @@ function mostrarOverlayBienvenida(){
 function logout(){
   USER=null;CARRITO=[];
   if(_notifInterval){clearInterval(_notifInterval);_notifInterval=null;}
+  if(_autoguardadoInterval){clearInterval(_autoguardadoInterval);_autoguardadoInterval=null;}
   try{localStorage.removeItem("pyro_sesion");}catch(e){}
   mostrar("s-login");
   document.getElementById("login-user").value="";
@@ -618,6 +619,7 @@ function mostrarTipSeccion(tab){
   if(!tips||!tips.length)return;
   var key="pyro_tipsec_"+USER.ruc+"_"+tab;
   if(localStorage.getItem(key))return;
+  var prev=document.getElementById("tipsec-ov");if(prev)prev.remove();
   var paso=-1; // -1 = pantalla de bienvenida, 0..n-1 = pasos, n = recompensa
   var _tutTimer=null;
   var ov=document.createElement("div");
@@ -2522,7 +2524,7 @@ function renderRecompensas(){
   var mot=siguiente?"¡Te faltan "+fmtPts(siguiente.pts-saldo)+" puntos para "+siguiente.nm+"!":"🎉 ¡Tienes puntos para canjear!";
   document.getElementById("rec-mot").textContent=mot;
   document.getElementById("rec-lista").innerHTML=REWARDS.map(function(r){
-    var pct=Math.min(100,Math.round(saldo/r.pts*100));
+    var pct=r.pts>0?Math.min(100,Math.round(saldo/r.pts*100)):100;
     var puede=saldo>=r.pts&&!r.agotado;
     return '<div class="rec-item">'+
       '<div class="rec-top"><div class="rec-ico">'+r.ico+'</div>'+
@@ -2538,6 +2540,7 @@ function renderRecompensas(){
     document.querySelectorAll("#rec-lista .rec-bar").forEach(function(b){b.style.width=(b.getAttribute("data-pct")||0)+"%";});
   },60);
   // Historial de puntos
+  if(!USER)return;
   var logPts=[];try{logPts=JSON.parse(localStorage.getItem("pyro_log_puntos_"+USER.ruc)||"[]");}catch(e){}
   var logEl=document.getElementById("rec-log-puntos");
   if(logEl){
@@ -3175,6 +3178,7 @@ function generarAzur(pid){
   if(_azurBusy){toast("⏳ Factura en proceso, espera...");return;}
   var p=PEDIDOS.find(function(x){return x.id===pid;});
   if(!p)return;
+  if(p.esCanje){toast("⚠️ Los canjes no se facturan por Azur");return;}
   if(!AZUR_TOKEN){toast("⚠️ Configura el token de Azur primero");return;}
   var dist=DISTRIBUIDORES.find(function(d){return d.ruc===p.ruc;})||{};
   var numDoc=(p.ruc||"").replace(/[^0-9]/g,"");
@@ -3255,7 +3259,7 @@ function exportarExcelDist(){
   var header=["RUC","Razón Social","Encargado","Email","Teléfono","Nº Pedidos","Total Comprado","Último Pedido","Estado"];
   var xml='<?xml version="1.0"?><Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"><Worksheet ss:Name="Distribuidores"><Table>'
     +'<Row>'+header.map(function(h){return'<Cell><Data ss:Type="String">'+h+'</Data></Cell>';}).join("")+'</Row>'
-    +rows.map(function(r){return'<Row>'+r.map(function(c){return'<Cell><Data ss:Type="String">'+String(c).replace(/&/g,"&amp;").replace(/</g,"&lt;")+'</Data></Cell>';}).join("")+'</Row>';}).join("")
+    +rows.map(function(r){return'<Row>'+r.map(function(c){return'<Cell><Data ss:Type="String">'+String(c).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")+'</Data></Cell>';}).join("")+'</Row>';}).join("")
     +'</Table></Worksheet></Workbook>';
   var blob=new Blob([xml],{type:"application/vnd.ms-excel"});
   var a=document.createElement("a");var u=URL.createObjectURL(blob);a.href=u;
@@ -3306,6 +3310,7 @@ function abrirNuevoDist(){abrir("modal-nuevo-dist");}
 function eliminarDist(ruc){
   var d=DISTRIBUIDORES.find(function(x){return x.ruc===ruc;});
   if(!d)return;
+  if(d.esAdmin){toast("⚠️ No se puede eliminar al administrador");return;}
   confirmar("¿Eliminar al distribuidor <b>"+escHtml(d.razon)+"</b>?<br><small>Esta acción no se puede deshacer.</small>",function(){
     var idx=DISTRIBUIDORES.indexOf(d);
     if(idx>-1)DISTRIBUIDORES.splice(idx,1);
@@ -3405,7 +3410,7 @@ function guardarEditarDist(ruc){
   var d=DISTRIBUIDORES.find(function(x){return x.ruc===ruc;});
   if(!d)return;
   d.razon=document.getElementById("ed-razon").value.trim()||d.razon;
-  d.empresa=document.getElementById("ed-empresa").value.trim()||undefined;
+  d.empresa=document.getElementById("ed-empresa").value.trim()||"";
   var encEl=document.getElementById("ed-encargado");
   if(encEl)d.encargado=encEl.value.trim();
   d.tel=document.getElementById("ed-tel").value.trim();
@@ -3421,8 +3426,8 @@ function guardarEditarDist(ruc){
   var saldoEl=document.getElementById("ed-saldo");if(saldoEl)d.saldoPendiente=parseFloat(saldoEl.value)||0;
   var notasEl=document.getElementById("ed-notas");if(notasEl)d.notasInternas=notasEl.value.trim();
   var latEl=document.getElementById("ed-lat"),lngEl=document.getElementById("ed-lng");
-  if(latEl)d.lat=latEl.value.trim()===""?undefined:parseFloat(latEl.value);
-  if(lngEl)d.lng=lngEl.value.trim()===""?undefined:parseFloat(lngEl.value);
+  if(latEl){var _lat=parseFloat(latEl.value);d.lat=latEl.value.trim()===""||isNaN(_lat)?undefined:_lat;}
+  if(lngEl){var _lng=parseFloat(lngEl.value);d.lng=lngEl.value.trim()===""||isNaN(_lng)?undefined:_lng;}
   guardarDistribuidores();
   cerrarModal("modal-editar-dist");
   renderAdmDist();
@@ -4944,6 +4949,7 @@ function restaurarMetaDesdeNube(){
 
 // ════════════════════ PWA INSTALL GAMIFICADO ════════════════════
 var _deferredInstallPrompt=null;
+window.addEventListener("beforeinstallprompt",function(e){e.preventDefault();_deferredInstallPrompt=e;});
 
 // Detecta tipo de dispositivo
 function _esMobile(){return/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);}
@@ -5088,7 +5094,11 @@ function mostrarGuiaInstalacion(dispositivo){
         '</div>'+
         '<button onclick="document.getElementById(\'guia-inst-ov\').remove()" style="margin-top:12px;background:none;border:none;color:#aaa;font-size:12px;cursor:pointer;width:100%">Cerrar</button>'+
       '</div>';
-    ov._next=function(){paso++;renderPaso();};
+    ov._next=function(){
+      paso++;
+      if(paso===1&&_deferredInstallPrompt){_deferredInstallPrompt.prompt();_deferredInstallPrompt.userChoice.then(function(){_deferredInstallPrompt=null;});}
+      renderPaso();
+    };
     ov._prev=function(){paso--;renderPaso();};
   }
   renderPaso();
