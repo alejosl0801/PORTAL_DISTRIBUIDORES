@@ -494,7 +494,6 @@ function primerIngresoPaso2(){
     '<input class="form-input" id="pi-pass1" type="password" placeholder="Nueva contraseña">'+
     '<input class="form-input" id="pi-pass2" type="password" placeholder="Repetir contraseña">'+
     '<button class="btn btn-p btn-full" style="margin-top:4px" onclick="primerIngresoGuardarPass()">Guardar contraseña</button>'+
-    '<button class="btn btn-s btn-full" style="margin-top:8px" onclick="primerIngresoPaso3()">Omitir por ahora</button>'
   );
 }
 function primerIngresoGuardarPass(){
@@ -597,7 +596,6 @@ function mostrarTipSeccion(tab){
   if(!tips||!tips.length)return;
   var key="pyro_tipsec_"+USER.ruc+"_"+tab;
   if(localStorage.getItem(key))return;
-  try{localStorage.setItem(key,"1");}catch(e){}
   var paso=-1; // -1 = pantalla de bienvenida, 0..n-1 = pasos, n = recompensa
   var _tutTimer=null;
   var ov=document.createElement("div");
@@ -608,6 +606,7 @@ function mostrarTipSeccion(tab){
   function otorgarPuntosTutorial(){
     var ya=localStorage.getItem("pyro_tut_pts_"+USER.ruc+"_"+tab);
     if(ya)return;
+    try{localStorage.setItem(key,"1");}catch(e){}
     try{localStorage.setItem("pyro_tut_pts_"+USER.ruc+"_"+tab,"1");}catch(e){}
     var pid="TUT"+Date.now().toString().slice(-6);
     PEDIDOS.push({id:pid,ruc:USER.ruc,razon:USER.razon,
