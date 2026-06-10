@@ -664,10 +664,10 @@ function mostrarTipSeccion(tab){
     // ── Pantalla bienvenida (paso -1) ──
     if(paso===-1){
       ov.innerHTML=
-        '<div style="background:#fff;border-radius:24px;padding:40px 28px;width:100%;max-width:380px;text-align:center;box-shadow:0 16px 60px rgba(0,0,0,.5)">'+
+        '<div style="background:var(--bg,#fff);border-radius:24px;padding:40px 28px;width:100%;max-width:380px;text-align:center;box-shadow:0 16px 60px rgba(0,0,0,.5)">'+
           '<div style="font-size:64px;margin-bottom:16px">🎓</div>'+
           '<div style="font-size:22px;font-weight:800;color:var(--negro,#111);margin-bottom:10px;line-height:1.2">¡Tutorial rápido!</div>'+
-          '<div style="font-size:15px;color:#555;line-height:1.6;margin-bottom:20px">Tienes <b>'+tips.length+' pasos</b> para conocer esta sección.<br>Al completarlos recibirás:</div>'+
+          '<div style="font-size:15px;color:var(--g4,#555);line-height:1.6;margin-bottom:20px">Tienes <b>'+tips.length+' pasos</b> para conocer esta sección.<br>Al completarlos recibirás:</div>'+
           '<div style="background:linear-gradient(135deg,#B8860B,#f5c842);border-radius:16px;padding:18px 24px;margin-bottom:24px">'+
             '<div style="font-size:42px;font-weight:900;color:#fff;line-height:1">🏆 10</div>'+
             '<div style="font-size:14px;font-weight:700;color:#fff;margin-top:4px">PUNTOS DE BIENVENIDA</div>'+
@@ -686,10 +686,10 @@ function mostrarTipSeccion(tab){
     if(paso===tips.length){
       otorgarPuntosTutorial();
       ov.innerHTML=
-        '<div style="background:#fff;border-radius:24px;padding:40px 28px;width:100%;max-width:380px;text-align:center;box-shadow:0 16px 60px rgba(0,0,0,.5)">'+
+        '<div style="background:var(--bg,#fff);border-radius:24px;padding:40px 28px;width:100%;max-width:380px;text-align:center;box-shadow:0 16px 60px rgba(0,0,0,.5)">'+
           '<div style="font-size:64px;margin-bottom:14px">🎉</div>'+
           '<div style="font-size:22px;font-weight:800;color:var(--negro,#111);margin-bottom:10px">¡Tutorial completado!</div>'+
-          '<div style="font-size:15px;color:#555;margin-bottom:20px">Has ganado tu recompensa:</div>'+
+          '<div style="font-size:15px;color:var(--g4,#555);margin-bottom:20px">Has ganado tu recompensa:</div>'+
           '<div style="background:linear-gradient(135deg,#B8860B,#f5c842);border-radius:16px;padding:20px 24px;margin-bottom:8px">'+
             '<div style="font-size:48px;font-weight:900;color:#fff;line-height:1">🏆 +10</div>'+
             '<div style="font-size:15px;font-weight:700;color:#fff;margin-top:6px">PUNTOS ACREDITADOS</div>'+
@@ -712,11 +712,11 @@ function mostrarTipSeccion(tab){
     var pct=Math.round((paso+1)/tips.length*100);
     var esFin=paso===tips.length-1;
     ov.innerHTML=
-      '<div style="background:#fff;border-radius:24px;padding:36px 28px;width:100%;max-width:380px;text-align:center;box-shadow:0 16px 60px rgba(0,0,0,.5)">'+
+      '<div style="background:var(--bg,#fff);border-radius:24px;padding:36px 28px;width:100%;max-width:380px;text-align:center;box-shadow:0 16px 60px rgba(0,0,0,.5)">'+
         '<div style="font-size:56px;margin-bottom:14px">'+t.ico+'</div>'+
         '<div style="font-size:11px;font-weight:700;color:var(--oro);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:10px">PASO '+(paso+1)+' DE '+tips.length+'</div>'+
         '<div style="font-size:20px;font-weight:800;color:var(--negro);margin-bottom:10px;line-height:1.2">'+escHtml(t.t)+'</div>'+
-        '<div style="font-size:14px;color:#555;line-height:1.6;margin-bottom:22px">'+escHtml(t.d)+'</div>'+
+        '<div style="font-size:14px;color:var(--g4,#555);line-height:1.6;margin-bottom:22px">'+escHtml(t.d)+'</div>'+
         '<div style="background:#eee;border-radius:6px;height:6px;margin-bottom:22px">'+
           '<div style="background:var(--rojo);height:6px;border-radius:6px;width:'+pct+'%;transition:width .3s"></div>'+
         '</div>'+
@@ -1158,7 +1158,7 @@ function renderPromosHome(){
   cont.innerHTML="<div class='sec-titulo'>Promociones</div>"+activas.map(function(pr){
     var items=pr.items.map(function(it){
       var prod=PRODUCTOS.find(function(x){return x.id===it.id;});
-      var imgHtml=prod&&prod.img&&IMGS[prod.img]?'<img src="'+IMGS[prod.img]+'" alt="'+it.nm+'" onerror="this.style.display=\'none\'" style="width:60px;height:60px;object-fit:contain;background:#000;border-radius:8px;margin-bottom:6px">':'';
+      var imgHtml=prod&&prod.img&&IMGS[prod.img]?'<img src="'+IMGS[prod.img]+'" alt="'+escHtml(it.nm)+'" onerror="this.style.display=\'none\'" style="width:60px;height:60px;object-fit:contain;background:#000;border-radius:8px;margin-bottom:6px">':'';
       // Controles de cantidad + agregar al carrito (idénticos al catálogo)
       var addCtl='';
       if(prod&&!prod.ago){
@@ -1177,7 +1177,7 @@ function renderPromosHome(){
       }
       return '<div class="promo-it">'+
         imgHtml+
-        '<div class="nm">'+it.nm+'</div>'+
+        '<div class="nm">'+escHtml(it.nm)+'</div>'+
         '<div class="pv">'+fmt$(it.pv)+'</div>'+
         '<div class="pp">'+fmt$(it.pp)+'</div>'+
         '<div class="sv">Ahorras '+fmt$(it.ahorro)+'</div>'+
@@ -1429,10 +1429,10 @@ function renderProdCard(p){
 
   if(CAT_GRID){
     return '<div class="prod prod-grid'+(p.ago?" ago":"")+'">'+
-      '<div class="prod-grid-img">'+(imgSrc?'<img src="'+imgSrc+'" alt="'+p.nm+'" loading="lazy" onerror="this.onerror=null;this.src=IMG_PLACEHOLDER" onclick="zoomImg(\''+imgSrc+'\')" style="cursor:zoom-in">':'<div class="ph" style="font-size:36px">🧯</div>')+'</div>'+
+      '<div class="prod-grid-img">'+(imgSrc?'<img src="'+imgSrc+'" alt="'+escHtml(p.nm)+'" loading="lazy" onerror="this.onerror=null;this.src=IMG_PLACEHOLDER" onclick="zoomImg(\''+imgSrc+'\')" style="cursor:zoom-in">':'<div class="ph" style="font-size:36px">🧯</div>')+'</div>'+
       favBtn+
       '<div class="prod-grid-body">'+
-        '<div class="prod-nm">'+p.nm+'</div>'+
+        '<div class="prod-nm">'+escHtml(p.nm)+'</div>'+
         '<div class="prod-meta" style="margin:4px 0">'+stockBadge+promoBadge+'</div>'+
         '<div class="prod-pu">'+fmt$(pc)+'</div>'+
         (descPctDisp>0?'<div class="prod-desc-badge" style="display:inline-block;margin-bottom:4px">−'+descPctDisp+'%</div>':'')+
@@ -1459,7 +1459,7 @@ function renderProdCard(p){
     favBtn+deseoBtn+calcBtn+
     '<div class="prod-img">'+imgHtml+'</div>'+
     '<div class="prod-info">'+
-      '<div class="prod-nm">'+p.nm+'</div>'+
+      '<div class="prod-nm">'+escHtml(p.nm)+'</div>'+
       '<div class="prod-meta">'+stockBadge+promoBadge+volBadge+'</div>'+
     '</div>'+
     '<div class="prod-r">'+
@@ -1723,7 +1723,7 @@ function renderCarrito(){
     var stockWarn=(p.stock<=20&&p.stock>0)?'<div class="stock-warn">⚠️ Quedan pocas unidades ('+p.stock+')</div>':"";
     return '<div class="item" data-cart-id="'+it.id+'">'+
       '<div class="item-i">'+
-        '<div class="item-nm">'+p.nm+'</div>'+
+        '<div class="item-nm">'+escHtml(p.nm)+'</div>'+
         '<div class="item-pr">'+
           '<span class="prx-vitrina">'+fmt$(p.pv)+'</span> → <span class="prx-final">'+fmt$(pr)+'/u</span>'+
           ' <span class="pts-badge">🏆 '+fmtPts(pts)+' pts</span>'+
@@ -1743,7 +1743,7 @@ function renderCarrito(){
       '</div>'+
     '</div>';
   }).join("");
-  if(omitidos.length)html='<div style="background:var(--amarc);border:1.5px solid var(--amar);border-radius:10px;padding:10px 14px;margin-bottom:10px;font-size:12px;color:#8a6600">⚠️ '+omitidos.length+' productos agotado(s) fueron omitidos: '+omitidos.join(", ")+'</div>'+html;
+  if(omitidos.length)html='<div style="background:var(--amarc);border:1.5px solid var(--amar);border-radius:10px;padding:10px 14px;margin-bottom:10px;font-size:12px;color:#8a6600">⚠️ '+omitidos.length+' productos agotado(s) fueron omitidos: '+omitidos.map(escHtml).join(", ")+'</div>'+html;
   cont.innerHTML=html;
   activarSwipeCarrito();
   var iva=parseFloat((subtotal*IVA).toFixed(2));
@@ -2240,7 +2240,7 @@ function renderHistorial(){
       '<div class="ped-top"><div><div class="ped-id">'+(p.esBienvenida?"🎁 Bienvenida":(p.esCanje?"Canje":"Pedido"))+' #'+p.id+'</div><div style="font-size:12px;color:var(--g3)">'+p.fecha+'</div></div>'+
       '<span class="est-chip '+estadoClass(p.estado)+'">'+estadoLabel(p.estado)+'</span></div>'+
       '<div class="ped-total">'+fmt$(p.total)+'</div>'+
-      (p.esCanje?'<div class="ped-items">🎁 '+p.canjeNm+'</div>':'<div class="ped-items">'+(p.items?p.items.length:0)+' productos · '+p.pago+'</div>')+
+      (p.esCanje?'<div class="ped-items">🎁 '+escHtml(p.canjeNm)+'</div>':'<div class="ped-items">'+(p.items?p.items.length:0)+' productos · '+escHtml(p.pago)+'</div>')+
       ptsHtml+califShow+
       '<div class="ped-acc">'+accBtns+'</div>'+
     '</div>';
@@ -2360,11 +2360,11 @@ function verDetallePed(pid){
       '<span class="est-chip '+estadoClass(p.estado)+'">'+estadoLabel(p.estado)+'</span>'+
     '</div>';
   if(p.items)html+=p.items.map(function(it){
-    return '<div class="rrow"><span>'+it.nm+' x'+it.cant+'</span><span>'+fmt$(it.pr*it.cant)+'</span></div>';
+    return '<div class="rrow"><span>'+escHtml(it.nm)+' x'+it.cant+'</span><span>'+fmt$(it.pr*it.cant)+'</span></div>';
   }).join("");
   html+='<div class="rrow tot"><span>TOTAL</span><span>'+fmt$(p.total)+'</span></div>'+
     '<div style="margin-top:12px;font-size:13px;color:var(--g4)">'+
-      '<b>Pago:</b> '+p.pago+'<br><b>Modo:</b> '+(p.modo==="retiro"?"Retiro en local":"Entrega a domicilio")+
+      '<b>Pago:</b> '+escHtml(p.pago)+'<br><b>Modo:</b> '+(p.modo==="retiro"?"Retiro en local":"Entrega a domicilio")+
     '</div>'+
     ((p.estado==="pendiente"&&!p.esCanje)?
       '<div style="margin-top:10px">'+
@@ -2381,7 +2381,7 @@ function verDetallePed(pid){
       (p.entregaInfo.hora?'<br><b>Horario:</b> '+p.entregaInfo.hora:'')+
       '</div>':'')+
     (p.notas?'<div style="margin-top:8px;font-size:13px;color:var(--g4)"><b>Notas:</b> '+escHtml(p.notas)+'</div>':'')+
-    (p.puntos?'<div style="margin-top:8px;font-size:13px;color:#B8860B;font-weight:700">🏆 '+fmtPts(p.puntos)+' puntos '+(p.estado==="entregado"||p.estado==="finalizado"?"acreditados":"pendientes de entrega")+'</div>':'')+
+    (p.puntos?'<div style="margin-top:8px;font-size:13px;color:#B8860B;font-weight:700">🏆 '+fmtPts(p.puntos)+' puntos '+(p.estado==="finalizado"?"acreditados":p.estado==="entregado"?"confirmados al finalizar":"pendientes")+'</div>':'')+
     (p.calificacion?'<div style="margin-top:8px;font-size:13px">Calificación: '+"⭐".repeat(p.calificacion.estrellas)+'<br><i>'+(p.calificacion.comentario||"")+'</i></div>':'')+
     (!p.esCanje?renderTrackingPedido(p.estado):'')+
     ((!p.esCanje&&p.items&&p.items.length)?
@@ -2642,7 +2642,7 @@ function renderRolImpresion(){
     return '<div class="card"><div class="card-b">'+
       '<div style="display:flex;justify-content:space-between;align-items:center">'+
         '<div><div style="font-weight:700">Pedido #'+p.id+'</div>'+
-        '<div style="font-size:12px;color:var(--g3)">'+p.razon+' · '+p.fecha+'</div></div>'+
+        '<div style="font-size:12px;color:var(--g3)">'+escHtml(p.razon)+' · '+escHtml(p.fecha)+'</div></div>'+
         '<span class="est-chip '+estadoClass(p.estado)+'">'+estadoLabelAdmin(p.estado)+'</span>'+
       '</div>'+
       '<div style="font-size:18px;font-weight:800;font-family:\'Barlow Condensed\',sans-serif;margin-top:6px">'+fmt$(p.total)+'</div>'+
@@ -2779,7 +2779,7 @@ function renderAdmPedidos(){
     return '<div class="card" onclick="admVerPedido(\''+p.id+'\')" style="cursor:pointer"><div class="card-b">'+
       '<div style="display:flex;justify-content:space-between;align-items:center">'+
         '<div><div style="font-weight:700">'+(p.esCanje?"🎁 Canje":"Pedido #"+p.id)+'</div>'+
-        '<div style="font-size:12px;color:var(--g3)">'+p.razon+' · '+p.fecha+'</div></div>'+
+        '<div style="font-size:12px;color:var(--g3)">'+escHtml(p.razon)+' · '+escHtml(p.fecha)+'</div></div>'+
         '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">'+
         '<span class="est-chip '+estadoClass(p.estado)+'">'+estadoLabelAdmin(p.estado)+'</span>'+
         facBadge+
@@ -2828,8 +2828,8 @@ function admVerPedido(pid){
   // Estados editables por admin (finalizado se asigna automáticamente al facturar)
   var estadosAdmin=['pendiente','en_proceso','entregado','cancelado'];
   var html='<div class="mhandle"></div><h3>'+(p.esCanje?"Canje":"Pedido")+" #"+p.id+'</h3>'+
-    (p.esCanje&&p.canjeNm?'<div style="font-size:15px;font-weight:700;color:var(--oro);margin-bottom:8px">🎁 '+p.canjeNm+'</div>':'')+
-    '<div style="font-size:12px;color:var(--g3);margin-bottom:12px">'+p.razon+' · '+tipoDocLabel(DISTRIBUIDORES.find(function(d){return d.ruc===p.ruc;})||{ruc:p.ruc})+': '+p.ruc+' · '+p.fecha+'</div>'+
+    (p.esCanje&&p.canjeNm?'<div style="font-size:15px;font-weight:700;color:var(--oro);margin-bottom:8px">🎁 '+escHtml(p.canjeNm)+'</div>':'')+
+    '<div style="font-size:12px;color:var(--g3);margin-bottom:12px">'+escHtml(p.razon)+' · '+tipoDocLabel(DISTRIBUIDORES.find(function(d){return d.ruc===p.ruc;})||{ruc:p.ruc})+': '+escHtml(p.ruc)+' · '+escHtml(p.fecha)+'</div>'+
     '<label class="form-label">Estado</label>'+
     '<select class="form-select" id="adm-estado-sel">'+estadosAdmin.map(function(e){return'<option value="'+e+'"'+(p.estado===e?" selected":"")+'>'+estadoLabelAdmin(e)+'</option>';}).join("")+'</select>';
 
@@ -2843,7 +2843,7 @@ function admVerPedido(pid){
           '<option value="Pago pendiente">💰 Pago pendiente</option>'+
         '</select>'+
       '</div>';
-    if(p.obsAdmin)html+='<div style="font-size:12px;color:var(--azul);margin-bottom:8px">Obs. actual: '+p.obsAdmin+'</div>';
+    if(p.obsAdmin)html+='<div style="font-size:12px;color:var(--azul);margin-bottom:8px">Obs. actual: '+escHtml(p.obsAdmin)+'</div>';
     // Editar forma de pago (si el pedido no está finalizado)
     if(p.estado!=="finalizado"){
       var opcionesPagoAdm=["Efectivo","Transferencia","Cheque / Crédito 30 días","Cheque / Crédito 60 días","Cheque / Crédito 90 días"];
@@ -2857,11 +2857,11 @@ function admVerPedido(pid){
 
   if(!p.esCanje&&p.items){
     html+=p.items.map(function(it){
-      return '<div class="rrow"><span>'+it.nm+' x'+it.cant+'</span><span>'+fmt$(it.pr*it.cant)+'</span></div>';
+      return '<div class="rrow"><span>'+escHtml(it.nm)+' x'+it.cant+'</span><span>'+fmt$(it.pr*it.cant)+'</span></div>';
     }).join("")+'<div class="rrow tot"><span>TOTAL</span><span>'+fmt$(p.total)+'</span></div>';
-    html+='<div style="margin-top:10px;font-size:13px"><b>Pago:</b> '+p.pago+'</div>';
+    html+='<div style="margin-top:10px;font-size:13px"><b>Pago:</b> '+escHtml(p.pago)+'</div>';
     if(p.puntos)html+='<div style="font-size:13px;color:#B8860B;font-weight:700;margin-top:4px">🏆 '+fmtPts(p.puntos)+' puntos</div>';
-    if(p.calificacion)html+='<div style="margin-top:8px;font-size:13px">Calificación: '+"⭐".repeat(p.calificacion.estrellas)+' '+( p.calificacion.comentario?'<i>"'+p.calificacion.comentario+'"</i>':"")+' </div>';
+    if(p.calificacion)html+='<div style="margin-top:8px;font-size:13px">Calificación: '+"⭐".repeat(p.calificacion.estrellas)+' '+( p.calificacion.comentario?'<i>"'+escHtml(p.calificacion.comentario)+'"</i>':"")+' </div>';
     // Botones de acción
     html+='<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">'+
       '<button class="btn btn-s" style="flex:1;background:#25D366;color:#fff;border-color:#25D366" onclick="generarWA(\''+p.id+'\')">📲 WhatsApp</button>'+
@@ -3250,9 +3250,9 @@ function renderAdmDist(){
     return '<div class="card"><div class="card-b">'+
       '<div style="display:flex;justify-content:space-between;align-items:flex-start">'+
         '<div>'+
-          '<div style="font-weight:700;font-size:15px">'+d.razon+'</div>'+
-          (d.empresa?'<div style="font-size:12px;color:var(--azul);font-weight:600">'+d.empresa+'</div>':'')+
-          '<div style="font-size:12px;color:var(--g3);margin-top:3px">'+tipoDocLabel(d)+': '+d.ruc+(d.tel?' · Tel: '+d.tel:'')+'</div>'+
+          '<div style="font-weight:700;font-size:15px">'+escHtml(d.razon)+'</div>'+
+          (d.empresa?'<div style="font-size:12px;color:var(--azul);font-weight:600">'+escHtml(d.empresa)+'</div>':'')+
+          '<div style="font-size:12px;color:var(--g3);margin-top:3px">'+tipoDocLabel(d)+': '+escHtml(d.ruc)+(d.tel?' · Tel: '+escHtml(d.tel):'')+'</div>'+
           '<div style="font-size:11px;color:var(--g3)">Pass: <span style="font-family:monospace;background:var(--g1);padding:1px 6px;border-radius:4px">••••••</span></div>'+
         '</div>'+
         '<div style="display:flex;gap:6px">'+
@@ -3283,7 +3283,7 @@ function abrirNuevoDist(){abrir("modal-nuevo-dist");}
 function eliminarDist(ruc){
   var d=DISTRIBUIDORES.find(function(x){return x.ruc===ruc;});
   if(!d)return;
-  confirmar("¿Eliminar al distribuidor <b>"+d.razon+"</b>?<br><small>Esta acción no se puede deshacer.</small>",function(){
+  confirmar("¿Eliminar al distribuidor <b>"+escHtml(d.razon)+"</b>?<br><small>Esta acción no se puede deshacer.</small>",function(){
     var idx=DISTRIBUIDORES.indexOf(d);
     if(idx>-1)DISTRIBUIDORES.splice(idx,1);
     guardarDistribuidores();
@@ -3411,7 +3411,7 @@ function abrirPreciosEsp(ruc){
   var d=DISTRIBUIDORES.find(function(x){return x.ruc===ruc;});
   if(!d)return;
   if(!d.preciosEsp)d.preciosEsp={};
-  var html='<div class="mhandle"></div><h3>Precios especiales<br><span style="font-size:13px;color:var(--g3);font-weight:400">'+d.razon+'</span></h3>'+
+  var html='<div class="mhandle"></div><h3>Precios especiales<br><span style="font-size:13px;color:var(--g3);font-weight:400">'+escHtml(d.razon)+'</span></h3>'+
     '<div style="font-size:12px;color:var(--g3);margin-bottom:12px">Deja en blanco para usar el precio base del distribuidor.</div>'+
     PRODUCTOS.map(function(p){
       var esp=d.preciosEsp[p.id]!=null?d.preciosEsp[p.id]:"";
@@ -4968,10 +4968,10 @@ function mostrarOverlayInstalacion(tipo){
   ov.id="inst-ov";
   ov.style.cssText="position:fixed;top:0;left:0;width:100%;height:100vh;background:rgba(0,0,0,.85);z-index:9000;display:flex;align-items:center;justify-content:center;padding:24px";
   ov.innerHTML=
-    '<div style="background:#fff;border-radius:24px;padding:36px 28px;width:100%;max-width:380px;text-align:center">'+
+    '<div style="background:var(--bg,#fff);border-radius:24px;padding:36px 28px;width:100%;max-width:380px;text-align:center">'+
       '<div style="font-size:56px;margin-bottom:12px">🎉</div>'+
       '<div style="font-size:22px;font-weight:800;color:var(--verde);margin-bottom:8px">¡Genial! Instalaste la app</div>'+
-      '<div style="font-size:15px;color:#555;margin-bottom:6px;line-height:1.5">Instalaste PyroShield en tu <b>'+tipoLabel+'</b>.</div>'+
+      '<div style="font-size:15px;color:var(--g4,#555);margin-bottom:6px;line-height:1.5">Instalaste PyroShield en tu <b>'+tipoLabel+'</b>.</div>'+
       '<div style="background:var(--verdec);border-radius:14px;padding:14px;margin-bottom:20px">'+
         '<div style="font-size:24px;font-weight:800;color:var(--verde)">+20 puntos</div>'+
         '<div style="font-size:13px;color:var(--verde)">acreditados en tu cuenta 🏆</div>'+
@@ -5048,11 +5048,11 @@ function mostrarGuiaInstalacion(dispositivo){
     var p=pasos[paso];
     var pct=Math.round((paso+1)/pasos.length*100);
     ov.innerHTML=
-      '<div style="background:#fff;border-radius:24px;padding:36px 28px;width:100%;max-width:380px;text-align:center">'+
+      '<div style="background:var(--bg,#fff);border-radius:24px;padding:36px 28px;width:100%;max-width:380px;text-align:center">'+
         '<div style="font-size:52px;margin-bottom:12px">'+p.ico+'</div>'+
         '<div style="font-size:11px;font-weight:700;color:var(--oro);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px">Paso '+(paso+1)+' de '+pasos.length+'</div>'+
         '<div style="font-size:19px;font-weight:800;margin-bottom:10px">'+escHtml(p.t)+'</div>'+
-        '<div style="font-size:14px;color:#555;line-height:1.6;margin-bottom:20px">'+escHtml(p.d)+'</div>'+
+        '<div style="font-size:14px;color:var(--g4,#555);line-height:1.6;margin-bottom:20px">'+escHtml(p.d)+'</div>'+
         '<div style="background:#eee;border-radius:6px;height:6px;margin-bottom:20px">'+
           '<div style="background:var(--rojo);height:6px;border-radius:6px;width:'+pct+'%"></div>'+
         '</div>'+

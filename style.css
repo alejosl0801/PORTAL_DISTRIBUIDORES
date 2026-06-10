@@ -1,15 +1,16 @@
 :root{
   --rojo:#C0392B;--rojo2:#922B21;--rojo3:#E74C3C;--rojoc:#F9EBEA;
   --negro:#0D0D0D;--negro2:#1A1A1A;
-  --g1:#F5F5F3;--g2:#E8E8E6;--g3:#9E9E9C;--g4:#4A4A48;
+  --g1:#F5F5F3;--g2:#E8E8E6;--g3:#666;--g4:#4A4A48;
   --verde:#1A6B3A;--verdec:#D5F0E0;
   --blanco:#FFF;--amar:#F39C12;--amarc:#FEF9E7;
   --azul:#1A5FAA;--azulc:#EAF2FF;
-  --oro:#E8B923;
+  --oro:#E8B923;--oro-claro:#fff7e0;
+  --bg:#ffffff;
   --som:0 2px 16px rgba(0,0,0,.10);--som2:0 8px 32px rgba(0,0,0,.16);
   --rad:16px;--rads:10px;
 }
-html[data-theme="dark"]{--g1:#1A1A1A;--g2:#2A2A2A;--g3:#888;--g4:#CCC;--blanco:#222;--negro2:#111}
+html[data-theme="dark"]{--g1:#1A1A1A;--g2:#2A2A2A;--g3:#888;--g4:#CCC;--blanco:#1e1e1e;--bg:#121212;--negro2:#111}
 html[data-theme="dark"] .card,html[data-theme="dark"] .prod,html[data-theme="dark"] .item,html[data-theme="dark"] .resumen,html[data-theme="dark"] .acc-btn{background:#222!important;border-color:#333!important}
 html[data-theme="dark"] .form-input,html[data-theme="dark"] .form-select{background:#333;color:#eee;border-color:#444}
 html[data-theme="dark"] body{background:#111;color:#eee}
@@ -208,7 +209,7 @@ html[data-theme="dark"] body{background:#0a0a0a;}
 .tutorial-btns{display:flex;gap:10px}
 .tutorial-skip{flex:1;padding:12px;border:1.5px solid var(--g2);background:none;border-radius:var(--rads);font-family:'Barlow',sans-serif;font-size:14px;cursor:pointer;min-height:48px}
 .tutorial-next{flex:2;padding:12px;background:var(--rojo);color:#fff;border:none;border-radius:var(--rads);font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;cursor:pointer;min-height:48px}
-.ov{position:fixed;top:0;left:0;width:100%;height:100vh;background:rgba(0,0,0,.6);z-index:410;display:none;align-items:flex-end}
+.ov{position:fixed;top:0;left:0;width:100%;height:100vh;background:rgba(0,0,0,.6);z-index:900;display:none;align-items:flex-end}
 .ov.open{display:flex}
 .modal{background:#fff;border-radius:24px 24px 0 0;width:100%;max-height:90vh;overflow-y:auto;padding:20px 20px 30px}
 .mhandle{width:40px;height:4px;background:var(--g2);border-radius:2px;margin:0 auto 18px}
@@ -490,7 +491,7 @@ html[data-theme="dark"] body{background:#0a0a0a;}
 html[data-theme="dark"]{
   --negro:#050505;--negro2:#101010;
   --g1:#161616;--g2:#2b2b2b;--g3:#7d7d7d;--g4:#d2d2d2;
-  --blanco:#161616;
+  --blanco:#1e1e1e;--bg:#121212;
   --rojoc:#2a1512;--verdec:#10241a;--amarc:#241f10;--azulc:#11203a;
 }
 html[data-theme="dark"] body{background:#080808;color:#ececec}
@@ -821,3 +822,31 @@ html.theme-fade,html.theme-fade body,html.theme-fade .content,html.theme-fade #a
 
 /* #22 swipe delete bg */
 .item.swiping{transition:transform .15s}
+
+/* ══ Auditoría: dark mode en overlays dinámicos ══════════════ */
+[data-theme="dark"] .tut-card,
+[data-theme="dark"] #perfil-ov > div,
+[data-theme="dark"] #repetir-ped-ov > div,
+[data-theme="dark"] #tipsec-ov > div,
+[data-theme="dark"] .primer-ingreso-card {
+  background: var(--bg, #1e1e1e) !important;
+  color: var(--texto, #f0f0f0) !important;
+}
+[data-theme="dark"] .primer-ingreso-card h2,
+[data-theme="dark"] .tut-card h3 {
+  color: var(--texto, #f0f0f0) !important;
+}
+
+/* ══ Auditoría: touch targets mínimos (WCAG 44px) ════════════ */
+.fav-btn, .qb-sm, .brm, .btn-ico { min-width: 44px; min-height: 44px; }
+
+/* ══ Z-INDEX SCALE ═══════════════════════════════════════════
+   100  screens / topbar / bottomnav
+   400  toasts
+   800  tutorial / tipsec overlay
+   900  modales normales (.ov)
+   9000 perfil / overlays dinámicos
+   9100 overlays sobre overlays (est-modal)
+   9998 primer-ingreso
+   9999 saludo flash
+   ════════════════════════════════════════════════════════════ */
