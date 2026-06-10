@@ -604,3 +604,220 @@ a{transition:color .2s}
 
 html[data-theme="dark"] .hfechas-inner,html[data-theme="dark"] .track-wrap,html[data-theme="dark"] .card-frecuente{background:#1E1E1E!important;border-color:#2A2A2A!important}
 
+
+/* ══════════════════════════════════════════════════════════════════
+   60 ANIMACIONES — PyroShield (CSS vanilla puro, sin librerías)
+   ══════════════════════════════════════════════════════════════════ */
+
+/* #4 badge pop+shake */
+@keyframes badgePopShake{0%{transform:translateX(6px) scale(1)}25%{transform:translateX(6px) scale(1.5) rotate(-8deg)}50%{transform:translateX(4px) scale(.9) rotate(8deg)}75%{transform:translateX(8px) scale(1.1) rotate(-4deg)}100%{transform:translateX(6px) scale(1)}}
+.cbadge.badge-pop{animation:badgePopShake .45s var(--ease-spring)}
+
+/* #5 confetti */
+.confetti-pc{position:fixed;width:10px;height:14px;top:-20px;z-index:9998;pointer-events:none;border-radius:2px;will-change:transform,opacity}
+@keyframes confettiFall{0%{transform:translateY(-20px) rotateZ(0deg);opacity:1}100%{transform:translateY(110vh) rotateZ(720deg);opacity:.2}}
+
+/* #1 puntos volando */
+.fly-pts{position:fixed;z-index:9999;pointer-events:none;font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:18px;color:var(--oro);text-shadow:0 2px 6px rgba(0,0,0,.4)}
+
+/* #2/#38/#13 contador/ticker numérico — sin estilo extra, JS rAF */
+
+/* #6 toast dorado shimmer */
+.toast.gold{position:relative;overflow:hidden}
+.toast.gold::after{content:'';position:absolute;top:0;left:-60%;width:50%;height:100%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.7),transparent);animation:goldShimmer 1.8s var(--ease-smooth) infinite}
+@keyframes goldShimmer{0%{left:-60%}60%,100%{left:140%}}
+@keyframes toastGoldUp{from{transform:translateX(-50%) translateY(40px);opacity:0}to{transform:translateX(-50%) translateY(0);opacity:1}}
+.toast.gold.show{animation:toastGoldUp .4s var(--ease-spring)}
+
+/* #7 precio tachado animado */
+.price-strike{position:relative;text-decoration:none!important}
+.price-strike::after{content:'';position:absolute;left:0;top:50%;height:2px;width:0;background:var(--g3);animation:strikeIn .5s var(--ease-smooth) .15s forwards}
+@keyframes strikeIn{to{width:100%}}
+
+/* #8 pulso badge descuento volumen */
+@keyframes volPulse{0%,100%{transform:scale(1);box-shadow:0 0 0 0 rgba(192,57,43,.4)}50%{transform:scale(1.08);box-shadow:0 0 0 5px rgba(192,57,43,0)}}
+.prod-desc-badge,.vol-badge{animation:volPulse 2.2s var(--ease-smooth) infinite}
+
+/* #9/#46 skeleton */
+.skeleton{position:relative;overflow:hidden;background:var(--g2);border-radius:12px}
+.skeleton::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent 0%,rgba(255,255,255,.45) 50%,transparent 100%);background-size:200% 100%;animation:shimmerSk 1.4s infinite}
+html[data-theme="dark"] .skeleton::after{background:linear-gradient(90deg,transparent,rgba(255,255,255,.08),transparent)}
+@keyframes shimmerSk{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
+.sk-prod{display:flex;gap:11px;padding:14px;margin-bottom:12px;border-radius:18px;background:var(--blanco);border:1px solid var(--g2)}
+.sk-prod .sk-img{width:90px;height:74px;flex-shrink:0}
+.sk-prod .sk-lines{flex:1;display:flex;flex-direction:column;gap:8px;justify-content:center}
+.sk-line{height:12px;border-radius:6px}
+.sk-line.w70{width:70%}.sk-line.w40{width:40%}.sk-line.w90{width:90%}
+
+/* #11/#16/#41 tab slide+fade */
+@keyframes tabSlideR{from{opacity:0;transform:translateX(40px)}to{opacity:1;transform:none}}
+@keyframes tabSlideL{from{opacity:0;transform:translateX(-40px)}to{opacity:1;transform:none}}
+@keyframes fadeScaleIn{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:none}}
+.tab-panel.slide-r{animation:tabSlideR .3s var(--ease-smooth)}
+.tab-panel.slide-l{animation:tabSlideL .3s var(--ease-smooth)}
+
+/* #39 stagger cards */
+@keyframes cardStagger{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+.card-stagger{animation:cardStagger .4s var(--ease-spring) both}
+
+/* #12 progress ring avatar */
+.avatar-ring{position:absolute;top:0;left:0;width:100%;height:100%;transform:rotate(-90deg);pointer-events:none}
+.avatar-ring circle{fill:none;stroke-width:4;stroke-linecap:round}
+.avatar-ring .bg{stroke:rgba(232,185,35,.18)}
+.avatar-ring .fg{stroke:var(--oro);stroke-dasharray:1;stroke-dashoffset:1;transition:stroke-dashoffset 1.2s var(--ease-smooth)}
+
+/* #14 check svg draw */
+.draw-check{stroke:var(--verde);stroke-width:5;fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:48;stroke-dashoffset:48;animation:drawCheck .5s var(--ease-smooth) forwards}
+@keyframes drawCheck{to{stroke-dashoffset:0}}
+
+/* #15 shake */
+@keyframes shakeX{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-6px)}80%{transform:translateX(6px)}}
+.shake{animation:shakeX .45s var(--ease-smooth)}
+
+/* #17 wave hero */
+.hero-wave{position:absolute;left:0;bottom:0;width:200%;height:40px;opacity:.22;pointer-events:none;z-index:0}
+.hero-wave svg{width:50%;height:100%;animation:waveMove 8s linear infinite}
+@keyframes waveMove{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+.hero>*{position:relative;z-index:1}
+
+/* #18 logro flip */
+@keyframes logroFlip{0%{transform:perspective(600px) rotateY(0)}50%{transform:perspective(600px) rotateY(90deg)}100%{transform:perspective(600px) rotateY(0)}}
+.logro-flip{animation:logroFlip .7s var(--ease-smooth)}
+
+/* #19 fuego logo */
+@keyframes logoFire{0%,100%{filter:brightness(1) drop-shadow(0 0 0 rgba(232,185,35,0))}50%{filter:brightness(1.18) drop-shadow(0 0 8px rgba(243,156,18,.6))}}
+.topbar-brand img,.login-logo img{animation:logoFire 3.2s var(--ease-smooth) infinite}
+
+/* #20 typewriter caret */
+.tw-caret::after{content:'|';animation:caretBlink .7s steps(1) infinite;color:var(--rojo)}
+@keyframes caretBlink{50%{opacity:0}}
+
+/* #23 bounce login btn */
+@keyframes bounceIn{0%{opacity:0;transform:scale(.5)}60%{opacity:1;transform:scale(1.08)}100%{transform:scale(1)}}
+.btn-login{animation:bounceIn .6s var(--ease-spring) .4s both}
+
+/* #25/#47 shimmer/orbit */
+.shimmer-badge{position:relative;overflow:hidden}
+.shimmer-badge::after{content:'';position:absolute;top:0;left:-70%;width:50%;height:100%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.65),transparent);animation:badgeShine 3s ease-in-out infinite}
+@keyframes badgeShine{0%{left:-70%}40%,100%{left:160%}}
+.orbit-star{position:absolute;font-size:13px;pointer-events:none;animation:orbit 4s linear infinite;transform-origin:0 0}
+@keyframes orbit{from{transform:rotate(0) translateX(34px) rotate(0)}to{transform:rotate(360deg) translateX(34px) rotate(-360deg)}}
+
+/* #28 promo countdown — JS */
+/* #29 brasas fuego login */
+.brasa{position:absolute;bottom:-10px;width:6px;height:6px;border-radius:50%;background:radial-gradient(circle,#ffd24d,#e03c31);pointer-events:none;z-index:0;opacity:.9}
+@keyframes brasaUp{0%{transform:translateY(0) scale(1);opacity:.9}100%{transform:translateY(-90vh) translateX(var(--bx,0)) scale(.2);opacity:0}}
+
+/* #30/#60 portal de fuego */
+.fire-portal{position:fixed;inset:0;z-index:9000;pointer-events:none;background:radial-gradient(circle,#ffd24d 0%,#e03c31 35%,#922B21 60%,#0D0D0D 100%);clip-path:circle(0% at 50% 50%);animation:firePortal .8s var(--ease-smooth) forwards}
+@keyframes firePortal{0%{clip-path:circle(0% at 50% 50%);opacity:1}70%{opacity:1}100%{clip-path:circle(150% at 50% 50%);opacity:0}}
+
+/* #31 vibration — JS */
+/* #32 reveal numbers — JS */
+
+/* #33 long press confirm */
+.lp-fill{position:absolute;left:0;top:0;height:100%;width:0;background:rgba(255,255,255,.28);pointer-events:none;border-radius:inherit;z-index:0}
+.lp-host{position:relative;overflow:hidden}
+.lp-host>*{position:relative;z-index:1}
+
+/* #34 agotado respira */
+@keyframes breatheRed{0%,100%{box-shadow:0 4px 20px rgba(0,0,0,.07)}50%{box-shadow:0 0 0 2px rgba(192,57,43,.35),0 4px 20px rgba(192,57,43,.2)}}
+.prod.ago{animation:breatheRed 3s var(--ease-smooth) infinite}
+
+/* #35 stock bajo tiembla */
+@keyframes stockShake{0%,92%,100%{transform:translateX(0)}94%{transform:translateX(-3px)}96%{transform:translateX(3px)}98%{transform:translateX(-2px)}}
+.stock-warn.low-shake{animation:stockShake 8s infinite}
+
+/* #36 precio explota */
+@keyframes priceExplode{0%{transform:scale(1);opacity:1;filter:blur(0)}100%{transform:scale(1.8);opacity:0;filter:blur(4px)}}
+.price-explode{animation:priceExplode .4s var(--ease-smooth) forwards;display:inline-block}
+
+/* #37 barra siguiente tier */
+.tier-bar{height:6px;border-radius:6px;background:var(--g2);overflow:hidden;margin-top:4px}
+.tier-bar>i{display:block;height:100%;background:linear-gradient(90deg,var(--azul),var(--verde));border-radius:6px;transition:width .8s var(--ease-smooth)}
+
+/* #40 pull-to-refresh llama */
+.ptr-flame{position:fixed;top:62px;left:50%;transform:translateX(-50%) scale(0);font-size:30px;z-index:300;transition:transform .2s;pointer-events:none}
+.ptr-flame.show{transform:translateX(-50%) scale(1)}
+.ptr-flame.spin{animation:flameWobble .6s ease-in-out infinite}
+@keyframes flameWobble{0%,100%{transform:translateX(-50%) scale(1) rotate(-8deg)}50%{transform:translateX(-50%) scale(1.15) rotate(8deg)}}
+
+/* #42 avatar bounce */
+.avatar-bounce{animation:bounceIn .5s var(--ease-spring)}
+
+/* #44 ripple */
+.ripple-ink{position:absolute;border-radius:50%;background:rgba(255,255,255,.5);transform:scale(0);animation:rippleGo .55s var(--ease-smooth);pointer-events:none}
+@keyframes rippleGo{to{transform:scale(2.4);opacity:0}}
+
+/* #45 modal scale (refuerzo) */
+.ov.open .modal{transform-origin:center bottom}
+
+/* #48 sello NUEVO */
+.sello-nuevo{position:absolute;top:6px;left:6px;z-index:3;background:var(--rojo);color:#fff;font-size:9px;font-weight:900;padding:3px 7px;border-radius:8px;letter-spacing:.5px;box-shadow:0 3px 10px rgba(192,57,43,.4);animation:selloRot 4s ease-in-out infinite}
+@keyframes selloRot{0%,100%{transform:rotate(-8deg)}50%{transform:rotate(8deg)}}
+
+/* #49 iva slide */
+@keyframes ivaSlide{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}
+.iva-anim{animation:ivaSlide .4s var(--ease-smooth)}
+
+/* #50 crossfade tema */
+html.theme-fade,html.theme-fade body,html.theme-fade .content,html.theme-fade #app-shell{transition:background .4s var(--ease-smooth),color .4s var(--ease-smooth)!important}
+
+/* #51 cart wiggle */
+@keyframes wiggle{0%,100%{transform:rotate(0)}25%{transform:rotate(-12deg)}50%{transform:rotate(10deg)}75%{transform:rotate(-6deg)}}
+.cart-wiggle .ico{animation:wiggle .6s ease-in-out}
+
+/* #52 camión timeline */
+.track-truck{position:absolute;top:-2px;font-size:18px;transition:left .8s var(--ease-spring);z-index:5;pointer-events:none}
+
+/* #53 estrellas pop */
+@keyframes starPop{0%{transform:scale(.4)}55%{transform:scale(1.45);filter:drop-shadow(0 0 8px gold)}100%{transform:scale(1)}}
+.star.pop{animation:starPop .4s var(--ease-spring)}
+
+/* #54 input glow verde */
+@keyframes inputFound{0%,100%{box-shadow:0 0 0 0 rgba(26,107,58,.4)}50%{box-shadow:0 0 0 4px rgba(26,107,58,.15)}}
+.input-found{border-color:var(--verde)!important;animation:inputFound 1.6s ease-in-out infinite}
+
+/* #55 logo flash login */
+@keyframes logoFlash{0%{filter:brightness(1)}40%{filter:brightness(2.6) drop-shadow(0 0 18px var(--oro))}100%{filter:brightness(1)}}
+.logo-flash{animation:logoFlash .7s var(--ease-smooth)}
+
+/* #56 ranking reorder */
+.rank-row{transition:transform .5s var(--ease-spring),background .3s}
+.rank-row.rank-up{background:rgba(26,107,58,.12)}
+
+/* #57 explosión nivel */
+.lvl-burst{position:fixed;inset:0;z-index:9001;pointer-events:none;display:flex;align-items:center;justify-content:center}
+.lvl-burst .lvl-txt{font-family:'Barlow Condensed',sans-serif;font-size:42px;font-weight:900;color:var(--oro);text-shadow:0 4px 20px rgba(232,185,35,.6);animation:lvlTxt 2s var(--ease-spring) forwards}
+@keyframes lvlTxt{0%{transform:scale(0);opacity:0}25%{transform:scale(1.15);opacity:1}80%{transform:scale(1);opacity:1}100%{transform:scale(1.05);opacity:0}}
+.lvl-part{position:absolute;width:9px;height:9px;border-radius:50%;background:var(--oro)}
+
+/* #58 factura imprime */
+.print-ov{position:fixed;inset:0;z-index:9001;background:rgba(0,0,0,.5);display:flex;justify-content:center;align-items:flex-start;pointer-events:none}
+.print-paper{width:200px;background:#fff;border-radius:4px;box-shadow:0 12px 40px rgba(0,0,0,.4);padding:18px;margin-top:-260px;animation:paperDrop .9s var(--ease-smooth) forwards}
+.print-paper .pl{height:7px;background:var(--g2);border-radius:4px;margin-bottom:8px}
+.print-paper .pl.s{width:55%}
+@keyframes paperDrop{0%{margin-top:-260px;opacity:0}30%{opacity:1}80%{margin-top:90px;opacity:1}100%{margin-top:90px;opacity:0}}
+
+/* #59 antena offline */
+.ant-bars{display:inline-flex;align-items:flex-end;gap:2px;height:14px;vertical-align:middle;margin-right:6px}
+.ant-bars i{width:3px;background:#fff;border-radius:1px;animation:antDrop 2.4s steps(1) infinite}
+.ant-bars i:nth-child(1){height:4px}.ant-bars i:nth-child(2){height:8px;animation-delay:.3s}
+.ant-bars i:nth-child(3){height:12px;animation-delay:.6s}.ant-bars i:nth-child(4){height:14px;animation-delay:.9s}
+@keyframes antDrop{0%,100%{opacity:1}50%{opacity:.2}}
+
+/* #26 ticker ventas */
+.sales-ticker{overflow:hidden;background:linear-gradient(90deg,var(--negro),var(--rojo2));color:#fff;font-size:12px;font-weight:600;white-space:nowrap;position:relative;height:0;transition:height .3s}
+.sales-ticker.on{height:28px;display:flex;align-items:center}
+.sales-ticker span{display:inline-block;padding-left:100%;animation:tickerScroll 18s linear infinite}
+@keyframes tickerScroll{from{transform:translateX(0)}to{transform:translateX(-100%)}}
+
+/* #27 entrega lottie-style */
+@keyframes truckRun{0%{transform:translateX(-30px)}50%{transform:translateX(20px)}100%{transform:translateX(-30px)}}
+.entrega-anim{font-size:34px;display:inline-block;animation:truckRun 1.2s ease-in-out infinite}
+
+/* #24 hover lift */
+.prod:active,.prod.lift{transform:translateY(-4px)!important;box-shadow:0 10px 28px rgba(0,0,0,.16)!important}
+
+/* #22 swipe delete bg */
+.item.swiping{transition:transform .15s}
