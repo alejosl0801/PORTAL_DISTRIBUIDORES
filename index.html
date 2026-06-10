@@ -43,7 +43,7 @@
     <div class="login-title">Bienvenido</div>
     <div class="login-sub">Ingresa con tu RUC y contraseña</div>
     <div class="field-label">RUC / Usuario</div>
-    <input class="field-inp" id="login-user" type="text" placeholder="Tu RUC" autocomplete="off" inputmode="numeric" maxlength="13">
+    <input class="field-inp" id="login-user" type="text" placeholder="Tu RUC" autocomplete="off" inputmode="text" maxlength="13">
     <div class="field-label">Contraseña</div>
     <div style="position:relative">
       <input class="field-inp" id="login-pass" type="password" placeholder="Tu contraseña" autocomplete="off" style="padding-right:48px;margin-bottom:0">
@@ -140,12 +140,6 @@
 
     <div id="tab-historial" class="tab-panel">
       <div class="sec-titulo">Mis pedidos</div>
-      <div class="hfiltros">
-        <button class="fbtn active" onclick="setHFiltro('todos',this)">Todos</button>
-        <button class="fbtn" onclick="setHFiltro('pendiente',this)">⏳ Pendientes</button>
-        <button class="fbtn" onclick="setHFiltro('proceso',this)">🚚 En proceso</button>
-        <button class="fbtn" onclick="setHFiltro('finalizado',this)">✅ Entregados</button>
-      </div>
       <div id="hfechas-wrap" class="hfechas-wrap">
         <div class="hfechas-inner">
           <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">

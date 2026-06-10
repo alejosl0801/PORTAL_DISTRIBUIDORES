@@ -290,6 +290,19 @@
     var _bInt=setInterval(function(){ for(var i=0;i<2;i++) spawn(); }, 600); ROOT._animIntervals=ROOT._animIntervals||[]; ROOT._animIntervals.push(_bInt);
   }
 
+  // ─────────── Logout: detener brasas y limpiar intervalos ───────────
+  wrap("logout", function(){
+    var box=document.querySelector(".login-brasas-box");
+    if(box){ box.__brasas=false; }
+    var lb=document.getElementById("s-login");
+    if(lb){ lb.__brasas=false; }
+    (ROOT._animIntervals||[]).forEach(function(id){ clearInterval(id); });
+    ROOT._animIntervals=[];
+    // Reanudar vigilancia de brasas para el próximo login
+    var _reInt=setInterval(montarBrasasLogin, 4000);
+    ROOT._animIntervals.push(_reInt);
+  });
+
   // ─────────── #50 Crossfade tema ───────────
   wrap("cambiarTema", null, function(){
     document.documentElement.classList.add("theme-fade");

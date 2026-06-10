@@ -867,7 +867,14 @@ function renderInicio(){
 
 // ════════════════════ INSIGNIAS / LOGROS ════════════════════
 // bonoPts: puntos fijos que se suman al saldo cuando el logro está desbloqueado
+var _logrosCache=null;
+var _logrosCacheKey="";
 function _logrosDefinicion(){
+  var _favsN=0,_borrN=0;
+  try{_favsN=(JSON.parse(localStorage.getItem("pyro_favs_"+(USER&&USER.ruc))||"[]")||[]).length;}catch(e){}
+  try{_borrN=(JSON.parse(localStorage.getItem("pyro_borradores_"+(USER&&USER.ruc))||"[]")||[]).length;}catch(e){}
+  var _key=(USER&&USER.ruc||"")+"_"+PEDIDOS.length+"_"+(new Date().getHours())+"_"+_favsN+"_"+_borrN;
+  if(_logrosCache&&_logrosCacheKey===_key) return _logrosCache;
   var mp=misPedidos().filter(function(p){return!p.esCanje;});
   var comp=mp.filter(function(p){return["finalizado","entregado","facturado"].indexOf(p.estado)!==-1;});
   var pend=mp.filter(function(p){return p.estado==="pendiente";});
@@ -899,7 +906,7 @@ function _logrosDefinicion(){
   var totalPuntosPed=comp.reduce(function(s,p){return s+(p.puntos||0);},0);
   var pedConDesc=comp.filter(function(p){return(p.items||[]).some(function(i){return i.descVol>0||i.descPct>0;});}).length;
   var cats3=new Set(comp.reduce(function(a,p){return a.concat((p.items||[]).map(function(i){var pr=PRODUCTOS.find(function(x){return x.id===i.id;});return pr?pr.cat:null;}).filter(Boolean));},[])).size;
-  return [
+  var _resultadoLogros=[
     // ── NIVEL 1: Inmediatos / primer contacto ──
     {ico:"🔍",nm:"Explorador",             desc:"Abre el portal PyroShield",               ok:true,            bonoPts:1},
     {ico:"🌙",nm:"Noctámbulo",             desc:"Entra al portal después de las 9pm",       ok:(function(){var h=ahora.getHours();var logrado=(h>=21||h<6);if(logrado)try{localStorage.setItem("pyro_logro_noct_"+USER.ruc,"1");}catch(e){}return logrado||!!localStorage.getItem("pyro_logro_noct_"+(USER&&USER.ruc||""));}()), bonoPts:1},
@@ -1001,6 +1008,9 @@ function _logrosDefinicion(){
     {ico:"🦅",nm:"Águila PyroShield",      desc:"200 pedidos completados",                 ok:n>=200,          bonoPts:180},
     {ico:"🦄",nm:"Unicornio",              desc:"50 pedidos + $5.000 + 5.000 pts",         ok:n>=50&&total>=5000&&pts>=5000, bonoPts:120}
   ];
+  _logrosCache=_resultadoLogros;
+  _logrosCacheKey=_key;
+  return _logrosCache;
 }
 
 function calcularInsignias(){return _logrosDefinicion();}
@@ -1379,7 +1389,7 @@ function renderProdCard(p){
   var promoBadge=promoIt?'<span class="badge b-rojo" style="font-size:9px">🔥 PROMO</span>':'';
   var volBadge=(!USER||!USER.sinDescVol)&&p.descVol&&!promoIt?'<span class="badge b-azul" style="font-size:9px">Desc. volumen disponible</span>':'';
   var imgSrc=p.img&&IMGS[p.img]?IMGS[p.img]:null;
-  var imgHtml=imgSrc?'<img src="'+imgSrc+'" alt="'+p.nm+'" loading="lazy" onerror="this.onerror=null;this.src=IMG_PLACEHOLDER" onclick="zoomImg(\''+imgSrc+'\')" style="cursor:zoom-in">':"<div class='ph'>🧯</div>";
+  var imgHtml=imgSrc?'<img src="'+imgSrc+'" alt="'+escHtml(p.nm)+'" loading="lazy" onerror="this.onerror=null;this.src=IMG_PLACEHOLDER" onclick="zoomImg(\''+imgSrc+'\')" style="cursor:zoom-in">':"<div class='ph'>🧯</div>";
   var favBtn='<button class="fav-btn'+(isFav?" active":"")+'\" onclick="toggleFav(\''+p.id+'\')">'+(isFav?"❤️":"🤍")+'</button>';
   var isDeseo=DESEOS.indexOf(p.id)!==-1;
   var deseoBtn='<button class="fav-btn deseo-btn'+(isDeseo?" active":"")+'\" onclick="toggleDeseo(\''+p.id+'\')" title="'+(isDeseo?"Quitar de lista de deseos":"Guardar en lista de deseos")+'">'+(isDeseo?"🔖":"🏷️")+'</button>';
@@ -2200,7 +2210,7 @@ function renderHistorial(){
     '</div>';
   var histEl=document.getElementById("hist-lista");
   var pedidosHtml=mp.length?mp.map(function(p){
-    var confirmados=(p.estado==="entregado"||p.estado==="finalizado");
+    var confirmados=(p.estado==="finalizado");
     var ptsHtml=p.esBienvenida?
       '<div class="ped-pts" style="color:#B8860B">🎁 Regalo de bienvenida</div>'+
       '<div style="font-size:11px;color:var(--g3);margin-top:3px">¡Gracias por unirte! Coordinaremos tu combo con tu primer pedido.</div>':
@@ -2209,7 +2219,9 @@ function renderHistorial(){
       '<div style="font-size:11px;color:var(--g3);margin-top:3px">Tu regalo será entregado en 0 a 7 días laborables.</div>':
       (confirmados
         ?'<div class="ped-pts" style="color:var(--verde)">🏆 '+fmtPts(p.puntos||0)+' puntos acreditados</div>'
-        :(p.estado!=="cancelado"?'<div class="ped-pts" style="color:var(--amar)">⏳ '+fmtPts(p.puntos||0)+' puntos pendientes de entrega</div>':''));
+        :(p.estado==="entregado"
+          ?'<div class="ped-pts" style="color:var(--amar)">⏳ '+fmtPts(p.puntos||0)+' puntos confirmados al finalizar</div>'
+          :(p.estado!=="cancelado"?'<div class="ped-pts" style="color:var(--amar)">⏳ '+fmtPts(p.puntos||0)+' puntos pendientes</div>':'')));
     var califShow=p.calificacion?'<div style="font-size:11px;color:var(--g3);margin-top:4px">Calificación: '+"⭐".repeat(p.calificacion.estrellas)+'</div>':"";
     var accBtns='<button class="btn btn-sm btn-s" onclick="verDetallePed(\''+p.id+'\')">Ver detalle</button>';
     if(!p.esCanje){
@@ -4112,7 +4124,7 @@ function checkStorageQuota(){
     }
   }catch(e){}
 }
-function guardarPedidos(){checkStorageQuota();try{localStorage.setItem("pyro_pedidos",JSON.stringify(PEDIDOS));backupCambio();}catch(e){avisarStorage();}}
+function guardarPedidos(){_logrosCache=null;checkStorageQuota();try{localStorage.setItem("pyro_pedidos",JSON.stringify(PEDIDOS));backupCambio();}catch(e){avisarStorage();}}
 function guardarStock(){var st={};PRODUCTOS.forEach(function(p){st[p.id]={stock:p.stock,ago:p.ago};});try{localStorage.setItem("pyro_stock",JSON.stringify(st));backupCambio();}catch(e){}}
 function cargarStock(){try{var st=JSON.parse(localStorage.getItem("pyro_stock")||"{}");PRODUCTOS.forEach(function(p){if(st[p.id]!=null){p.stock=st[p.id].stock;p.ago=st[p.id].ago;}});}catch(e){}}
 function guardarDistribuidores(){
