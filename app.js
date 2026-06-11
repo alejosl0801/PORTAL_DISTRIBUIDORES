@@ -2522,6 +2522,7 @@ cargarRewards();
 function renderRecompensas(){
   var saldo=saldoPuntos();
   var pendiente=puntosPendientes();
+  setTopbarPts(saldo);
   document.getElementById("rec-pts-v").textContent=fmtPts(saldo);
   var pendHtml=pendiente>0?'<div class="rec-pts-pend">⏳ '+fmtPts(pendiente)+' pts pendientes de entrega</div>':'';
   document.getElementById("rec-pts-pend-box").innerHTML=pendHtml;
