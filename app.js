@@ -1584,8 +1584,9 @@ function renderDetallePuntos(){
     html+='</div>';
   } else {html+='<div class="empty" style="padding:16px"><p>Aún no tienes pedidos con puntos</p></div>';}
   html+='<div style="background:var(--g1);border-radius:12px;padding:12px 14px;display:grid;gap:6px;margin-bottom:4px">'+
-    '<div style="display:flex;justify-content:space-between"><span style="font-size:13px;color:var(--g4)">Confirmados</span><b style="color:var(--verde)">'+fmtPts(confirmados)+'</b></div>'+
-    '<div style="display:flex;justify-content:space-between"><span style="font-size:13px;color:var(--g4)">Pendientes</span><b style="color:var(--amar)">'+fmtPts(pendientes)+'</b></div>'+
+    '<div style="display:flex;justify-content:space-between"><span style="font-size:13px;color:var(--g4)">Ganados en pedidos</span><b style="color:var(--verde)">'+fmtPts(confirmados)+'</b></div>'+
+    (bonoPorLogros()>0?'<div style="display:flex;justify-content:space-between"><span style="font-size:13px;color:var(--g4)">🏅 Logros desbloqueados</span><b style="color:var(--verde)">+'+fmtPts(bonoPorLogros())+'</b></div>':'')+
+    '<div style="display:flex;justify-content:space-between"><span style="font-size:13px;color:var(--g4)">Pendientes de entrega</span><b style="color:var(--amar)">'+fmtPts(pendientes)+'</b></div>'+
     (canjeados>0?'<div style="display:flex;justify-content:space-between"><span style="font-size:13px;color:var(--g4)">Canjeados</span><b style="color:var(--rojo)">−'+fmtPts(canjeados)+'</b></div>':'')+
     '<div style="border-top:1.5px solid var(--g2);padding-top:6px;display:flex;justify-content:space-between"><b style="font-size:13px">Saldo disponible</b><b style="font-size:15px;color:var(--azul)">'+fmtPts(saldoPuntos())+'</b></div>'+
   '</div>';
