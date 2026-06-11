@@ -33,8 +33,8 @@ var PRODUCTOS = [
   // ACCESORIOS - MANÓMETROS
   {id:"MANOPQS",nm:"Manómetro 195 PSI",cat:"accesorios",sub:"Manómetros",pv:0.85,pb:0.70,costo:0.36,stock:36,ago:false,img:"MANOPQS",descVol:[[30,1],[50,2],[100,3],[150,5],[300,6]],cantMin:10,codigoAzur:"MANOPQS"},
   // ACCESORIOS - MANGUERAS
-  {id:"MANG10PQS",nm:"Manguera 10 PQS",cat:"accesorios",sub:"Mangueras",pv:0.90,pb:0.80,costo:0.36,stock:327,ago:false,img:"MANGPQS10",descVol:[[30,1],[50,2],[80,3],[100,5],[150,6]],codigoAzur:"MANGPQS10"},
-  {id:"MANG20PQS",nm:"Manguera 20 PQS",cat:"accesorios",sub:"Mangueras",pv:0.90,pb:0.80,costo:0.34,stock:678,ago:false,img:"MANGPQS20",descVol:[[30,1],[50,2],[80,3],[100,5],[150,6]],codigoAzur:"MANGPQS20"},
+  {id:"MANG10PQS",nm:"Manguera 10 PQS",cat:"accesorios",sub:"Mangueras",pv:0.90,pb:0.80,costo:0.36,stock:327,ago:false,img:"MANG10PQS",descVol:[[30,1],[50,2],[80,3],[100,5],[150,6]],codigoAzur:"MANGPQS10"},
+  {id:"MANG20PQS",nm:"Manguera 20 PQS",cat:"accesorios",sub:"Mangueras",pv:0.90,pb:0.80,costo:0.34,stock:678,ago:false,img:"MANG20PQS",descVol:[[30,1],[50,2],[80,3],[100,5],[150,6]],codigoAzur:"MANGPQS20"},
   {id:"CORN5CO2",nm:"Corneta 5 CO2",cat:"accesorios",sub:"Mangueras",pv:2.80,pb:2.20,costo:0.95,stock:623,ago:false,img:null,descVol:[[10,1],[15,2],[25,3],[50,5],[80,6]],codigoAzur:"CORN5CO2"},
   {id:"MANG10CO2",nm:"Manguera con corneta 10 CO2",cat:"accesorios",sub:"Mangueras",pv:7.20,pb:6.40,costo:2.37,stock:579,ago:false,img:"MANG10CO2",descVol:[[10,1],[20,2],[30,3],[40,5],[60,6]],codigoAzur:"CORN10CO2"},
   // ACCESORIOS - SOPORTES
