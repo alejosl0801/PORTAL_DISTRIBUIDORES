@@ -44,6 +44,8 @@ var PRODUCTOS = [
   // ACCESORIOS - OTROS
   {id:"ABRPQS",nm:"Abrazaderas Plásticas",cat:"accesorios",sub:"Otros",pv:0.26,pb:0.24,costo:0.12,stock:2616,ago:false,img:null,descVol:[[100,1],[200,2],[300,3],[500,5],[1000,6]],codigoAzur:"ABRPQS"},
   {id:"SEGPLAM",nm:"Seguros Plásticos Amarillo",cat:"accesorios",sub:"Otros",pv:0.08,pb:0.06,costo:0.03,stock:13467,ago:false,img:null,descVol:[[200,1],[500,2],[800,3],[1000,5],[2000,6]],cantMin:200,codigoAzur:"SEGPLAST01"},
+  {id:"LETPQS",nm:"Letrero Instructivo Extintor PQS",cat:"accesorios",sub:"Otros",pv:1.95,pb:1.95,costo:1.50,stock:0,ago:true,img:"LETPQS",descVol:[[10,5]],codigoAzur:"LETPQS"},
+  {id:"LETCO2",nm:"Letrero Instructivo Extintor CO2",cat:"accesorios",sub:"Otros",pv:1.95,pb:1.95,costo:1.50,stock:0,ago:true,img:"LETCO2",descVol:[[10,5]],codigoAzur:"LETCO2"},
   // MANGUERAS HID
   {id:"MANG15M",nm:"Manguera 15M doble chaqueta 1½\"",cat:"mangueras_hid",sub:"Mangueras",pv:38.61,pb:36.98,costo:29.93,stock:161,ago:false,img:"MANG15M",descVol:[[3,1],[5,2],[8,3]],codigoAzur:"MANH15C001"},
   {id:"MANG30M",nm:"Manguera 30M doble chaqueta 1½\"",cat:"mangueras_hid",sub:"Mangueras",pv:69.10,pb:64.28,costo:46.14,stock:89,ago:false,img:"MANG30M",descVol:[[3,1],[5,2],[8,3],[10,4],[15,5]],codigoAzur:"MANH30C001"},

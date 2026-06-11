@@ -31,6 +31,8 @@ var IMGS = {
   "GANCPQS10":"img/GANCPQS10.jpg",
   "GANCPQS20":"img/GANCPQS20.jpg",
   "CORN5CO2":"img/CORN5CO2.jpg",
+  "LETPQS":"img/LETPQS.jpg",
+  "LETCO2":"img/LETCO2.jpg",
   "promo_activa":"img/promo_activa.jpg",
   "promo_ant1":"img/promo_ant1.jpg",
   "promo_fin":"img/promo_fin.jpg"
