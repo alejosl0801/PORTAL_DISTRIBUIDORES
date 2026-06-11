@@ -1772,7 +1772,7 @@ function renderCarrito(){
       '</div>'+
     '</div>';
   }).join("");
-  if(omitidos.length)html='<div style="background:var(--amarc);border:1.5px solid var(--amar);border-radius:10px;padding:10px 14px;margin-bottom:10px;font-size:12px;color:#8a6600">⚠️ '+omitidos.length+' productos agotado(s) fueron omitidos: '+omitidos.map(escHtml).join(", ")+'</div>'+html;
+  if(omitidos.length)html='<div style="background:var(--amarc);border:1.5px solid var(--amar);border-radius:10px;padding:10px 14px;margin-bottom:10px;font-size:12px;color:var(--amar)">⚠️ '+omitidos.length+' productos agotado(s) fueron omitidos: '+omitidos.map(escHtml).join(", ")+'</div>'+html;
   cont.innerHTML=html;
   activarSwipeCarrito();
   var iva=parseFloat((subtotal*IVA).toFixed(2));
@@ -3234,7 +3234,7 @@ function renderAdmAlertas(){
     var f=parseFechaPed(ultimo);return !f||(ahora-f)>30*24*60*60*1000;
   });
   if(inactivos.length)alertas.push({tipo:"amar",ico:"😴",msg:inactivos.length+" distribuidor(es) sin pedidos en 30+ días",accion:"admTab('distribuidores')"});
-  if(!alertas.length)return'<div style="background:#e8f5e9;border-radius:10px;padding:12px 14px;font-size:13px;color:#2e7d32;margin-bottom:14px">✅ Todo en orden — sin alertas críticas</div>';
+  if(!alertas.length)return'<div style="background:var(--verdec);border:1.5px solid var(--verde);border-radius:10px;padding:12px 14px;font-size:13px;color:var(--verde);margin-bottom:14px">✅ Todo en orden — sin alertas críticas</div>';
   return'<div style="display:grid;gap:8px;margin-bottom:14px">'+alertas.map(function(a){
     var bg=a.tipo==="rojo"?"var(--rojoc)":"var(--amarc)";
     var col=a.tipo==="rojo"?"var(--rojo)":"#8a6600";
@@ -4545,7 +4545,7 @@ function renderDistribuidoresInactivos(){
   var inactivos=[];
   DISTRIBUIDORES.forEach(function(d){if(d.esAdmin||d.bloqueado||d.rol==="impresion")return;var ul=ultPedido[d.ruc];if(!ul){inactivos.push({razon:d.razon,fecha:"Sin pedidos"});return;}if(ahora-ul.ts>umbral30)inactivos.push({razon:d.razon,fecha:ul.fecha});});
   if(!inactivos.length)return'';
-  return '<div style="background:var(--amarc);border:1.5px solid var(--amar);border-radius:10px;padding:12px 14px;margin-bottom:14px"><div style="font-weight:700;margin-bottom:8px;font-size:14px">⚠️ Sin pedidos hace >30 días ('+inactivos.length+')</div>'+
+  return '<div style="background:var(--amarc);border:1.5px solid var(--amar);border-radius:10px;padding:12px 14px;margin-bottom:14px;color:var(--amar)"><div style="font-weight:700;margin-bottom:8px;font-size:14px">⚠️ Sin pedidos hace >30 días ('+inactivos.length+')</div>'+
     inactivos.map(function(d){return '<div style="display:flex;justify-content:space-between;font-size:13px;padding:3px 0;border-bottom:1px solid var(--g2)"><span>'+escHtml(d.razon)+'</span><span style="color:var(--g3)">'+escHtml(d.fecha)+'</span></div>';}).join("")+'</div>';
 }
 function renderTicketPromedioDist(){
@@ -5027,7 +5027,7 @@ function renderBannerInstalacion(){
         :"Instala la app en tu <b>celular</b> (Android: Chrome) y reclámalos ahora.";
   el.style.display="";
   el.innerHTML=
-    '<div style="background:linear-gradient(135deg,#fff7e0,#ffe0a0);border:2px solid var(--oro);border-radius:16px;padding:14px 16px;margin-bottom:16px">'+
+    '<div style="background:var(--oro-claro,#fff7e0);border:2px solid var(--oro);border-radius:16px;padding:14px 16px;margin-bottom:16px">'+
       '<div style="display:flex;align-items:center;gap:12px">'+
         '<span style="font-size:32px">'+faltaIco+'</span>'+
         '<div style="flex:1">'+
