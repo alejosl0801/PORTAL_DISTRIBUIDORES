@@ -422,14 +422,11 @@ function _sincTutorialesDesdeServidor(ruc){
 }
 
 function hacerLogin(){
-  if(_loginBlocked){toast("⛔ Demasiados intentos fallidos. Espera 30 segundos.");return;}
   var u=document.getElementById("login-user").value.trim();
   var pw=document.getElementById("login-pass").value.trim();
   var err=document.getElementById("login-err");
   err.style.display="none";
   if(!loginConCredenciales(u,pw)){
-    _loginAttempts++;
-    if(_loginAttempts>=5){_loginBlocked=true;setTimeout(function(){_loginBlocked=false;_loginAttempts=0;},30000);err.textContent="Demasiados intentos. Espera 30 segundos.";}
     err.style.display="block";return;
   }
   _loginAttempts=0;
