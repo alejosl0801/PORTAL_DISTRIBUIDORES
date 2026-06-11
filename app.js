@@ -3513,10 +3513,22 @@ function buscarSRI(){
 }
 
 function confirmarLimpiarDatos(){
-  if(!confirm("¿Limpiar TODOS los datos de prueba? Se eliminarán pedidos, stock y sesiones. Esta acción no se puede deshacer."))return;
-  ["pyro_pedidos","pyro_stock","pyro_sesion","pyro_dist_extra"].forEach(function(k){try{localStorage.removeItem(k);}catch(e){}});
+  // Claves fijas a borrar
+  ["pyro_pedidos","pyro_stock","pyro_sesion","pyro_dist_extra",
+   "pyro_cola_offline","pyro_sync_pendientes","pyro_ultimo_backup",
+   "pyro_log_accesos","pyro_notif_vistas","pyro_last_ruc"
+  ].forEach(function(k){try{localStorage.removeItem(k);}catch(e){}});
+  // Claves por prefijo (por RUC o por sesión)
   var keys=[];try{for(var i=0;i<localStorage.length;i++)keys.push(localStorage.key(i));}catch(e){}
-  keys.filter(function(k){return k&&(k.startsWith("pyro_cart_")||k.startsWith("pyro_borradores_")||k.startsWith("pyro_tut_")||k.startsWith("pyro_tipsec_")||k.startsWith("pyro_tut_pts_")||k.startsWith("pyro_log_puntos_")||k.startsWith("pyro_avatar_")||k.startsWith("pyro_pwa_")||k.startsWith("pyro_biometria_"));}).forEach(function(k){try{localStorage.removeItem(k);}catch(e){}});
+  var prefijos=[
+    "pyro_cart_","pyro_borradores_","pyro_tut_","pyro_tipsec_","pyro_tut_pts_",
+    "pyro_log_puntos_","pyro_avatar_","pyro_pwa_","pyro_biometria_",
+    "pyro_bio_skip_","pyro_busquedas_","pyro_deseos_","pyro_favs_",
+    "pyro_logro_madrug_","pyro_logro_noct_","pyro_primer_ingreso_",
+    "pyro_tut_resetado_","pyro_ultima_tab_"
+  ];
+  keys.filter(function(k){return k&&prefijos.some(function(p){return k.startsWith(p);});})
+    .forEach(function(k){try{localStorage.removeItem(k);}catch(e){}});
   toast("✅ Datos de prueba eliminados. Recargando...");
   setTimeout(function(){window.location.reload();},1200);
 }
