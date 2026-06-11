@@ -1816,7 +1816,7 @@ function renderCarrito(){
       '<select class="form-select" id="cart-modo" onchange="renderModoEntrega();validarConfirmar()">'+
         '<option value="" disabled selected>Seleccionar...</option>'+
         '<option value="retiro">Retiro en local</option>'+
-        (USER.entrega&&USER.entrega.habilitada?'<option value="entrega">Entrega a domicilio</option>':'')+
+        '<option value="entrega">Entrega a domicilio</option>'+
       '</select>'+
       '<div id="entrega-extra"></div>'+
       '<label class="form-label">Notas (opcional)</label>'+
@@ -1855,11 +1855,12 @@ function validarConfirmar(){
   var ok=!!(pago&&pago.value&&modo&&modo.value);
   // Validación de monto mínimo para entrega a domicilio
   var minMsg="";
-  if(modo&&modo.value==="entrega"&&USER&&USER.entrega&&USER.entrega.montoMin){
+  if(modo&&modo.value==="entrega"){
+    var _minEnt=(USER&&USER.entrega&&USER.entrega.montoMin)||30;
     var subtotal=calcularSubtotalCarrito();
-    if(subtotal<USER.entrega.montoMin){
+    if(subtotal<_minEnt){
       ok=false;
-      minMsg="⚠️ Pedido mínimo para entrega a domicilio: "+fmt$(USER.entrega.montoMin);
+      minMsg="⚠️ Pedido mínimo para entrega a domicilio: "+fmt$(_minEnt);
     }
   }
   btn.disabled=!ok;
@@ -2037,9 +2038,10 @@ function confirmarPedido(){
 
   var modo=document.getElementById("cart-modo").value;
   // Validar monto mínimo para entrega a domicilio
-  if(modo==="entrega"&&USER&&USER.entrega&&USER.entrega.montoMin){
-    if(calcularSubtotalCarrito()<USER.entrega.montoMin){
-      toast("⚠️ Pedido mínimo para entrega a domicilio: "+fmt$(USER.entrega.montoMin));
+  if(modo==="entrega"){
+    var _minEnt2=(USER&&USER.entrega&&USER.entrega.montoMin)||30;
+    if(calcularSubtotalCarrito()<_minEnt2){
+      toast("⚠️ Pedido mínimo para entrega a domicilio: "+fmt$(_minEnt2));
       if(btnConf)btnConf.disabled=false;
       return;
     }
@@ -2606,6 +2608,7 @@ function admTab(t,btn){
   document.querySelectorAll(".adm-panel").forEach(function(p){p.classList.remove("active");});
   document.getElementById("adm-"+t).classList.add("active");
   if(t==="pedidos")renderAdmPedidos();
+  if(t==="dashboard")renderAdmDashboard();
   if(t==="distribuidores")renderAdmDist();
   if(t==="stock")renderAdmStock();
   if(t==="recompensas")renderAdmRecompensas();
@@ -2650,6 +2653,7 @@ function renderAdmin(){
   // (por si una sesión previa de rol "impresion" las dejó ocultas en el DOM)
   document.querySelectorAll(".adm-tab").forEach(function(b){b.style.display="";});
   renderAdmPedidos();
+  renderAdmDashboard();
 }
 // UI reducida para rol "impresion": lista de pedidos con filtros y botones de impresión directos
 function renderRolImpresion(){
@@ -2728,38 +2732,22 @@ function costoCanjesEntregados(lista){
   },0);
 }
 
-function renderAdmPedidos(){
-  // Solo pedidos reales (no canjes) para estadísticas
+function renderAdmDashboard(){
   var ped=PEDIDOS.filter(function(p){return!p.esCanje;});
   var canjes=PEDIDOS.filter(function(p){return p.esCanje;});
-
-  // Nuevos = solo pendientes activos (no cancelados)
   var nuevos=ped.filter(function(p){return p.estado==="pendiente";}).length;
-
-  // Total vendido = suma de SUBTOTALES de pedidos entregados/finalizados (sin IVA)
   var totalVendido=ped.filter(function(p){return p.estado==="entregado"||p.estado==="finalizado";})
     .reduce(function(s,p){return s+(p.subtotal||0);},0);
-
-  // Utilidad generada = subtotal - costos, de pedidos entregados/finalizados
   var utilidad=ped.filter(function(p){return p.estado==="entregado"||p.estado==="finalizado";})
     .reduce(function(s,p){
-      var costoTotal=(p.items||[]).reduce(function(cs,it){
-        return cs+getCostoProducto(it.id)*(it.cant||0);
-      },0);
+      var costoTotal=(p.items||[]).reduce(function(cs,it){return cs+getCostoProducto(it.id)*(it.cant||0);},0);
       return s+(p.subtotal||0)-costoTotal;
     },0);
-
-  // Distribuidores únicos con al menos un pedido entregado
   var distActivos=new Set(ped.filter(function(p){return p.estado==="entregado"||p.estado==="finalizado";}).map(function(p){return p.ruc;})).size;
-
-  // Canjes pendientes (solo estado pendiente, no cancelados, no finalizados)
   var canjesPend=canjes.filter(function(p){return p.estado==="pendiente";}).length;
   var canjesEntregadosArr=canjes.filter(function(p){return p.estado==="entregado"||p.estado==="finalizado";});
   var canjesEntregados=canjesEntregadosArr.length;
-
-  // Costo real de canjes entregados/finalizados (usando costoReal de REWARDS por nombre del canje)
   var costoCanjes=costoCanjesEntregados(canjesEntregadosArr);
-
   document.getElementById("adm-stats").innerHTML=
     '<div class="adm-stat"><div class="v">'+nuevos+'</div><div class="l">Nuevos pedidos</div></div>'+
     '<div class="adm-stat"><div class="v">'+fmt$(totalVendido)+'</div><div class="l">Total vendido (subtotal)</div></div>'+
@@ -2778,10 +2766,11 @@ function renderAdmPedidos(){
       renderTop5Distribuidores()+
       '<div id="adm-charts-canvas" style="margin-bottom:14px"></div>'+
       '<button class="btn btn-s btn-full" style="margin-bottom:14px" onclick="generarReporteMensual()">📊 Reporte mensual PDF</button>';
-    // Dibujar gráficas Canvas después de que el DOM se actualice
     setTimeout(function(){dibujarGraficasCanvas();},50);
   }
+}
 
+function renderAdmPedidos(){
   // Barra de filtros de estado (chips)
   var filtros=[
     {f:"todos",l:"Todos"},

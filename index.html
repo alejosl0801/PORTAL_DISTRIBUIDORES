@@ -199,6 +199,7 @@
   </div>
   <div class="adm-tabs">
     <button class="adm-tab active" onclick="admTab('pedidos',this)">📦 Pedidos</button>
+    <button class="adm-tab" onclick="admTab('dashboard',this)">📊 Dashboard</button>
     <button class="adm-tab" onclick="admTab('distribuidores',this)">🏢 Distribuidores</button>
     <button class="adm-tab" onclick="admTab('stock',this)">📊 Stock</button>
     <button class="adm-tab" onclick="admTab('recompensas',this)">🎁 Recompensas</button>
@@ -208,10 +209,12 @@
   </div>
   <div class="content" style="padding-top:12px">
     <div id="adm-pedidos" class="adm-panel active">
-      <div class="adm-stats" id="adm-stats"></div>
-      <div id="adm-dashboard-extra"></div>
       <button class="btn btn-s btn-full" id="adm-export-btn" style="margin-bottom:14px" onclick="exportarExcel()">📥 Exportar a Excel</button>
       <div id="adm-ped-lista"></div>
+    </div>
+    <div id="adm-dashboard" class="adm-panel">
+      <div class="adm-stats" id="adm-stats"></div>
+      <div id="adm-dashboard-extra"></div>
     </div>
     <div id="adm-distribuidores" class="adm-panel">
       <div style="display:flex;gap:8px;margin-bottom:12px">
