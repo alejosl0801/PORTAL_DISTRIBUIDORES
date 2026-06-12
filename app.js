@@ -476,6 +476,7 @@ function finalizarLogin(u,pw){
   }
   // Alerta pedidos pendientes >30 días
   if(!USER.esAdmin&&USER.rol!=="impresion"){setTimeout(function(){var ahora=new Date();var viejos=PEDIDOS.filter(function(p){if(p.ruc!==USER.ruc||p.estado!=="pendiente")return false;var f=parseFechaPed(p);return f&&(ahora-f)>30*24*60*60*1000;});if(viejos.length)toast("⏰ Tienes "+viejos.length+" pedidos en 'pendiente' hace más de 30 días — contacta a PyroShield");},2500);}
+  podarPedidosAdmin();
   if(USER.esAdmin){
     backupAutomatico(false);
     sincronizarDesdeNube(null);
@@ -4217,6 +4218,35 @@ function checkStorageQuota(){
     }
   }catch(e){}
 }
+
+// ════════════════════ PODA DE PEDIDOS VIEJOS (solo admin) ════════════════════
+// El Google Sheet conserva TODO para siempre. En el dispositivo del admin solo
+// mantenemos los pedidos recientes para no llenar el localStorage (~5MB). Los
+// clientes NUNCA se podan (tienen pocos pedidos y los necesitan para sus puntos).
+var _RETEN_MESES_ADMIN=13;
+// Gestor = admin o rol impresión: ambos ven TODOS los pedidos y por eso se podan.
+function _esGestor(){return!!(USER&&(USER.esAdmin||USER.rol==="impresion"));}
+function _cutoffPodaAdmin(){var d=new Date();d.setMonth(d.getMonth()-_RETEN_MESES_ADMIN);d.setHours(0,0,0,0);return d;}
+// ¿Conservar este pedido en el dispositivo del gestor?
+function _conservarPedidoAdmin(p){
+  // Activo (no terminal) → siempre se conserva, sin importar la antigüedad
+  if(p.estado!=="finalizado"&&p.estado!=="cancelado")return true;
+  // Terminal pero reciente (dentro de la ventana de retención) → se conserva
+  var f=parseFechaPed(p);
+  if(f&&f.getTime()>=_cutoffPodaAdmin().getTime())return true;
+  return false;
+}
+function podarPedidosAdmin(){
+  if(!_esGestor())return false;
+  var antes=PEDIDOS.length;
+  PEDIDOS=PEDIDOS.filter(_conservarPedidoAdmin);
+  if(PEDIDOS.length!==antes){
+    _logrosCache=null;
+    try{localStorage.setItem("pyro_pedidos",JSON.stringify(PEDIDOS));}catch(e){}
+    return true;
+  }
+  return false;
+}
 function guardarPedidos(){_logrosCache=null;checkStorageQuota();try{localStorage.setItem("pyro_pedidos",JSON.stringify(PEDIDOS));backupCambio();}catch(e){avisarStorage();}}
 function guardarStock(){var st={};PRODUCTOS.forEach(function(p){st[p.id]={stock:p.stock,ago:p.ago};});try{localStorage.setItem("pyro_stock",JSON.stringify(st));backupCambio();}catch(e){}}
 function cargarStock(){try{var st=JSON.parse(localStorage.getItem("pyro_stock")||"{}");PRODUCTOS.forEach(function(p){if(st[p.id]!=null){p.stock=st[p.id].stock;p.ago=st[p.id].ago;}});}catch(e){}}
@@ -4896,9 +4926,12 @@ function sincronizarDesdeNube(ruc){
     // Pedidos con subida pendiente: su estado local es más nuevo que el de la nube
     var pendSubida={};try{cargarSyncPendientes().forEach(function(p){pendSubida[p.id]=true;});}catch(e){}
     var cambio=false;
+    var esGestor=_esGestor();
     data.pedidos.forEach(function(pc){
       if(tumba[pc.id])return;
       var pl=porId[pc.id];
+      // En admin/impresión no re-traemos pedidos viejos ya podados (siguen en el Sheet)
+      if(!pl&&esGestor&&!_conservarPedidoAdmin(pc))return;
       if(!pl){local.push(pc);cambio=true;return;}
       if(pendSubida[pc.id])return;
       // El estado de la nube manda (lo asigna el admin); también factura y observaciones
