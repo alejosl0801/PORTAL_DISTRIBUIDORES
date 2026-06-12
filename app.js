@@ -24,7 +24,7 @@ var PRODUCTOS = [
   {id:"VENT5CO2",nm:"Extintor 5 LBS CO2",cat:"extintores",sub:"CO2",pv:26.70,pb:22.40,costo:15.03,stock:57,ago:false,img:"VENT5CO2",descVol:[[5,1],[8,2],[12,3],[15,5],[20,6]],codigoAzur:"VENT5CO2"},
   {id:"VENT10CO2",nm:"Extintor 10 LBS CO2",cat:"extintores",sub:"CO2",pv:34.65,pb:33.85,costo:23.92,stock:0,ago:true,img:"VENT10CO2",descVol:[[3,1],[5,2],[8,3],[10,5],[15,6]],codigoAzur:"VENT10CO2"},
   {id:"VENT20CO2",nm:"Extintor 20 LBS CO2 + Carro",cat:"extintores",sub:"CO2",pv:106.99,pb:104.99,costo:40.99,stock:17,ago:false,img:"VENT20CO2",descVol:[[2,1],[3,2],[4,3],[5,5],[8,6]],codigoAzur:"VENT20CO2"},
-  {id:"VENT25AQ",nm:"Extintor 2.5 Glns Agua Química",cat:"extintores",sub:"H2O",pv:63.00,pb:61.25,costo:38.25,stock:24,ago:false,img:"VENT25AQ",descVol:[[2,1],[3,2],[4,3],[5,5],[8,6]],codigoAzur:"VENT2.5AQ"},
+  {id:"VENT2-5AQ",nm:"Extintor 2.5 Glns Agua Química",cat:"extintores",sub:"H2O",pv:63.00,pb:61.25,costo:38.25,stock:24,ago:false,img:"VENT2-5AQ",descVol:[[2,1],[3,2],[4,3],[5,5],[8,6]],codigoAzur:"VENT2-5AQ"},
   // ACCESORIOS - CABEZALES
   {id:"CABPQS1020",nm:"Cabezal PQS 10/20 LBS",cat:"accesorios",sub:"Cabezales",pv:2.95,pb:2.80,costo:1.24,stock:0,ago:true,img:"CABPQS1020",descVol:[[20,1],[40,2],[60,3],[80,5],[120,6]],codigoAzur:"CABPQS1020"},
   {id:"CABCO2510",nm:"Cabezal CO2 5/10 LBS",cat:"accesorios",sub:"Cabezales",pv:7.80,pb:7.00,costo:4.71,stock:222,ago:false,img:"CABCO2510",descVol:[[10,1],[20,2],[30,3],[40,5],[50,6]],codigoAzur:"CABCO2510"},
