@@ -23,42 +23,42 @@ var PRODUCTOS = [
   // EXTINTORES CO2
   {id:"VENT5CO2",nm:"Extintor 5 LBS CO2",cat:"extintores",sub:"CO2",pv:26.70,pb:22.40,costo:15.03,stock:57,ago:false,img:"VENT5CO2",descVol:[[5,1],[8,2],[12,3],[15,5],[20,6]],codigoAzur:"VENT5CO2"},
   {id:"VENT10CO2",nm:"Extintor 10 LBS CO2",cat:"extintores",sub:"CO2",pv:34.65,pb:33.85,costo:23.92,stock:0,ago:true,img:"VENT10CO2",descVol:[[3,1],[5,2],[8,3],[10,5],[15,6]],codigoAzur:"VENT10CO2"},
-  {id:"VENT20CO2C",nm:"Extintor 20 LBS CO2 + Carro",cat:"extintores",sub:"CO2",pv:106.99,pb:104.99,costo:40.99,stock:17,ago:false,img:"VENT20CO2C",descVol:[[2,1],[3,2],[4,3],[5,5],[8,6]],codigoAzur:"VENT20CO2"},
+  {id:"VENT20CO2",nm:"Extintor 20 LBS CO2 + Carro",cat:"extintores",sub:"CO2",pv:106.99,pb:104.99,costo:40.99,stock:17,ago:false,img:"VENT20CO2",descVol:[[2,1],[3,2],[4,3],[5,5],[8,6]],codigoAzur:"VENT20CO2"},
   {id:"VENT25AQ",nm:"Extintor 2.5 Glns Agua Química",cat:"extintores",sub:"H2O",pv:63.00,pb:61.25,costo:38.25,stock:24,ago:false,img:"VENT25AQ",descVol:[[2,1],[3,2],[4,3],[5,5],[8,6]],codigoAzur:"VENT2.5AQ"},
   // ACCESORIOS - CABEZALES
   {id:"CABPQS1020",nm:"Cabezal PQS 10/20 LBS",cat:"accesorios",sub:"Cabezales",pv:2.95,pb:2.80,costo:1.24,stock:0,ago:true,img:"CABPQS1020",descVol:[[20,1],[40,2],[60,3],[80,5],[120,6]],codigoAzur:"CABPQS1020"},
   {id:"CABCO2510",nm:"Cabezal CO2 5/10 LBS",cat:"accesorios",sub:"Cabezales",pv:7.80,pb:7.00,costo:4.71,stock:222,ago:false,img:"CABCO2510",descVol:[[10,1],[20,2],[30,3],[40,5],[50,6]],codigoAzur:"CABCO2510"},
-  {id:"CO2CABMAR",nm:"Cabezal Marítimo CO2",cat:"accesorios",sub:"Cabezales",pv:42.25,pb:38.46,costo:18.93,stock:73,ago:false,img:"CO2CABMAR",descVol:[[2,1],[3,2],[5,3],[8,5],[10,6]],codigoAzur:"CABMARITIMO"},
-  {id:"CO2DISRAP",nm:"CO2 Disparo Rápido (50-100 LBS)",cat:"accesorios",sub:"Cabezales",pv:16.80,pb:13.95,costo:5.92,stock:121,ago:false,img:"CO2DISRAP",descVol:[[5,1],[10,2],[15,3],[20,5],[30,6]],codigoAzur:"CAB50CO2AR"},
+  {id:"CABMARITIMO",nm:"Cabezal Marítimo CO2",cat:"accesorios",sub:"Cabezales",pv:42.25,pb:38.46,costo:18.93,stock:73,ago:false,img:"CABMARITIMO",descVol:[[2,1],[3,2],[5,3],[8,5],[10,6]],codigoAzur:"CABMARITIMO"},
+  {id:"CAB50CO2AR",nm:"CO2 Disparo Rápido (50-100 LBS)",cat:"accesorios",sub:"Cabezales",pv:16.80,pb:13.95,costo:5.92,stock:121,ago:false,img:"CAB50CO2AR",descVol:[[5,1],[10,2],[15,3],[20,5],[30,6]],codigoAzur:"CAB50CO2AR"},
   // ACCESORIOS - MANÓMETROS
   {id:"MANOPQS",nm:"Manómetro 195 PSI",cat:"accesorios",sub:"Manómetros",pv:0.85,pb:0.70,costo:0.36,stock:36,ago:false,img:"MANOPQS",descVol:[[30,1],[50,2],[100,3],[150,5],[300,6]],cantMin:10,codigoAzur:"MANOPQS"},
   // ACCESORIOS - MANGUERAS
-  {id:"MANG10PQS",nm:"Manguera 10 PQS",cat:"accesorios",sub:"Mangueras",pv:0.90,pb:0.80,costo:0.36,stock:327,ago:false,img:"MANG10PQS",descVol:[[30,1],[50,2],[80,3],[100,5],[150,6]],codigoAzur:"MANGPQS10"},
-  {id:"MANG20PQS",nm:"Manguera 20 PQS",cat:"accesorios",sub:"Mangueras",pv:0.90,pb:0.80,costo:0.34,stock:678,ago:false,img:"MANG20PQS",descVol:[[30,1],[50,2],[80,3],[100,5],[150,6]],codigoAzur:"MANGPQS20"},
+  {id:"MANGPQS10",nm:"Manguera 10 PQS",cat:"accesorios",sub:"Mangueras",pv:0.90,pb:0.80,costo:0.36,stock:327,ago:false,img:"MANGPQS10",descVol:[[30,1],[50,2],[80,3],[100,5],[150,6]],codigoAzur:"MANGPQS10"},
+  {id:"MANGPQS20",nm:"Manguera 20 PQS",cat:"accesorios",sub:"Mangueras",pv:0.90,pb:0.80,costo:0.34,stock:678,ago:false,img:"MANGPQS20",descVol:[[30,1],[50,2],[80,3],[100,5],[150,6]],codigoAzur:"MANGPQS20"},
   {id:"CORN5CO2",nm:"Corneta 5 CO2",cat:"accesorios",sub:"Mangueras",pv:2.80,pb:2.20,costo:0.95,stock:623,ago:false,img:"CORN5CO2",descVol:[[10,1],[15,2],[25,3],[50,5],[80,6]],codigoAzur:"CORN5CO2"},
-  {id:"MANG10CO2",nm:"Manguera con corneta 10 CO2",cat:"accesorios",sub:"Mangueras",pv:7.20,pb:6.40,costo:2.37,stock:579,ago:false,img:"MANG10CO2",descVol:[[10,1],[20,2],[30,3],[40,5],[60,6]],codigoAzur:"CORN10CO2"},
+  {id:"CORN10CO2",nm:"Manguera con corneta 10 CO2",cat:"accesorios",sub:"Mangueras",pv:7.20,pb:6.40,costo:2.37,stock:579,ago:false,img:"CORN10CO2",descVol:[[10,1],[20,2],[30,3],[40,5],[60,6]],codigoAzur:"CORN10CO2"},
   // ACCESORIOS - SOPORTES
-  {id:"SOPCO2R",nm:"Soporte CO2 Rojo",cat:"accesorios",sub:"Soportes",pv:1.20,pb:1.15,costo:0.41,stock:340,ago:false,img:"GANCO2",descVol:[[50,1],[100,2],[150,3],[200,5],[400,6]],codigoAzur:"GANCO2"},
-  {id:"SOPPQS10",nm:"Soporte PQS 10",cat:"accesorios",sub:"Soportes",pv:0.98,pb:0.85,costo:0.25,stock:440,ago:false,img:"GANCPQS10",descVol:[[50,1],[100,2],[150,3],[200,5],[400,6]],codigoAzur:"GANCPQS10"},
-  {id:"SOPPQS20",nm:"Soporte PQS 20",cat:"accesorios",sub:"Soportes",pv:0.98,pb:0.85,costo:0.28,stock:486,ago:false,img:"GANCPQS20",descVol:[[50,1],[100,2],[150,3],[200,5],[400,6]],codigoAzur:"GANCPQS20"},
+  {id:"GANCO2",nm:"Soporte CO2 Rojo",cat:"accesorios",sub:"Soportes",pv:1.20,pb:1.15,costo:0.41,stock:340,ago:false,img:"GANCO2",descVol:[[50,1],[100,2],[150,3],[200,5],[400,6]],codigoAzur:"GANCO2"},
+  {id:"GANCPQS10",nm:"Soporte PQS 10",cat:"accesorios",sub:"Soportes",pv:0.98,pb:0.85,costo:0.25,stock:440,ago:false,img:"GANCPQS10",descVol:[[50,1],[100,2],[150,3],[200,5],[400,6]],codigoAzur:"GANCPQS10"},
+  {id:"GANCPQS20",nm:"Soporte PQS 20",cat:"accesorios",sub:"Soportes",pv:0.98,pb:0.85,costo:0.28,stock:486,ago:false,img:"GANCPQS20",descVol:[[50,1],[100,2],[150,3],[200,5],[400,6]],codigoAzur:"GANCPQS20"},
   // ACCESORIOS - OTROS
   {id:"ABRPQS",nm:"Abrazaderas Plásticas",cat:"accesorios",sub:"Otros",pv:0.26,pb:0.24,costo:0.12,stock:2616,ago:false,img:null,descVol:[[100,1],[200,2],[300,3],[500,5],[1000,6]],codigoAzur:"ABRPQS"},
   {id:"SEGPLAM",nm:"Seguros Plásticos Amarillo",cat:"accesorios",sub:"Otros",pv:0.08,pb:0.06,costo:0.03,stock:13467,ago:false,img:null,descVol:[[200,1],[500,2],[800,3],[1000,5],[2000,6]],cantMin:200,codigoAzur:"SEGPLAST01"},
   {id:"LETPQS",nm:"Letrero Instructivo Extintor PQS",cat:"accesorios",sub:"Otros",pv:1.95,pb:1.95,costo:1.50,stock:0,ago:true,img:"LETPQS",descVol:[[10,5]],codigoAzur:"LETPQS"},
   {id:"LETCO2",nm:"Letrero Instructivo Extintor CO2",cat:"accesorios",sub:"Otros",pv:1.95,pb:1.95,costo:1.50,stock:0,ago:true,img:"LETCO2",descVol:[[10,5]],codigoAzur:"LETCO2"},
   // MANGUERAS HID
-  {id:"MANG15M",nm:"Manguera 15M doble chaqueta 1½\"",cat:"mangueras_hid",sub:"Mangueras",pv:38.61,pb:36.98,costo:29.93,stock:161,ago:false,img:"MANG15M",descVol:[[3,1],[5,2],[8,3]],codigoAzur:"MANH15C001"},
-  {id:"MANG30M",nm:"Manguera 30M doble chaqueta 1½\"",cat:"mangueras_hid",sub:"Mangueras",pv:69.10,pb:64.28,costo:46.14,stock:89,ago:false,img:"MANG30M",descVol:[[3,1],[5,2],[8,3],[10,4],[15,5]],codigoAzur:"MANH30C001"},
+  {id:"MANH15C001",nm:"Manguera 15M doble chaqueta 1½\"",cat:"mangueras_hid",sub:"Mangueras",pv:38.61,pb:36.98,costo:29.93,stock:161,ago:false,img:"MANH15C001",descVol:[[3,1],[5,2],[8,3]],codigoAzur:"MANH15C001"},
+  {id:"MANH30C001",nm:"Manguera 30M doble chaqueta 1½\"",cat:"mangueras_hid",sub:"Mangueras",pv:69.10,pb:64.28,costo:46.14,stock:89,ago:false,img:"MANH30C001",descVol:[[3,1],[5,2],[8,3],[10,4],[15,5]],codigoAzur:"MANH30C001"},
   // GABINETES - VÁLVULAS
-  {id:"ANG112",nm:"Angular 1½\" 300 lbs bronce",cat:"gabinetes",sub:"Válvulas",pv:33.83,pb:31.48,costo:23.19,stock:149,ago:false,img:"ANG112",descVol:[[3,1],[5,2],[8,3],[10,4],[15,5]],codigoAzur:"VALVANG001"},
-  {id:"ANG212",nm:"Angular 2½\" 300 lbs bronce",cat:"gabinetes",sub:"Válvulas",pv:67.11,pb:61.26,costo:46.85,stock:76,ago:false,img:"ANG212",descVol:[[3,1],[5,2],[8,3],[10,4]],codigoAzur:"VALVANG002"},
+  {id:"VALVANG001",nm:"Angular 1½\" 300 lbs bronce",cat:"gabinetes",sub:"Válvulas",pv:33.83,pb:31.48,costo:23.19,stock:149,ago:false,img:"VALVANG001",descVol:[[3,1],[5,2],[8,3],[10,4],[15,5]],codigoAzur:"VALVANG001"},
+  {id:"VALVANG002",nm:"Angular 2½\" 300 lbs bronce",cat:"gabinetes",sub:"Válvulas",pv:67.11,pb:61.26,costo:46.85,stock:76,ago:false,img:"VALVANG002",descVol:[[3,1],[5,2],[8,3],[10,4]],codigoAzur:"VALVANG002"},
   // GABINETES - HIDRANTES
-  {id:"PIT112",nm:"Pitón 1½\" bronce",cat:"gabinetes",sub:"Hidrantes",pv:19.80,pb:17.80,costo:14.91,stock:168,ago:false,img:"PIT112",descVol:null,codigoAzur:"HID001"},
-  {id:"NIP112",nm:"Niple 1½\" bronce",cat:"gabinetes",sub:"Hidrantes",pv:7.68,pb:6.88,costo:5.68,stock:299,ago:false,img:"NIP112",descVol:[[5,1],[10,2]],codigoAzur:"HID002"},
+  {id:"HID001",nm:"Pitón 1½\" bronce",cat:"gabinetes",sub:"Hidrantes",pv:19.80,pb:17.80,costo:14.91,stock:168,ago:false,img:"HID001",descVol:null,codigoAzur:"HID001"},
+  {id:"HID002",nm:"Niple 1½\" bronce",cat:"gabinetes",sub:"Hidrantes",pv:7.68,pb:6.88,costo:5.68,stock:299,ago:false,img:"HID002",descVol:[[5,1],[10,2]],codigoAzur:"HID002"},
   // GABINETES - OTROS
-  {id:"BRAZOPOR",nm:"Brazo Portamanguera",cat:"gabinetes",sub:"Otros",pv:12.91,pb:11.71,costo:7.10,stock:97,ago:false,img:"BRAZOPOR",descVol:[[3,1],[5,2],[8,3],[10,4],[15,5]],codigoAzur:"PORTMAN"},
-  {id:"HACHA",nm:"Hacha Reforzada",cat:"gabinetes",sub:"Otros",pv:12.40,pb:11.78,costo:9.23,stock:80,ago:false,img:"HACHA",descVol:[[3,1],[5,2],[8,3],[10,4]],codigoAzur:"HACHA001"},
-  {id:"SPANNER",nm:"Llave Spanner",cat:"gabinetes",sub:"Otros",pv:6.98,pb:5.98,costo:4.50,stock:95,ago:false,img:"SPANNER",descVol:[[5,1],[10,2],[15,3],[20,4],[30,5]],codigoAzur:"SPANNER001"}
+  {id:"PORTMAN",nm:"Brazo Portamanguera",cat:"gabinetes",sub:"Otros",pv:12.91,pb:11.71,costo:7.10,stock:97,ago:false,img:"PORTMAN",descVol:[[3,1],[5,2],[8,3],[10,4],[15,5]],codigoAzur:"PORTMAN"},
+  {id:"HACHA001",nm:"Hacha Reforzada",cat:"gabinetes",sub:"Otros",pv:12.40,pb:11.78,costo:9.23,stock:80,ago:false,img:"HACHA001",descVol:[[3,1],[5,2],[8,3],[10,4]],codigoAzur:"HACHA001"},
+  {id:"SPANNER001",nm:"Llave Spanner",cat:"gabinetes",sub:"Otros",pv:6.98,pb:5.98,costo:4.50,stock:95,ago:false,img:"SPANNER001",descVol:[[5,1],[10,2],[15,3],[20,4],[30,5]],codigoAzur:"SPANNER001"}
 ];
 
 // ════════════════════ ESTADO GLOBAL ════════════════════

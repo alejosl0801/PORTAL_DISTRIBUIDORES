@@ -6,27 +6,27 @@ var IMGS = {
   "VENT5CO2":"img/VENT5CO2.jpg",
   "VENT10CO2":"img/VENT10CO2.jpg",
   "CABCO2510":"img/CABCO2510.jpg",
-  "MANG10CO2":"img/MANG10CO2.jpg",
-  "MANG30M":"img/MANG30M.jpg",
-  "VENT20CO2C":"img/VENT20CO2C.jpg",
+  "CORN10CO2":"img/MANG10CO2.jpg",
+  "MANH30C001":"img/MANG30M.jpg",
+  "VENT20CO2":"img/VENT20CO2C.jpg",
   "VENT25AQ":"img/VENT25AQ.jpg",
-  "MANG15M":"img/MANG15M.jpg",
-  "PIT112":"img/PIT112.jpg",
-  "NIP112":"img/NIP112.jpg",
-  "CO2CABMAR":"img/CO2CABMAR.jpg",
-  "CO2DISRAP":"img/CO2DISRAP.jpg",
+  "MANH15C001":"img/MANG15M.jpg",
+  "HID001":"img/PIT112.jpg",
+  "HID002":"img/NIP112.jpg",
+  "CABMARITIMO":"img/CO2CABMAR.jpg",
+  "CAB50CO2AR":"img/CO2DISRAP.jpg",
   "VENT50PQS":"img/VENT50PQS.jpg",
   "VENT100PQS":"img/VENT100PQS.jpg",
   "VENT150PQS":"img/VENT150PQS.jpg",
-  "HACHA":"img/HACHA.jpg",
-  "SPANNER":"img/SPANNER.jpg",
-  "BRAZOPOR":"img/BRAZOPOR.jpg",
-  "ANG112":"img/ANG112.jpg",
-  "ANG212":"img/ANG212.jpg",
+  "HACHA001":"img/HACHA.jpg",
+  "SPANNER001":"img/SPANNER.jpg",
+  "PORTMAN":"img/BRAZOPOR.jpg",
+  "VALVANG001":"img/ANG112.jpg",
+  "VALVANG002":"img/ANG212.jpg",
   "CABPQS1020":"img/CABPQS1020.jpg",
   "MANOPQS":"img/MANOPQS.jpg",
-  "MANG10PQS":"img/MANG10PQS.jpg",
-  "MANG20PQS":"img/MANG20PQS.jpg",
+  "MANGPQS10":"img/MANG10PQS.jpg",
+  "MANGPQS20":"img/MANG20PQS.jpg",
   "GANCO2":"img/GANCO2.jpg",
   "GANCPQS10":"img/GANCPQS10.jpg",
   "GANCPQS20":"img/GANCPQS20.jpg",
@@ -68,7 +68,7 @@ var PROMOS = [
     fechaVence: "2026-06-06",
     items: [
       {id:"CABCO2510", nm:"Cabezal CO2 5/10 LB", pv:7.80, pp:6.40, ahorro:1.40},
-      {id:"MANG10CO2", nm:"Manguera CO2 10 LB", pv:7.20, pp:5.90, ahorro:1.30}
+      {id:"CORN10CO2", nm:"Manguera CO2 10 LB", pv:7.20, pp:5.90, ahorro:1.30}
     ]
   },
   {
@@ -76,8 +76,8 @@ var PROMOS = [
     titulo: "Promo Semana Anterior",
     fechaVence: "2026-05-30",
     items: [
-      {id:"ANG112", nm:"Válvula Angular 1½\"", pv:33.83, pp:28.33, ahorro:5.50},
-      {id:"PIT112", nm:"Pitón Bronce 1½\"", pv:19.80, pp:16.02, ahorro:3.78}
+      {id:"VALVANG001", nm:"Válvula Angular 1½\"", pv:33.83, pp:28.33, ahorro:5.50},
+      {id:"HID001", nm:"Pitón Bronce 1½\"", pv:19.80, pp:16.02, ahorro:3.78}
     ]
   },
   {
@@ -85,8 +85,8 @@ var PROMOS = [
     titulo: "Promo Anterior",
     fechaVence: "2026-05-23",
     items: [
-      {id:"MANG30M", nm:"Manguera Doble Chaqueta 30M", pv:64.28, pp:57.85, ahorro:6.43},
-      {id:"CO2CABMAR", nm:"Cabezal Marítimo CO2", pv:38.40, pp:34.61, ahorro:3.85}
+      {id:"MANH30C001", nm:"Manguera Doble Chaqueta 30M", pv:64.28, pp:57.85, ahorro:6.43},
+      {id:"CABMARITIMO", nm:"Cabezal Marítimo CO2", pv:38.40, pp:34.61, ahorro:3.85}
     ]
   }
 ];
@@ -126,13 +126,13 @@ var DISTRIBUIDORES = [
    establecimientos:[{nm:"Local principal",dir:"AV. QUITO #1810 Y AYACUCHO",obs:""}],
    preciosEsp:{
     "VENT10PQS":11.78,"VENT20PQS":19.84,"VENT50PQS":124.91,"VENT100PQS":164.88,"VENT150PQS":207.96,
-    "VENT5CO2":22.40,"VENT10CO2":32.88,"VENT20CO2C":98.80,"VENT25AQ":58.25,
-    "CABPQS1020":2.65,"MANOPQS":0.65,"MANG10PQS":0.75,"MANG20PQS":0.75,
-    "CABCO2510":6.80,"CORN5CO2":2.10,"MANG10CO2":6.25,
-    "SOPCO2R":0.98,"SOPPQS10":0.80,"SOPPQS20":0.80,"ABRPQS":0.22,
-    "CO2CABMAR":38.46,"CO2DISRAP":13.95,"SEGPLAM":0.06,
-    "MANG15M":36.98,"MANG30M":64.28,"ANG112":31.48,"ANG212":61.26,
-    "PIT112":17.80,"NIP112":6.88,"BRAZOPOR":11.71,"HACHA":11.78,"SPANNER":5.98
+    "VENT5CO2":22.40,"VENT10CO2":32.88,"VENT20CO2":98.80,"VENT25AQ":58.25,
+    "CABPQS1020":2.65,"MANOPQS":0.65,"MANGPQS10":0.75,"MANGPQS20":0.75,
+    "CABCO2510":6.80,"CORN5CO2":2.10,"CORN10CO2":6.25,
+    "GANCO2":0.98,"GANCPQS10":0.80,"GANCPQS20":0.80,"ABRPQS":0.22,
+    "CABMARITIMO":38.46,"CAB50CO2AR":13.95,"SEGPLAM":0.06,
+    "MANH15C001":36.98,"MANH30C001":64.28,"VALVANG001":31.48,"VALVANG002":61.26,
+    "HID001":17.80,"HID002":6.88,"PORTMAN":11.71,"HACHA001":11.78,"SPANNER001":5.98
    }
   },
   {ruc:"0953657509001",pass:"85d494013b74adf5bbd7c16d24db0f2cf857bdccc5e0947cd117797e167b5a56",razon:"SOLIS MINA KAREN ZULAY",encargado:"Solis",tel:"",correo:"",entrega:{habilitada:false,montoMin:30},establecimientos:[{nm:"Local",dir:"CAPITAN NAJERA 2802 Y PASAJE ANDRES MARIN",obs:""}]},
