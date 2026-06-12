@@ -3353,8 +3353,8 @@ function abrirEditarDist(ruc){
     '<input class="form-input" id="ed-tel" value="'+escHtml(d.tel||"")+'">'+
     '<label class="form-label">Correo</label>'+
     '<input class="form-input" id="ed-correo" value="'+escHtml(d.correo||"")+'">'+
-    '<label class="form-label">Contraseña</label>'+
-    '<input class="form-input" id="ed-pass" type="password" value="'+escHtml(d.pass||"")+'">'+
+    '<label class="form-label">Contraseña <span style="font-weight:400;color:var(--g3);font-size:11px">(dejar vacío para no cambiarla)</span></label>'+
+    '<input class="form-input" id="ed-pass" type="text" value="" placeholder="Escribe una nueva para resetear el acceso" autocomplete="off">'+
     '<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">'+
       '<input type="checkbox" id="ed-entrega" '+(d.entrega&&d.entrega.habilitada?"checked":"")+' style="width:18px;height:18px">'+
       '<label for="ed-entrega" style="font-size:14px">Entrega a domicilio habilitada</label>'+
