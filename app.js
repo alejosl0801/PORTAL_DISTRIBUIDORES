@@ -42,8 +42,8 @@ var PRODUCTOS = [
   {id:"GANCPQS10",nm:"Soporte PQS 10",cat:"accesorios",sub:"Soportes",pv:0.98,pb:0.85,costo:0.25,stock:440,ago:false,img:"GANCPQS10",descVol:[[50,1],[100,2],[150,3],[200,5],[400,6]],codigoAzur:"GANCPQS10"},
   {id:"GANCPQS20",nm:"Soporte PQS 20",cat:"accesorios",sub:"Soportes",pv:0.98,pb:0.85,costo:0.28,stock:486,ago:false,img:"GANCPQS20",descVol:[[50,1],[100,2],[150,3],[200,5],[400,6]],codigoAzur:"GANCPQS20"},
   // ACCESORIOS - OTROS
-  {id:"ABRPQS",nm:"Abrazaderas Plásticas",cat:"accesorios",sub:"Otros",pv:0.26,pb:0.24,costo:0.12,stock:2616,ago:false,img:null,descVol:[[100,1],[200,2],[300,3],[500,5],[1000,6]],codigoAzur:"ABRPQS"},
-  {id:"SEGPLAM",nm:"Seguros Plásticos Amarillo",cat:"accesorios",sub:"Otros",pv:0.08,pb:0.06,costo:0.03,stock:13467,ago:false,img:null,descVol:[[200,1],[500,2],[800,3],[1000,5],[2000,6]],cantMin:200,codigoAzur:"SEGPLAST01"},
+  {id:"ABRPQS",nm:"Abrazaderas Plásticas",cat:"accesorios",sub:"Otros",pv:0.26,pb:0.24,costo:0.12,stock:2616,ago:false,img:"ABRPQS",descVol:[[100,1],[200,2],[300,3],[500,5],[1000,6]],codigoAzur:"ABRPQS"},
+  {id:"SEGPLAM",nm:"Seguros Plásticos Amarillo",cat:"accesorios",sub:"Otros",pv:0.08,pb:0.06,costo:0.03,stock:13467,ago:false,img:"SEGPLAST01",descVol:[[200,1],[500,2],[800,3],[1000,5],[2000,6]],cantMin:200,codigoAzur:"SEGPLAST01"},
   {id:"LETPQS",nm:"Letrero Instructivo Extintor PQS",cat:"accesorios",sub:"Otros",pv:1.95,pb:1.95,costo:1.50,stock:0,ago:true,img:"LETPQS",descVol:[[10,5]],codigoAzur:"LETPQS"},
   {id:"LETCO2",nm:"Letrero Instructivo Extintor CO2",cat:"accesorios",sub:"Otros",pv:1.95,pb:1.95,costo:1.50,stock:0,ago:true,img:"LETCO2",descVol:[[10,5]],codigoAzur:"LETCO2"},
   // MANGUERAS HID
