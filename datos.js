@@ -121,7 +121,7 @@ function promoDelProducto(pid){
 //   El campo "tipoDoc" indica cuál es ("ruc" o "cedula"); si falta, se detecta por longitud.
 // ⚠️ POR CONFIRMAR: email "efreinreyesv539@gmail.com" → ¿posible typo de "efrain"?
 var DISTRIBUIDORES = [
-  {ruc:"ADMIN",pass:"d0f0c1955aa832124e11c72a66f97da8cca523d3a1000e797df6f61586797f7d",razon:"Administrador PyroShield",esAdmin:true},
+  {ruc:"ADMIN",pass:"8acc4be6fa71868aed2427235d3034d0f0f687475c45ae6c74ddbdebfa356817",razon:"Administrador PyroShield",esAdmin:true},
   {ruc:"FABIOLA",pass:"14c6b50752f6d7830b82c8e57c044ffc8a94767d6e3fc7358492d217e116577a",razon:"Fabiola Impresiones",rol:"impresion",esAdmin:false},
   {ruc:"0906872742001",pass:"573a96dd77f2faf2ab1c23d725639545124319e6619c50fe54563a6909648b73",razon:"AVILES BRIONES JORGE ENRIQUE",empresa:"Sumiseg",encargado:"Jorge",tel:"0993704934",correo:"docs.sumiseg@outlook.com",
    entrega:{habilitada:true,montoMin:30},

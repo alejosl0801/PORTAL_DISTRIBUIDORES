@@ -171,13 +171,16 @@ La clave de acceso se guarda en `p.azurFactura` y persiste en `pyro_pedidos`.
 
 ---
 
-## Credenciales de prueba
+## Credenciales
 
-| Usuario | Contraseña | Tipo |
-|---|---|---|
-| `ADMIN` | `pyro2024` | Administrador (accede a pedidos, distribuidores, stock, Azur) |
-| `0906872742001` | `jorge123` | Distribuidor con precios especiales (`preciosEsp`) y entrega habilitada |
-| Cualquier otro RUC | `dist123` | Distribuidor estándar (sin entrega, sin precios especiales) |
+Por seguridad, las contraseñas NO se documentan en este archivo ni en ningún
+otro archivo del repositorio (el repo se sirve público via GitHub Pages).
+En `datos.js` solo viven los hashes SHA-256. Las credenciales reales las
+gestiona el administrador fuera del repo.
+
+- `ADMIN` — administrador (pedidos, distribuidores, stock, Azur)
+- `FABIOLA` — rol impresión (solo ve pedidos)
+- RUC/cédula de cada distribuidor — cliente estándar
 
 ---
 

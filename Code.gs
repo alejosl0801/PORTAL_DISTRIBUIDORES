@@ -11,7 +11,7 @@ var HOJA_TUTORIALES = "TUTORIALES_COMPLETADOS";
 
 var ENCABEZADOS_PEDIDOS = [
   "id_pedido","fecha","ruc_dist","nombre_dist",
-  "items_json","total","estado","fecha_registro"
+  "items_json","total","estado","fecha_registro","pedido_json"
 ];
 
 // ════════════════════════════════════════════════════════════════
@@ -87,7 +87,14 @@ function recibirPedidoPyro(datos) {
   var ultima = hoja.getLastRow();
   if (ultima > 1) {
     var ids = hoja.getRange(2, 1, ultima - 1, 1).getValues().flat();
-    if (ids.indexOf(datos.id_pedido) !== -1) return { ok: true, duplicado: true };
+    var idx = ids.indexOf(datos.id_pedido);
+    if (idx !== -1) {
+      // Upsert: la fila ya existe — actualizar estado y pedido_json
+      var fila = idx + 2;
+      if (datos.estado) hoja.getRange(fila, 7).setValue(datos.estado);
+      if (datos.pedido_json) hoja.getRange(fila, 9).setValue(datos.pedido_json);
+      return { ok: true, actualizado: true };
+    }
   }
   hoja.appendRow([
     datos.id_pedido || "",
@@ -97,7 +104,8 @@ function recibirPedidoPyro(datos) {
     datos.items_json || "",
     datos.total != null ? datos.total : "",
     datos.estado || "pendiente",
-    new Date()
+    new Date(),
+    datos.pedido_json || ""
   ]);
   return { ok: true };
 }
@@ -140,11 +148,13 @@ function recibirBackupPyro(datos) {
         JSON.stringify(p.items || []),
         p.total != null ? p.total : "",
         p.estado || "",
-        new Date()
+        new Date(),
+        JSON.stringify(p)
       ]);
     } else {
       var idx = ids.indexOf(p.id);
       hojaPed.getRange(idx + 2, 7).setValue(p.estado || "");
+      hojaPed.getRange(idx + 2, 9).setValue(JSON.stringify(p));
     }
   });
 
@@ -181,25 +191,25 @@ function recibirBackupPyro(datos) {
 function obtenerTodosPedidos(params) {
   var rucFiltro = params.ruc || null;
 
+  // PEDIDOS_PYRO es la fuente de verdad: una fila por pedido, nunca se
+  // sobreescribe completa. (El snapshot de BACKUP_COMPLETO lo reescribe el
+  // último dispositivo que respalda y puede estar incompleto.)
   var ss = SpreadsheetApp.openById(SHEET_ID);
-  var hojaSnap = ss.getSheetByName(HOJA_BACKUP);
-  if (hojaSnap && hojaSnap.getLastRow() > 1) {
-    var lastRow = hojaSnap.getLastRow();
-    var pedidosJson = hojaSnap.getRange(lastRow, 2).getValue();
-    try {
-      var pedidos = JSON.parse(pedidosJson);
-      if (rucFiltro) pedidos = pedidos.filter(function(p){ return p.ruc === rucFiltro; });
-      return { ok: true, pedidos: pedidos, fuente: "snapshot" };
-    } catch(e) {}
-  }
-
-  // Fallback: reconstruir desde PEDIDOS_PYRO fila a fila
   var hojaPed = ss.getSheetByName(HOJA_PEDIDOS);
   if (!hojaPed || hojaPed.getLastRow() < 2) return { ok: true, pedidos: [] };
-  var rows = hojaPed.getRange(2, 1, hojaPed.getLastRow() - 1, 8).getValues();
+  var rows = hojaPed.getRange(2, 1, hojaPed.getLastRow() - 1, 9).getValues();
   var pedidos = rows
     .filter(function(r){ return r[0]; })
     .map(function(r){
+      // Si la fila tiene el pedido completo en JSON, usarlo (conserva pago,
+      // modo, entregaInfo, puntos, canjes...). La columna estado (7) manda.
+      if (r[8]) {
+        try {
+          var p = JSON.parse(r[8]);
+          if (r[6]) p.estado = r[6];
+          return p;
+        } catch(e) {}
+      }
       var items = [];
       try { items = JSON.parse(r[4]); } catch(e){}
       return { id:r[0], fecha:r[1], ruc:r[2], razon:r[3], items:items, total:r[5], estado:r[6] };

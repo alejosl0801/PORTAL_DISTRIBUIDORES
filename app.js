@@ -481,8 +481,9 @@ function finalizarLogin(u,pw){
     sincronizarDesdeNube(null);
     restaurarMetaDesdeNube();
   } else {
-    sincronizarDesdeNube(USER.ruc);
+    sincronizarDesdeNube(USER.rol==="impresion"?null:USER.ruc);
   }
+  iniciarSondeoNube();
 }
 
 // ════════════════════ FLUJO PRIMER INGRESO ════════════════════
@@ -559,14 +560,16 @@ function otorgarBienvenida(){
   if(localStorage.getItem(flag))return;
   var now=new Date();
   var bid="B"+now.getTime().toString().slice(-5);
-  PEDIDOS.push({
+  var pedBienv={
     id:bid,ruc:USER.ruc,razon:USER.razon,
     fecha:now.toLocaleDateString("es-EC"),fechaISO:now.toISOString(),
     esCanje:true,esBienvenida:true,canjePts:0,
     canjeNm:"Combo KFC 3 presas + papas + cola",
     estado:"pendiente",total:0,puntos:0
-  });
+  };
+  PEDIDOS.push(pedBienv);
   guardarPedidos();
+  sincronizarConSheets(pedBienv,true);
   try{localStorage.setItem(flag,"1");}catch(e){}
   if(typeof renderInicio==="function")renderInicio();
   // Solo mostrar overlay si NO es primer ingreso (primerIngresoPaso1 ya lo anuncia)
@@ -589,6 +592,7 @@ function logout(){
   USER=null;CARRITO=[];
   if(_notifInterval){clearInterval(_notifInterval);_notifInterval=null;}
   if(_autoguardadoInterval){clearInterval(_autoguardadoInterval);_autoguardadoInterval=null;}
+  if(_nubeInterval){clearInterval(_nubeInterval);_nubeInterval=null;}
   try{localStorage.removeItem("pyro_sesion");}catch(e){}
   mostrar("s-login");
   document.getElementById("login-user").value="";
@@ -2295,8 +2299,18 @@ function cancelarPedido(pid){
         guardarStock();
       }
     }
-    guardarPedidos(); renderHistorial(); toast("✕ Pedido cancelado");
+    guardarPedidos();
+    if(p)sincronizarConSheets(p,true);
+    renderHistorial(); toast("✕ Pedido cancelado");
   });
+}
+
+// Marca un pedido como eliminado localmente para que el sondeo de la nube no lo resucite
+function marcarPedidoEliminado(pid){
+  try{
+    var t=JSON.parse(localStorage.getItem("pyro_ped_eliminados")||"[]");
+    if(t.indexOf(pid)===-1){t.push(pid);if(t.length>200)t=t.slice(-200);localStorage.setItem("pyro_ped_eliminados",JSON.stringify(t));}
+  }catch(e){}
 }
 
 function editarPedido(pid){
@@ -2317,6 +2331,10 @@ function editarPedido(pid){
     });
     PEDIDOS=PEDIDOS.filter(function(x){return x.id!==pid;});
     guardarPedidos(); guardarCarrito(); actualizarBadge();
+    marcarPedidoEliminado(pid);
+    // En la nube queda como cancelado (el pedido nuevo se creará con otro número)
+    var copia=null;try{copia=JSON.parse(JSON.stringify(p));}catch(e){}
+    if(copia){copia.estado="cancelado";sincronizarConSheets(copia,true);}
     irTab("carrito");
     toast("✏️ Pedido #"+pid+" devuelto al carrito.");
   });
@@ -2579,8 +2597,10 @@ function canjear(pts,nm){
   confirmar("¿Canjear <b>"+fmtPts(pts)+" puntos</b> por <b>"+nm+"</b>?<br><small>Se coordinará con tu próximo pedido.</small>",function(){
     if(saldoPuntos()<pts){toast("⚠️ Ya no tienes suficientes puntos");renderRecompensas();return;}
     var pid="C"+Date.now().toString().slice(-5);
-    PEDIDOS.push({id:pid,ruc:USER.ruc,razon:USER.razon,fecha:new Date().toLocaleDateString("es-EC"),fechaISO:new Date().toISOString(),esCanje:true,canjePts:pts,canjeNm:nm,estado:"pendiente",total:0,puntos:0});
+    var pedCanje={id:pid,ruc:USER.ruc,razon:USER.razon,fecha:new Date().toLocaleDateString("es-EC"),fechaISO:new Date().toISOString(),esCanje:true,canjePts:pts,canjeNm:nm,estado:"pendiente",total:0,puntos:0};
+    PEDIDOS.push(pedCanje);
     guardarPedidos();
+    sincronizarConSheets(pedCanje,true);
     registrarLogPuntos(USER.ruc,"canjeados",pts,"Canje: "+nm);
     renderRecompensas();
     setTopbarPts(saldoPuntos());
@@ -2950,7 +2970,9 @@ function guardarEstadoPed(pid){
     });
     guardarStock();
   }
-  guardarPedidos(); cerrarModal("modal-pedido-det"); renderAdmPedidos();
+  guardarPedidos();
+  sincronizarConSheets(p,true);
+  cerrarModal("modal-pedido-det"); renderAdmPedidos();
   toast("✅ Estado actualizado");
   // Notificación WhatsApp al distribuidor
   var nuevoEstado=sel.value;
@@ -4099,29 +4121,38 @@ function guardarSyncPendientes(lista){
 function sincronizarConSheets(ped, silencioso){
   var payload={
     accion:"guardarPedidoPyro",
+    token:GAS_TOKEN,
     id_pedido:ped.id,
     fecha:ped.fechaISO,
     ruc_dist:ped.ruc,
     nombre_dist:ped.razon,
     items_json:JSON.stringify(ped.items||[]),
     total:ped.total,
-    estado:ped.estado
+    estado:ped.estado,
+    pedido_json:JSON.stringify(ped)
   };
+  // En caso de fallo, guarda una copia con el estado actual (reemplaza la anterior)
+  function _encolar(){
+    var pend=cargarSyncPendientes();
+    pend=pend.filter(function(x){return x.id!==ped.id;});
+    pend.push(ped);
+    guardarSyncPendientes(pend);
+    if(!silencioso)toast("☁️ Pendiente de sincronización (se reintentará)");
+  }
   fetch(GAS_URL,{
     method:"POST",
     headers:{"Content-Type":"text/plain;charset=utf-8"},
     body:JSON.stringify(payload)
-  }).then(function(){
-    var pend=cargarSyncPendientes();
-    pend=pend.filter(function(x){return x.id!==ped.id;});
-    guardarSyncPendientes(pend);
-  }).catch(function(){
-    var pend=cargarSyncPendientes();
-    if(!pend.some(function(x){return x.id===ped.id;})){
-      pend.push(ped);
+  }).then(function(r){return r.json();}).then(function(d){
+    if(d&&d.ok){
+      var pend=cargarSyncPendientes();
+      pend=pend.filter(function(x){return x.id!==ped.id;});
       guardarSyncPendientes(pend);
+    } else {
+      _encolar();
     }
-    if(!silencioso)toast("☁️ Pendiente de sincronización (se reintentará)");
+  }).catch(function(){
+    _encolar();
   });
 }
 
@@ -4288,37 +4319,20 @@ function procesarColaOffline(){
   if(!navigator.onLine)return;
   var cola=cargarColaOffline();
   if(!cola.length)return;
-  var sincronizados=0;
-  var promesas=cola.map(function(pedId){
+  var enviados=0;
+  cola.forEach(function(pedId){
     var ped=PEDIDOS.find(function(p){return p.id===pedId;});
-    if(!ped)return Promise.resolve();
-    return new Promise(function(resolve){
-      var payload={
-        accion:"guardarPedidoPyro",
-        id_pedido:ped.id,
-        fecha:ped.fechaISO,
-        ruc_dist:ped.ruc,
-        nombre_dist:ped.razon,
-        items_json:JSON.stringify(ped.items||[]),
-        total:ped.total,
-        estado:ped.estado
-      };
-      fetch(GAS_URL,{
-        method:"POST",
-        headers:{"Content-Type":"text/plain;charset=utf-8"},
-        body:JSON.stringify(payload)
-      }).then(function(){sincronizados++;resolve();}).catch(function(){resolve();});
-    });
+    if(!ped)return;
+    // sincronizarConSheets ya incluye token, pedido_json y reintentos propios
+    sincronizarConSheets(ped,true);
+    enviados++;
   });
-  Promise.all(promesas).then(function(){
-    if(sincronizados>0){
-      // Limpiar solo los que se sincronizaron con éxito (simplificación: si llegamos aquí con onLine=true, limpiamos todos)
-      guardarColaOffline([]);
-      toast("☁️ "+sincronizados+" pedido(s) sincronizado(s) con la nube");
-      // Refrescar banner de inicio si está visible
-      if(document.getElementById("offline-cola-banner"))renderInicio();
-    }
-  });
+  guardarColaOffline([]);
+  if(enviados>0){
+    toast("☁️ "+enviados+" pedido(s) enviado(s) a la nube");
+    // Refrescar banner de inicio si está visible
+    if(document.getElementById("offline-cola-banner"))renderInicio();
+  }
 }
 
 // ═══════════ TEMA CLARO / OSCURO (persistente) ═══════════
@@ -4846,21 +4860,49 @@ function sincronizarDesdeNube(ruc){
   fetch(url).then(function(r){return r.json();}).then(function(data){
     if(!data.ok||!data.pedidos||!data.pedidos.length)return;
     var local=[];try{local=JSON.parse(localStorage.getItem("pyro_pedidos")||"[]");}catch(e){}
-    var idsLocal={};local.forEach(function(p){idsLocal[p.id]=true;});
-    var nuevos=data.pedidos.filter(function(p){return !idsLocal[p.id];});
-    if(!nuevos.length)return;
-    var merged=local.concat(nuevos);
-    merged.sort(function(a,b){return (b.fechaISO||b.fecha||"")>(a.fechaISO||a.fecha||"")?1:-1;});
-    localStorage.setItem("pyro_pedidos",JSON.stringify(merged));
-    PEDIDOS=merged;
-    // Si estamos en la pantalla de historial o inicio, refrescar
+    var porId={};local.forEach(function(p){porId[p.id]=p;});
+    // Pedidos eliminados localmente (ej. al editar) — no resucitarlos desde la nube
+    var tumba={};try{JSON.parse(localStorage.getItem("pyro_ped_eliminados")||"[]").forEach(function(id){tumba[id]=true;});}catch(e){}
+    // Pedidos con subida pendiente: su estado local es más nuevo que el de la nube
+    var pendSubida={};try{cargarSyncPendientes().forEach(function(p){pendSubida[p.id]=true;});}catch(e){}
+    var cambio=false;
+    data.pedidos.forEach(function(pc){
+      if(tumba[pc.id])return;
+      var pl=porId[pc.id];
+      if(!pl){local.push(pc);cambio=true;return;}
+      if(pendSubida[pc.id])return;
+      // El estado de la nube manda (lo asigna el admin); también factura y observaciones
+      if(pc.estado&&pc.estado!==pl.estado){pl.estado=pc.estado;cambio=true;}
+      if(pc.azurFactura&&!pl.azurFactura){pl.azurFactura=pc.azurFactura;cambio=true;}
+      if(pc.obsAdmin&&pc.obsAdmin!==pl.obsAdmin){pl.obsAdmin=pc.obsAdmin;cambio=true;}
+    });
+    if(!cambio)return;
+    local.sort(function(a,b){return (b.fechaISO||b.fecha||"")>(a.fechaISO||a.fecha||"")?1:-1;});
+    localStorage.setItem("pyro_pedidos",JSON.stringify(local));
+    PEDIDOS=local;
+    _logrosCache=null;
+    // Refrescar la pantalla activa (sin tocar modales abiertos)
     try{
+      if(document.querySelector(".ov.open"))return;
       if(document.getElementById("s-main")&&document.getElementById("s-main").classList.contains("active")){
         var tabAct=document.querySelector(".tab-btn.active");
-        if(tabAct){var t=tabAct.dataset.tab;if(t==="inicio"||t==="historial")irTab(t);}
+        if(tabAct){var t=tabAct.dataset.tab;if(t==="inicio"||t==="historial"||t==="recompensas")irTab(t);}
+      } else if(USER&&USER.esAdmin&&document.getElementById("s-admin")&&document.getElementById("s-admin").classList.contains("active")){
+        if(ADM_TAB==="pedidos")renderAdmPedidos();
+        chequearPedidosNuevos();
       }
     }catch(e){}
   }).catch(function(){});
+}
+
+// Sondeo periódico: trae pedidos nuevos y cambios de estado cada 2 minutos
+var _nubeInterval=null;
+function iniciarSondeoNube(){
+  if(_nubeInterval)clearInterval(_nubeInterval);
+  _nubeInterval=setInterval(function(){
+    if(!USER||!navigator.onLine)return;
+    sincronizarDesdeNube(USER.esAdmin||USER.rol==="impresion"?null:USER.ruc);
+  },120000);
 }
 
 /* ═══════════════════════════════════════════
@@ -4894,6 +4936,9 @@ function _buildBackupPayload(){
 }
 
 function backupAutomatico(forzado){
+  // Solo el admin envía el backup global: la vista de un cliente es parcial
+  // y sobreescribiría el snapshot de la nube con datos incompletos.
+  if(!USER||!USER.esAdmin)return;
   if(!forzado){
     var hoy=new Date().toISOString().slice(0,10);
     var ultimo=localStorage.getItem("pyro_ultimo_backup")||"";
@@ -4913,6 +4958,8 @@ function backupAutomatico(forzado){
 var _backupCambioTimer=null;
 function backupCambio(){
   if(!GAS_URL)return;
+  // Solo el admin: ver nota en backupAutomatico
+  if(!USER||!USER.esAdmin)return;
   clearTimeout(_backupCambioTimer);
   _backupCambioTimer=setTimeout(function(){
     fetch(GAS_URL,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(_buildBackupPayload())})
