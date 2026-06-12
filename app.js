@@ -1962,8 +1962,14 @@ function cambiarCant(id,d){
     if(p&&p.stock!=null&&it.cant>=p.stock){toast("⚠️ Solo hay "+p.stock+" unidades disponibles");return;}
   }
   it.cant+=d;
-  if(p){var msg=validarCantMinMsg(p,it.cant);if(msg&&it.cant>0)toast("⚠️ "+msg);}
   if(it.cant<0)it.cant=0;
+  // Al bajar por debajo del mínimo del producto, ajustar al mínimo (o quitar si llega a 0)
+  if(p&&d<0&&it.cant>0){
+    var min=cantMinProducto(p);
+    if(it.cant<min){
+      if(min<=(p.stock!=null?p.stock:min)){it.cant=min;toast("⚠️ Mínimo "+min+" unidades de "+p.nm);}
+    }
+  }
   guardarCarrito(); renderCarrito(); actualizarBadge();
 }
 function quitarItem(id){
@@ -2086,14 +2092,17 @@ function confirmarPedido(){
     items.push({id:p.id,nm:p.nm,cant:it.cant,pv:p.pv,pr:pr,descPct:rv.descPct,pts:pts,costo:p.costo||0});
   });
   if(stockError.length){if(btnConf)btnConf.disabled=false;toast("⚠️ Stock insuficiente: "+stockError.join(", "));return;}
-  if(!items.length){toast("⚠️ No hay productos válidos en el carrito");return;}
+  if(!items.length){if(btnConf)btnConf.disabled=false;toast("⚠️ No hay productos válidos en el carrito");return;}
   var iva=parseFloat((subtotal*IVA).toFixed(2)), total=parseFloat((subtotal+iva).toFixed(2));
   var pid="P"+Date.now()+Math.floor(Math.random()*1000);
   var now=new Date();
   var entregaInfo={};
   if(modo==="entrega"){
     var estSel2=document.getElementById("cart-est");
-    var idx=estSel2?parseInt(estSel2.value,10):0;
+    // Si se acaba de agregar una dirección nueva, es la última del array
+    var idx;
+    if(estSel2&&estSel2.value==="nuevo"){idx=(USER.establecimientos||[]).length-1;}
+    else{idx=estSel2?parseInt(estSel2.value,10):0;if(isNaN(idx))idx=0;}
     var est=USER.establecimientos&&USER.establecimientos[idx]?USER.establecimientos[idx]:null;
     var fechaOpt=document.getElementById("cart-fecha-opt");
     var fechaVal=fechaOpt&&fechaOpt.value==="especifica"&&document.getElementById("cart-fecha")?document.getElementById("cart-fecha").value:"";
@@ -2388,8 +2397,11 @@ function confirmarRepetirPedido(pid){
     var cant=inp?parseInt(inp.value,10)||0:0;
     if(!prod||prod.ago){omitidos.push(it.nm);return;}
     if(cant<=0)return;
-    if(cant>prod.stock)cant=prod.stock;
     var exist=CARRITO.find(function(c){return c.id===it.id;});
+    var yaEnCarrito=exist?exist.cant:0;
+    // No exceder el stock contando lo que ya hay en el carrito
+    if(yaEnCarrito+cant>prod.stock)cant=prod.stock-yaEnCarrito;
+    if(cant<=0){omitidos.push(it.nm);return;}
     if(exist)exist.cant+=cant;
     else CARRITO.push({id:it.id,cant:cant});
     cargados++;
@@ -2434,7 +2446,7 @@ function verDetallePed(pid){
       '</div>':'')+
     (p.notas?'<div style="margin-top:8px;font-size:13px;color:var(--g4)"><b>Notas:</b> '+escHtml(p.notas)+'</div>':'')+
     (p.puntos?'<div style="margin-top:8px;font-size:13px;color:#B8860B;font-weight:700">🏆 '+fmtPts(p.puntos)+' puntos '+(p.estado==="finalizado"?"acreditados":p.estado==="entregado"?"confirmados al finalizar":"pendientes")+'</div>':'')+
-    (p.calificacion?'<div style="margin-top:8px;font-size:13px">Calificación: '+"⭐".repeat(p.calificacion.estrellas)+'<br><i>'+(p.calificacion.comentario||"")+'</i></div>':'')+
+    (p.calificacion?'<div style="margin-top:8px;font-size:13px">Calificación: '+"⭐".repeat(Math.max(0,Math.min(5,p.calificacion.estrellas||0)))+'<br><i>'+escHtml(p.calificacion.comentario||"")+'</i></div>':'')+
     (!p.esCanje?renderTrackingPedido(p.estado):'')+
     ((!p.esCanje&&p.items&&p.items.length)?
       '<button class="btn btn-p btn-full" style="margin-top:16px" onclick="generarProforma(\''+p.id+'\')">📄 Descargar Proforma PDF</button>'+
@@ -2455,6 +2467,7 @@ function guardarPagoCliente(pid){
   if(p.estado!=="pendiente"){toast("⚠️ Solo se puede cambiar el pago en pedidos pendientes");return;}
   p.pago=sel.value;
   guardarPedidos();
+  sincronizarConSheets(p,true);
   cerrarModal("modal-pedido-det");
   renderHistorial();
   toast("✅ Forma de pago actualizada");
@@ -2464,10 +2477,11 @@ function guardarPagoCliente(pid){
 function descargarFacturaPDF(pid){
   var p=PEDIDOS.find(function(x){return x.id===pid;});
   if(!p||!p.azurFactura){toast("⚠️ Esta factura aún no ha sido generada");return;}
-  var dist=p.razon||"";
-  var fecha=p.fecha||"";
+  var dist=escHtml(p.razon||"");
+  var fecha=escHtml(p.fecha||"");
   var rows=(p.items||[]).map(function(it){
-    return '<tr><td style="padding:6px 8px;border-bottom:1px solid #eee">'+it.nm+'</td><td style="padding:6px 8px;border-bottom:1px solid #eee;text-align:center">'+it.cant+'</td><td style="padding:6px 8px;border-bottom:1px solid #eee;text-align:right">$'+it.pr.toFixed(2)+'</td><td style="padding:6px 8px;border-bottom:1px solid #eee;text-align:right">$'+(it.pr*it.cant).toFixed(2)+'</td></tr>';
+    var pr=it.pr||0;
+    return '<tr><td style="padding:6px 8px;border-bottom:1px solid #eee">'+escHtml(it.nm)+'</td><td style="padding:6px 8px;border-bottom:1px solid #eee;text-align:center">'+(it.cant||0)+'</td><td style="padding:6px 8px;border-bottom:1px solid #eee;text-align:right">$'+pr.toFixed(2)+'</td><td style="padding:6px 8px;border-bottom:1px solid #eee;text-align:right">$'+(pr*(it.cant||0)).toFixed(2)+'</td></tr>';
   }).join("");
   var w=window.open("","_blank","width=800,height=700");
   if(!w)return;
@@ -2488,16 +2502,16 @@ function descargarFacturaPDF(pid){
   '<h1>🧾 Factura Electrónica — PyroShield</h1>'+
   '<div class="sub">Portal Distribuidores PyroShield</div>'+
   '<div class="info">'+
-    '<div><b>Cliente:</b> '+dist+'<br><b>RUC:</b> '+p.ruc+'</div>'+
-    '<div style="text-align:right"><b>Pedido #'+p.id+'</b><br><b>Fecha:</b> '+fecha+'<br><b>Pago:</b> '+(p.pago||"")+'</div>'+
+    '<div><b>Cliente:</b> '+dist+'<br><b>RUC:</b> '+escHtml(p.ruc||"")+'</div>'+
+    '<div style="text-align:right"><b>Pedido #'+escHtml(p.id)+'</b><br><b>Fecha:</b> '+fecha+'<br><b>Pago:</b> '+escHtml(p.pago||"")+'</div>'+
   '</div>'+
   '<table><thead><tr><th>Descripción</th><th style="text-align:center">Cant.</th><th style="text-align:right">P. Unit.</th><th style="text-align:right">Total</th></tr></thead><tbody>'+rows+'</tbody></table>'+
   '<div class="totales">'+
-    '<div class="row">Subtotal: <b>$'+p.subtotal.toFixed(2)+'</b></div>'+
-    '<div class="row">IVA 15%: <b>$'+p.iva.toFixed(2)+'</b></div>'+
-    '<div class="grand">TOTAL: $'+p.total.toFixed(2)+'</div>'+
+    '<div class="row">Subtotal: <b>$'+(p.subtotal||0).toFixed(2)+'</b></div>'+
+    '<div class="row">IVA 15%: <b>$'+(p.iva||0).toFixed(2)+'</b></div>'+
+    '<div class="grand">TOTAL: $'+(p.total||0).toFixed(2)+'</div>'+
   '</div>'+
-  '<div class="clave"><b>Clave de Acceso SRI:</b><br>'+p.azurFactura+'</div>'+
+  '<div class="clave"><b>Clave de Acceso SRI:</b><br>'+escHtml(p.azurFactura||"")+'</div>'+
   '<br><button onclick="window.print()" style="background:#111;color:#fff;border:none;padding:10px 24px;border-radius:6px;cursor:pointer;font-size:14px">🖨️ Imprimir / Guardar PDF</button>'+
   '</body></html>');
   w.document.close();
@@ -2551,15 +2565,15 @@ function renderRecompensas(){
   var siguiente=activas.find(function(r){return r.pts>saldo;});
   var mot=siguiente?"¡Te faltan "+fmtPts(siguiente.pts-saldo)+" puntos para "+siguiente.nm+"!":"🎉 ¡Tienes puntos para canjear!";
   document.getElementById("rec-mot").textContent=mot;
-  document.getElementById("rec-lista").innerHTML=REWARDS.map(function(r){
+  document.getElementById("rec-lista").innerHTML=REWARDS.map(function(r,i){
     var pct=r.pts>0?Math.min(100,Math.round(saldo/r.pts*100)):100;
     var puede=saldo>=r.pts&&!r.agotado;
     return '<div class="rec-item">'+
-      '<div class="rec-top"><div class="rec-ico">'+r.ico+'</div>'+
-      '<div><div class="rec-nm">'+r.nm+(r.agotado?' <span style="background:#e74c3c;color:#fff;font-size:10px;padding:1px 6px;border-radius:4px;font-weight:600">Agotado</span>':'')+'</div>'+
+      '<div class="rec-top"><div class="rec-ico">'+escHtml(r.ico||"")+'</div>'+
+      '<div><div class="rec-nm">'+escHtml(r.nm||"")+(r.agotado?' <span style="background:#e74c3c;color:#fff;font-size:10px;padding:1px 6px;border-radius:4px;font-weight:600">Agotado</span>':'')+'</div>'+
       '<div class="rec-pts-need">'+fmtPts(r.pts)+' puntos</div></div></div>'+
       '<div class="rec-bar-wrap"><div class="rec-bar" style="width:0" data-pct="'+pct+'"></div></div>'+
-      (puede?'<button class="btn btn-p btn-full rec-btn" onclick="canjear('+r.pts+',\''+r.nm+'\')">Canjear '+fmtPts(r.pts)+' pts</button>':
+      (puede?'<button class="btn btn-p btn-full rec-btn" onclick="canjear('+i+')">Canjear '+fmtPts(r.pts)+' pts</button>':
        r.agotado?'<button class="btn btn-s btn-full rec-btn" disabled style="opacity:0.5">No disponible</button>':
        '<button class="btn btn-s btn-full rec-btn" disabled>Faltan '+fmtPts(r.pts-saldo)+' pts</button>')+
     '</div>';
@@ -2592,11 +2606,15 @@ function renderRecompensas(){
     logEl.innerHTML=logHtml2;
   }
 }
-function canjear(pts,nm){
+function canjear(idx){
+  var r=REWARDS[idx];
+  if(!r){toast("⚠️ Recompensa no disponible");return;}
+  var pts=r.pts, nm=r.nm;
+  if(r.agotado){toast("⚠️ Esta recompensa está agotada");return;}
   if(saldoPuntos()<pts){toast("⚠️ No tienes suficientes puntos confirmados");return;}
-  confirmar("¿Canjear <b>"+fmtPts(pts)+" puntos</b> por <b>"+nm+"</b>?<br><small>Se coordinará con tu próximo pedido.</small>",function(){
+  confirmar("¿Canjear <b>"+fmtPts(pts)+" puntos</b> por <b>"+escHtml(nm)+"</b>?<br><small>Se coordinará con tu próximo pedido.</small>",function(){
     if(saldoPuntos()<pts){toast("⚠️ Ya no tienes suficientes puntos");renderRecompensas();return;}
-    var pid="C"+Date.now().toString().slice(-5);
+    var pid="C"+Date.now()+Math.floor(Math.random()*1000);
     var pedCanje={id:pid,ruc:USER.ruc,razon:USER.razon,fecha:new Date().toLocaleDateString("es-EC"),fechaISO:new Date().toISOString(),esCanje:true,canjePts:pts,canjeNm:nm,estado:"pendiente",total:0,puntos:0};
     PEDIDOS.push(pedCanje);
     guardarPedidos();
@@ -3009,8 +3027,8 @@ function generarProforma(pid){
     ahorroTotal+=descTotal;
     return '<tr>'+
       '<td>'+(i+1)+'</td>'+
-      '<td>'+it.id+'</td>'+
-      '<td>'+it.nm+'</td>'+
+      '<td>'+escHtml(it.id)+'</td>'+
+      '<td>'+escHtml(it.nm)+'</td>'+
       '<td style="text-align:center">'+it.cant+'</td>'+
       '<td style="text-align:right">'+fmt$(pvUnit)+'</td>'+
       '<td style="text-align:right">'+fmt$(it.pr)+'</td>'+
@@ -3058,10 +3076,10 @@ function generarProforma(pid){
       '</div>'+
     '</div>'+
     '<div style="background:#f5f5f5;padding:10px 14px;border-radius:8px;margin-bottom:12px">'+
-      '<div style="font-weight:700">'+p.razon+'</div>'+
-      '<div>RUC / Cédula: '+p.ruc+'</div>'+
-      (dist.tel?'<div>Tel: '+dist.tel+'</div>':'')+
-      (dist.correo?'<div>Correo: '+dist.correo+'</div>':'')+
+      '<div style="font-weight:700">'+escHtml(p.razon||"")+'</div>'+
+      '<div>RUC / Cédula: '+escHtml(p.ruc||"")+'</div>'+
+      (dist.tel?'<div>Tel: '+escHtml(dist.tel)+'</div>':'')+
+      (dist.correo?'<div>Correo: '+escHtml(dist.correo)+'</div>':'')+
     '</div>'+
     '<table>'+
       '<thead><tr>'+
@@ -3102,14 +3120,14 @@ function generarNotaEntrega(pid){
   var itemsHtml=p.items.map(function(it,i){
     return '<tr>'+
       '<td>'+(i+1)+'</td>'+
-      '<td>'+it.id+'</td>'+
-      '<td>'+it.nm+'</td>'+
-      '<td style="text-align:center;font-weight:700;font-size:14px">'+it.cant+'</td>'+
+      '<td>'+escHtml(it.id)+'</td>'+
+      '<td>'+escHtml(it.nm)+'</td>'+
+      '<td style="text-align:center;font-weight:700;font-size:14px">'+(it.cant||0)+'</td>'+
     '</tr>';
   }).join("");
   var entregaDir="";
   if(p.modo==="entrega"&&p.entregaInfo&&p.entregaInfo.establecimiento){
-    entregaDir=(p.entregaInfo.establecimiento.nm||"")+(p.entregaInfo.establecimiento.dir?" — "+p.entregaInfo.establecimiento.dir:"");
+    entregaDir=escHtml((p.entregaInfo.establecimiento.nm||"")+(p.entregaInfo.establecimiento.dir?" — "+p.entregaInfo.establecimiento.dir:""));
   }
   var win=window.open("","_blank","width=800,height=900");
   if(!win){toast("⚠️ Permite las ventanas emergentes para generar el PDF");return;}
@@ -3146,10 +3164,10 @@ function generarNotaEntrega(pid){
     '<div class="info-box">'+
       '<div><b>N° Pedido:</b> '+p.id+'</div>'+
       '<div><b>Fecha:</b> '+fecha+'</div>'+
-      '<div style="margin-top:8px"><b>Cliente:</b> '+p.razon+'</div>'+
-      '<div><b>RUC / Cédula:</b> '+p.ruc+'</div>'+
+      '<div style="margin-top:8px"><b>Cliente:</b> '+escHtml(p.razon||"")+'</div>'+
+      '<div><b>RUC / Cédula:</b> '+escHtml(p.ruc||"")+'</div>'+
       (entregaDir?'<div><b>Dirección de entrega:</b> '+entregaDir+'</div>':'')+
-      (dist.tel?'<div><b>Teléfono:</b> '+dist.tel+'</div>':'')+
+      (dist.tel?'<div><b>Teléfono:</b> '+escHtml(dist.tel)+'</div>':'')+
     '</div>'+
     '<table>'+
       '<thead><tr><th>#</th><th>Código</th><th>Descripción</th><th style="text-align:center">Cantidad</th></tr></thead>'+
@@ -3204,6 +3222,8 @@ function generarAzur(pid){
   var tipoIdent="04";
   if(dist.tipoDoc==="cedula"||numDoc.length===10) tipoIdent="05";
   if(numDoc==="9999999999999"||numDoc==="9999999999") tipoIdent="07";
+  // Identificación que se envía al SRI: siempre numérica. Consumidor final = 13 nueves.
+  var identAzur=(tipoIdent==="07")?"9999999999999":numDoc;
   var ahora=new Date();
   var fechaAzur=ahora.getFullYear()+"/"+String(ahora.getMonth()+1).padStart(2,"0")+"/"+String(ahora.getDate()).padStart(2,"0");
   var itemsAzur=(p.items||[]).filter(function(it){return it.pr>0&&it.cant>0;}).map(function(it){
@@ -3213,7 +3233,7 @@ function generarAzur(pid){
   });
   var pagoMap={"Efectivo":"01","Transferencia":"20","Cheque":"20","Cheque / Crédito 30 días":"20","Cheque / Crédito 60 días":"20","Cheque / Crédito 90 días":"20"};
   var codigoPago=pagoMap[p.pago]||"20";
-  var payload={api_key:AZUR_TOKEN,codigoDoc:"01",emisor:{manejo_interno_secuencia:"SI",fecha_emision:fechaAzur},comprador:{tipo_identificacion:tipoIdent,identificacion:p.ruc,razon_social:dist.razon||p.razon,direccion:(dist.establecimientos&&dist.establecimientos[0]&&dist.establecimientos[0].dir)?dist.establecimientos[0].dir:"S/N",telefono:dist.tel||null,celular:null,correo:dist.correo||null},items:itemsAzur,pagos:[{tipo:codigoPago,total:parseFloat(p.total.toFixed(2))}],informacion_adicional:[{nombre:"Pedido Portal",detalle:"#"+p.id},{nombre:"Forma de Pago",detalle:p.pago}]};
+  var payload={api_key:AZUR_TOKEN,codigoDoc:"01",emisor:{manejo_interno_secuencia:"SI",fecha_emision:fechaAzur},comprador:{tipo_identificacion:tipoIdent,identificacion:identAzur,razon_social:dist.razon||p.razon,direccion:(dist.establecimientos&&dist.establecimientos[0]&&dist.establecimientos[0].dir)?dist.establecimientos[0].dir:"S/N",telefono:dist.tel||null,celular:null,correo:dist.correo||null},items:itemsAzur,pagos:[{tipo:codigoPago,total:parseFloat((p.total||0).toFixed(2))}],informacion_adicional:[{nombre:"Pedido Portal",detalle:"#"+p.id},{nombre:"Forma de Pago",detalle:p.pago}]};
   _azurBusy=true;
   toast("⏳ Enviando a Azur...");
   fetch(AZUR_API+"factura/emision",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)})
@@ -3333,6 +3353,11 @@ function eliminarDist(ruc){
   confirmar("¿Eliminar al distribuidor <b>"+escHtml(d.razon)+"</b>?<br><small>Esta acción no se puede deshacer.</small>",function(){
     var idx=DISTRIBUIDORES.indexOf(d);
     if(idx>-1)DISTRIBUIDORES.splice(idx,1);
+    // Lápida: evita que un distribuidor base (datos.js) reaparezca al recargar
+    try{
+      var elim=JSON.parse(localStorage.getItem("pyro_dist_eliminados")||"[]");
+      if(elim.indexOf(ruc)===-1){elim.push(ruc);localStorage.setItem("pyro_dist_eliminados",JSON.stringify(elim));}
+    }catch(e){}
     guardarDistribuidores();
     renderAdmDist();
     toast("✅ Distribuidor eliminado");
@@ -3463,7 +3488,7 @@ function abrirPreciosEsp(ruc){
     PRODUCTOS.map(function(p){
       var esp=d.preciosEsp[p.id]!=null?d.preciosEsp[p.id]:"";
       return '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">'+
-        '<div style="flex:1;font-size:12px;font-weight:600">'+p.nm+'<span style="color:var(--g3);font-weight:400;font-size:11px"> (base: '+fmt$(p.pb)+')</span></div>'+
+        '<div style="flex:1;font-size:12px;font-weight:600">'+escHtml(p.nm)+'<span style="color:var(--g3);font-weight:400;font-size:11px"> (base: '+fmt$(p.pb)+')</span></div>'+
         '<input type="number" step="0.01" min="0" class="form-input" id="esp-'+p.id+'" value="'+esp+'" placeholder="'+fmt$(p.pb)+'" style="width:90px;margin:0;padding:8px 10px;font-size:13px">'+
       '</div>';
     }).join("")+
@@ -4205,8 +4230,16 @@ function guardarDistribuidores(){
 }
 function cargarDistribuidoresExtra(){
   try{
+    // Quitar los distribuidores marcados como eliminados (incluye los de datos.js)
+    var elim=[];try{elim=JSON.parse(localStorage.getItem("pyro_dist_eliminados")||"[]");}catch(e){}
+    if(elim.length){
+      for(var k=DISTRIBUIDORES.length-1;k>=0;k--){
+        if(!DISTRIBUIDORES[k].esAdmin&&DISTRIBUIDORES[k].rol!=="impresion"&&elim.indexOf(DISTRIBUIDORES[k].ruc)!==-1)DISTRIBUIDORES.splice(k,1);
+      }
+    }
     var extra=JSON.parse(localStorage.getItem("pyro_dist_extra")||"[]");
     extra.forEach(function(d){
+      if(elim.indexOf(d.ruc)!==-1)return;
       var idx=DISTRIBUIDORES.findIndex(function(x){return x.ruc===d.ruc;});
       if(idx>-1){
         // No sobreescribir usuarios de sistema (admin, impresion) — sus datos vienen de datos.js
@@ -4466,10 +4499,7 @@ function iniciarAutoguardado(){
     var entry={ts:Date.now(),nombre:"Autoguardado",items:JSON.parse(JSON.stringify(CARRITO))};
     if(idx>-1){borradores[idx]=entry;}
     else if(borradores.length<3){borradores.push(entry);}
-    else{
-      // Reemplazar el borrador autoguardado más viejo (o el primero sin nombre)
-      borradores[0]=entry;
-    }
+    // Si ya hay 3 borradores manuales y ninguno es autoguardado, NO pisar los del usuario
     try{localStorage.setItem("pyro_borradores_"+USER.ruc,JSON.stringify(borradores));}catch(e){}
   },60000);
 }
