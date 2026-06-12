@@ -31,7 +31,7 @@ var PRODUCTOS = [
   {id:"CABMARITIMO",nm:"Cabezal Marítimo CO2",cat:"accesorios",sub:"Cabezales",pv:42.25,pb:38.46,costo:18.93,stock:73,ago:false,img:"CABMARITIMO",descVol:[[2,1],[3,2],[5,3],[8,5],[10,6]],codigoAzur:"CABMARITIMO"},
   {id:"CAB50CO2AR",nm:"CO2 Disparo Rápido (50-100 LBS)",cat:"accesorios",sub:"Cabezales",pv:16.80,pb:13.95,costo:5.92,stock:121,ago:false,img:"CAB50CO2AR",descVol:[[5,1],[10,2],[15,3],[20,5],[30,6]],codigoAzur:"CAB50CO2AR"},
   // ACCESORIOS - MANÓMETROS
-  {id:"MANOPQS",nm:"Manómetro 195 PSI",cat:"accesorios",sub:"Manómetros",pv:0.85,pb:0.70,costo:0.36,stock:36,ago:false,img:"MANOPQS",descVol:[[30,1],[50,2],[100,3],[150,5],[300,6]],cantMin:10,codigoAzur:"MANOPQS"},
+  {id:"MANOPQS",nm:"Manómetro 195 PSI",cat:"accesorios",sub:"Manómetros",pv:0.85,pb:0.70,costo:0.36,stock:36,ago:false,img:"MANOPQS",descVol:[[20,1],[50,2],[100,3],[150,5],[300,6]],cantMin:10,codigoAzur:"MANOPQS"},
   // ACCESORIOS - MANGUERAS
   {id:"MANGPQS10",nm:"Manguera 10 PQS",cat:"accesorios",sub:"Mangueras",pv:0.90,pb:0.80,costo:0.36,stock:327,ago:false,img:"MANGPQS10",descVol:[[30,1],[50,2],[80,3],[100,5],[150,6]],codigoAzur:"MANGPQS10"},
   {id:"MANGPQS20",nm:"Manguera 20 PQS",cat:"accesorios",sub:"Mangueras",pv:0.90,pb:0.80,costo:0.34,stock:678,ago:false,img:"MANGPQS20",descVol:[[30,1],[50,2],[80,3],[100,5],[150,6]],codigoAzur:"MANGPQS20"},
@@ -43,9 +43,9 @@ var PRODUCTOS = [
   {id:"GANCPQS20",nm:"Soporte PQS 20",cat:"accesorios",sub:"Soportes",pv:0.98,pb:0.85,costo:0.28,stock:486,ago:false,img:"GANCPQS20",descVol:[[50,1],[100,2],[150,3],[200,5],[400,6]],codigoAzur:"GANCPQS20"},
   // ACCESORIOS - OTROS
   {id:"ABRPQS",nm:"Abrazaderas Plásticas",cat:"accesorios",sub:"Otros",pv:0.26,pb:0.24,costo:0.12,stock:2616,ago:false,img:"ABRPQS",descVol:[[100,1],[200,2],[300,3],[500,5],[1000,6]],codigoAzur:"ABRPQS"},
-  {id:"SEGPLAM",nm:"Seguros Plásticos Amarillo",cat:"accesorios",sub:"Otros",pv:0.08,pb:0.06,costo:0.03,stock:13467,ago:false,img:"SEGPLAST01",descVol:[[200,1],[500,2],[800,3],[1000,5],[2000,6]],cantMin:200,codigoAzur:"SEGPLAST01"},
-  {id:"LETPQS",nm:"Letrero Instructivo Extintor PQS",cat:"accesorios",sub:"Otros",pv:1.95,pb:1.95,costo:1.50,stock:0,ago:true,img:"LETPQS",descVol:[[10,5]],codigoAzur:"LETPQS"},
-  {id:"LETCO2",nm:"Letrero Instructivo Extintor CO2",cat:"accesorios",sub:"Otros",pv:1.95,pb:1.95,costo:1.50,stock:0,ago:true,img:"LETCO2",descVol:[[10,5]],codigoAzur:"LETCO2"},
+  {id:"SEGPLAST01",nm:"Seguros Plásticos Amarillo",cat:"accesorios",sub:"Otros",pv:0.08,pb:0.06,costo:0.03,stock:13467,ago:false,img:"SEGPLAST01",descVol:[[200,1],[500,2],[800,3],[1000,5],[2000,6]],cantMin:200,codigoAzur:"SEGPLAST01"},
+  {id:"LETPQS",nm:"Letrero Instructivo Extintor PQS",cat:"accesorios",sub:"Otros",pv:2.25,pb:1.95,costo:1.50,stock:100,ago:false,img:"LETPQS",descVol:[[10,3],[25,5]],codigoAzur:"LETPQS"},
+  {id:"LETCO2",nm:"Letrero Instructivo Extintor CO2",cat:"accesorios",sub:"Otros",pv:2.25,pb:1.95,costo:1.50,stock:100,ago:false,img:"LETCO2",descVol:[[10,3],[25,5]],codigoAzur:"LETCO2"},
   // MANGUERAS HID
   {id:"MANH15C001",nm:"Manguera 15M doble chaqueta 1½\"",cat:"mangueras_hid",sub:"Mangueras",pv:38.61,pb:36.98,costo:29.93,stock:161,ago:false,img:"MANH15C001",descVol:[[3,1],[5,2],[8,3]],codigoAzur:"MANH15C001"},
   {id:"MANH30C001",nm:"Manguera 30M doble chaqueta 1½\"",cat:"mangueras_hid",sub:"Mangueras",pv:69.10,pb:64.28,costo:46.14,stock:89,ago:false,img:"MANH30C001",descVol:[[3,1],[5,2],[8,3],[10,4],[15,5]],codigoAzur:"MANH30C001"},
@@ -916,7 +916,7 @@ function _logrosDefinicion(){
   var meses=new Set(comp.map(function(p){return(p.fechaISO||p.fecha||"").slice(0,7);})).size;
   var semanas=new Set(comp.map(function(p){var d=parseFechaPed(p);var w=Math.floor(d/6048e5);return w;})).size;
   var prods=new Set(comp.reduce(function(a,p){return a.concat((p.items||[]).map(function(i){return i.id;}));},[]).filter(Boolean)).size;
-  var _excUnid=["SEGPLAM","MANOPQS"]; // seguros plásticos y manómetros no cuentan por ser accesorios de muy bajo valor unitario
+  var _excUnid=["SEGPLAST01","MANOPQS"]; // seguros plásticos y manómetros no cuentan por ser accesorios de muy bajo valor unitario
   var items=comp.reduce(function(s,p){return s+(p.items||[]).reduce(function(ss,i){return _excUnid.indexOf(i.id)!==-1?ss:ss+i.cant;},0);},0);
   var maxPed=comp.reduce(function(s,p){return Math.max(s,p.total||0);},0);
   var diasSemana=comp.map(function(p){return parseFechaPed(p).getDay();});
