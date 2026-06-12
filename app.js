@@ -3896,7 +3896,7 @@ function renderTop5Distribuidores(){
       var dist=DISTRIBUIDORES.find(function(x){return x.ruc===d.ruc;})||{};
       return '<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--g2)">'+
         '<div><span style="font-weight:700;color:var(--azul);margin-right:8px">#'+(i+1)+'</span>'+
-        '<span style="font-size:13px">'+(dist.empresa||d.razon)+'</span></div>'+
+        '<span style="font-size:13px">'+escHtml(dist.empresa||d.razon||"")+'</span></div>'+
         '<span style="font-weight:700;font-size:12px;text-align:right">'+fmt$(d.total)+' subtotal<br><span style="color:var(--verde);font-weight:600">utilidad: '+fmt$(d.utilidad)+'</span></span>'+
       '</div>';
     }).join("")+
@@ -3923,8 +3923,8 @@ function generarReporteMensual(){
   var prodCounts={};
   pedMes.forEach(function(p){(p.items||[]).forEach(function(it){
     if(!prodCounts[it.id])prodCounts[it.id]={id:it.id,nm:it.nm,cant:0,subtotal:0};
-    prodCounts[it.id].cant+=it.cant;
-    prodCounts[it.id].subtotal+=it.pr*it.cant;
+    prodCounts[it.id].cant+=(it.cant||0);
+    prodCounts[it.id].subtotal+=(it.pr||0)*(it.cant||0);
   });});
   var topProds=Object.values(prodCounts).sort(function(a,b){return b.subtotal-a.subtotal;}).slice(0,10);
   var baseHref=window.location.href.substring(0,window.location.href.lastIndexOf("/")+1);
@@ -3967,7 +3967,7 @@ function generarReporteMensual(){
     (topProds.length?
       '<table><thead><tr><th>#</th><th>Producto</th><th style="text-align:center">Cant.</th><th style="text-align:right">Subtotal</th></tr></thead>'+
       '<tbody>'+topProds.map(function(p,i){
-        return '<tr><td>'+(i+1)+'</td><td>'+p.nm+'</td><td style="text-align:center">'+p.cant+'</td><td style="text-align:right">'+fmt$(p.subtotal)+'</td></tr>';
+        return '<tr><td>'+(i+1)+'</td><td>'+escHtml(p.nm)+'</td><td style="text-align:center">'+p.cant+'</td><td style="text-align:right">'+fmt$(p.subtotal)+'</td></tr>';
       }).join("")+'</tbody></table>':
       '<div style="color:#aaa;font-size:12px;padding:8px 0">No hay datos este mes.</div>')+
     '<div class="footer">PyroShield · Reporte generado el '+new Date().toLocaleDateString("es-EC")+'</div>'+
@@ -3987,9 +3987,9 @@ function renderAdmRecompensas(){
     return '<div class="card" style="margin-bottom:8px"><div class="card-b">'+
       '<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">'+
         '<div style="display:flex;align-items:center;gap:10px">'+
-          '<div style="font-size:28px">'+r.ico+'</div>'+
+          '<div style="font-size:28px">'+escHtml(r.ico||"")+'</div>'+
           '<div>'+
-            '<div style="font-weight:700">'+r.nm+'</div>'+
+            '<div style="font-weight:700">'+escHtml(r.nm||"")+'</div>'+
             '<div style="font-size:12px;color:var(--azul);font-weight:600">'+fmtPts(r.pts)+' puntos</div>'+
             '<div style="display:flex;align-items:center;gap:4px;margin-top:4px">'+
               '<span style="font-size:11px;color:var(--g3)">Costo real $</span>'+
@@ -5057,20 +5057,25 @@ function registrarInstalacionActual(){
   if(!_esInstalado())return;
   var tipo=_esMobile()?"mobile":"desktop";
   var key=tipo==="mobile"?_keyInstMobile(USER.ruc):_keyInstDesktop(USER.ruc);
+  // ID estable por cuenta+dispositivo: si ya existe (aquí o en la nube), no se duplica el premio
+  var pid="INST_"+tipo+"_"+USER.ruc;
+  var yaTiene=PEDIDOS.some(function(p){return p.id===pid||(p.esInstalacion&&p.ruc===USER.ruc&&p.instTipo===tipo);});
+  if(yaTiene){try{localStorage.setItem(key,"1");}catch(e){}return;}
   if(!localStorage.getItem(key)){
     try{localStorage.setItem(key,"1");}catch(e){}
     // Otorgar 20 puntos por instalación
-    var pid="INST"+Date.now().toString().slice(-6);
     var tipoLabel=tipo==="mobile"?"celular":"computadora";
-    PEDIDOS.push({
+    var pedInst={
       id:pid,ruc:USER.ruc,razon:USER.razon,
       fecha:new Date().toLocaleDateString("es-EC"),fechaISO:new Date().toISOString(),
       esCanje:true,esBienvenida:false,canjePts:0,
       canjeNm:"🎁 Premio por instalar app en tu "+tipoLabel+" — 20 pts",
-      estado:"finalizado",total:0,puntos:20,esInstalacion:true
-    });
+      estado:"finalizado",total:0,puntos:20,esInstalacion:true,instTipo:tipo
+    };
+    PEDIDOS.push(pedInst);
     registrarLogPuntos(USER.ruc,"confirmado",20,"Premio instalación PWA en "+tipoLabel);
     guardarPedidos();
+    sincronizarConSheets(pedInst,true);
     setTimeout(function(){
       mostrarOverlayInstalacion(tipo);
     },800);
