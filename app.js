@@ -557,7 +557,7 @@ function mostrarCambioPassOpcional(){
     '<div style="font-size:21px;font-weight:800;margin-bottom:10px">🔐 Cambiar contraseña</div>'+
     '<input class="form-input" id="pi-pass1" type="password" placeholder="Nueva contraseña" style="margin-bottom:8px">'+
     '<input class="form-input" id="pi-pass2" type="password" placeholder="Repetir contraseña" style="margin-bottom:12px">'+
-    '<button class="btn btn-p btn-full" style="margin-bottom:8px" onclick="primerIngresoGuardarPass();_cerrarPrimerIngresoOv();">Guardar</button>'+
+    '<button class="btn btn-p btn-full" style="margin-bottom:8px" onclick="primerIngresoGuardarPass()">Guardar</button>'+
     '<button class="btn btn-s btn-full" onclick="_cerrarPrimerIngresoOv()">Cancelar</button>'
   );
 }
@@ -3370,7 +3370,7 @@ function renderAdmDist(){
         '<span class="badge b-verde">'+nped+' pedidos</span>'+
         (esp?'<span class="badge b-oro">★ '+esp+' precios esp.</span>':'')+
         (d.sinDescVol?'<span class="badge b-rojo">Sin desc. volumen</span>':'')+
-        (d.entrega&&d.entrega.habilitada?'<span class="badge b-azul">🚚 Entrega $'+d.entrega.montoMin+'+</span>':'<span class="badge b-gris">Solo retiro</span>')+
+        (d.entrega&&d.entrega.habilitada?'<span class="badge b-azul">🚚 Entrega $'+(d.entrega.montoMin||30)+'+</span>':'<span class="badge b-gris">Solo retiro</span>')+
         (d.bloqueado?'<span class="badge b-rojo">🚫 Bloqueado'+(d.bloqueoRazon?' — '+escHtml(d.bloqueoRazon):'')+' </span>':'')+
         (d.saldoPendiente>0?'<span class="badge b-rojo">💲 Debe $'+(+d.saldoPendiente||0).toFixed(2)+'</span>':'')+
       '</div>'+
@@ -3425,7 +3425,7 @@ function abrirEditarDist(ruc){
       '<label for="ed-entrega" style="font-size:14px">Entrega a domicilio habilitada</label>'+
     '</div>'+
     '<label class="form-label">Monto mínimo entrega ($)</label>'+
-    '<input class="form-input" id="ed-min" type="number" value="'+(d.entrega?d.entrega.montoMin:30)+'">'+
+    '<input class="form-input" id="ed-min" type="number" value="'+((d.entrega&&d.entrega.montoMin!=null)?d.entrega.montoMin:30)+'">'+
     '<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">'+
       '<input type="checkbox" id="ed-sinvol" '+(d.sinDescVol?"checked":"")+' style="width:18px;height:18px">'+
       '<label for="ed-sinvol" style="font-size:14px;color:var(--rojo)">Sin descuentos por volumen</label>'+
@@ -5204,17 +5204,17 @@ function renderBannerInstalacion(){
   var esMobile=_esMobile();
   // Si ya tiene ambas instalaciones, ocultar
   if(tieneMobile&&tieneDesktop){el.style.display="none";return;}
-  // Determinar qué le falta
-  var falta=esMobile?"computadora":"celular";
-  var faltaIco=esMobile?"💻":"📱";
+  // Determinar qué le falta: si solo falta uno, sugerir ese; si faltan ambos, sugerir el del dispositivo actual
+  var faltaDesktop=!tieneDesktop,faltaMobile=!tieneMobile;
+  var sugerirComp=(faltaDesktop&&!faltaMobile)||(faltaDesktop&&!esMobile);
+  var falta=sugerirComp?"computadora":"celular";
+  var faltaIco=sugerirComp?"💻":"📱";
   var esIphone=/iPhone|iPad|iPod/i.test(navigator.userAgent);
-  var subtexto=(!esMobile&&esIphone)
+  var subtexto=sugerirComp
     ?"Instala la app en tu <b>computadora</b> (Chrome) y reclámalos ahora."
-    :esMobile
-      ?"Instala la app en tu <b>computadora</b> (Chrome) y reclámalos ahora."
-      :esIphone
-        ?"Instala la app en tu <b>iPhone</b> usando <b>Safari</b> y reclámalos ahora."
-        :"Instala la app en tu <b>celular</b> (Android: Chrome) y reclámalos ahora.";
+    :esIphone
+      ?"Instala la app en tu <b>iPhone</b> usando <b>Safari</b> y reclámalos ahora."
+      :"Instala la app en tu <b>celular</b> (Android: Chrome) y reclámalos ahora.";
   el.style.display="";
   el.innerHTML=
     '<div style="background:var(--oro-claro,#fff7e0);border:2px solid var(--oro);border-radius:16px;padding:14px 16px;margin-bottom:16px">'+
