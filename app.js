@@ -1520,7 +1520,11 @@ function toggleFav(id){
   if(idx===-1)FAVORITOS.push(id);
   else FAVORITOS.splice(idx,1);
   try{localStorage.setItem("pyro_favs_"+USER.ruc,JSON.stringify(FAVORITOS));}catch(e){}
-  renderCatalogo();
+  // En modo Favoritos hay que re-renderizar para que la tarjeta desaparezca; en el resto solo actualizarla
+  if(FILTRO==="favs"){renderCatalogo();return;}
+  var p=PRODUCTOS.find(function(x){return x.id===id;});
+  var cardEl=document.getElementById("prod-card-"+id);
+  if(p&&cardEl){cardEl.outerHTML=renderProdCard(p);}else{renderCatalogo();}
 }
 
 function toggleDeseo(id){
@@ -1528,7 +1532,10 @@ function toggleDeseo(id){
   if(idx===-1){DESEOS.push(id);toast("🔖 Añadido a tu lista de deseos");}
   else{DESEOS.splice(idx,1);toast("Quitado de lista de deseos");}
   try{localStorage.setItem("pyro_deseos_"+USER.ruc,JSON.stringify(DESEOS));}catch(e){}
-  renderCatalogo();renderDeseosSec();
+  var p=PRODUCTOS.find(function(x){return x.id===id;});
+  var cardEl=document.getElementById("prod-card-"+id);
+  if(p&&cardEl){cardEl.outerHTML=renderProdCard(p);}else{renderCatalogo();}
+  renderDeseosSec();
 }
 function renderDeseosSec(){
   var wrap=document.getElementById("deseos-sec");if(!wrap)return;
@@ -2837,6 +2844,7 @@ function renderAdmPedidos(){
     {f:"pendiente",l:"⏳ Pendientes"},
     {f:"proceso",l:"🔄 En proceso"},
     {f:"entregado",l:"📦 Entregados"},
+    {f:"facturado",l:"🧾 Facturados"},
     {f:"finalizado",l:"✔️ Finalizados"},
     {f:"cancelado",l:"✕ Cancelados"}
   ];
@@ -2844,12 +2852,15 @@ function renderAdmPedidos(){
     return '<button class="fbtn'+(ADM_PED_FILTRO===o.f?" active":"")+'" onclick="setAdmPedFiltro(\''+o.f+'\')">'+o.l+'</button>';
   }).join("")+'</div>';
 
-  var busqPed=(document.getElementById("adm-ped-busq")||{value:""}).value.toLowerCase().trim();
-  var lista=PEDIDOS.slice().reverse().filter(filtrarPedAdmin).filter(function(p){
+  var _busqEl=document.getElementById("adm-ped-busq");
+  var busqPed=(_busqEl||{value:""}).value.toLowerCase().trim();
+  var _busqFocused=_busqEl&&document.activeElement===_busqEl;
+  // Excluir canjes/bienvenida de la lista de pedidos admin
+  var lista=PEDIDOS.slice().reverse().filter(function(p){return!p.esCanje;}).filter(filtrarPedAdmin).filter(function(p){
     if(!busqPed)return true;
     return (p.id||"").toLowerCase().indexOf(busqPed)!==-1||(p.razon||"").toLowerCase().indexOf(busqPed)!==-1||(p.ruc||"").toLowerCase().indexOf(busqPed)!==-1;
   });
-  var busqHtml='<div style="margin-bottom:8px"><input id="adm-ped-busq" class="form-input" placeholder="🔍 Buscar por pedido, distribuidor o RUC..." oninput="renderAdmPedidos()" style="font-size:13px;padding:6px 10px"></div>';
+  var busqHtml='<div style="margin-bottom:8px"><input id="adm-ped-busq" class="form-input" placeholder="🔍 Buscar por pedido, distribuidor o RUC..." oninput="renderAdmPedidos()" value="'+escHtml(busqPed)+'" style="font-size:13px;padding:6px 10px"></div>';
   var admPL=document.getElementById("adm-ped-lista");if(!admPL)return;
   admPL.innerHTML=busqHtml+filtrosHtml+(lista.length?lista.map(function(p){
     var facBadge="";
@@ -2870,14 +2881,17 @@ function renderAdmPedidos(){
       (function(){if(p.esCanje)return'';var mg=(p.items||[]).reduce(function(s,it){return s+(it.cant||0)*((it.pr||0)-getCostoProducto(it.id));},0);var pct=p.subtotal>0?(mg/p.subtotal*100):0;var col=mg>=0?"var(--verde)":"var(--rojo)";return'<div style="font-size:11px;color:'+col+';margin-top:2px">Margen est.: '+fmt$(mg)+' ('+pct.toFixed(1)+'%)</div>';}())+
     '</div></div>';
   }).join(""):'<div class="empty"><div class="ico">📦</div><p>No hay pedidos en esta categoría.</p></div>');
+  // Restaurar foco en el buscador si el usuario estaba escribiendo
+  if(_busqFocused){var nb=document.getElementById("adm-ped-busq");if(nb){nb.focus();var l=nb.value.length;try{nb.setSelectionRange(l,l);}catch(e){}}}
 }
 
 // Filtra un pedido según ADM_PED_FILTRO
 function filtrarPedAdmin(p){
   if(ADM_PED_FILTRO==="todos")return true;
   if(ADM_PED_FILTRO==="pendiente")return p.estado==="pendiente";
-  if(ADM_PED_FILTRO==="proceso")return["en_proceso","autorizado","entrega","facturado"].indexOf(p.estado)!==-1;
+  if(ADM_PED_FILTRO==="proceso")return["en_proceso","autorizado","entrega"].indexOf(p.estado)!==-1;
   if(ADM_PED_FILTRO==="entregado")return p.estado==="entregado";
+  if(ADM_PED_FILTRO==="facturado")return p.estado==="facturado";
   if(ADM_PED_FILTRO==="finalizado")return p.estado==="finalizado";
   if(ADM_PED_FILTRO==="cancelado")return p.estado==="cancelado";
   return true;
@@ -3267,7 +3281,8 @@ function generarAzur(pid){
       p.azurFactura=data.claveacceso; p.azurEstado="enviado";
       guardarPedidos(); toastGold("🧾 Factura enviada a Azur ✅"); admVerPedido(pid);
     } else {
-      var errores=(data.errors||["Error desconocido"]).join(" · ");
+      var errArr=Array.isArray(data.errors)?data.errors:(data.errors?[String(data.errors)]:["Error desconocido"]);
+      var errores=errArr.join(" · ");
       toast("⚠️ Azur: "+errores.substring(0,90));
     }
   })
@@ -5013,11 +5028,11 @@ function _buildBackupPayload(){
   var umbrales={};try{umbrales=JSON.parse(localStorage.getItem("pyro_umbrales")||"{}");}catch(e){}
   var costos={};try{costos=JSON.parse(localStorage.getItem("pyro_costos")||"{}");}catch(e){}
   var rewards=[];try{rewards=JSON.parse(localStorage.getItem("pyro_rewards")||"[]");}catch(e){}
-  // Recopilar logs de puntos de todos los distribuidores conocidos
+  // Recopilar logs de puntos de todos los distribuidores (base + extra)
   var logsPuntos={};
   try{
-    var rucs=distExtra.map(function(d){return d.ruc;});
-    rucs.forEach(function(ruc){
+    var rucsAll=DISTRIBUIDORES.filter(function(d){return!d.esAdmin&&d.rol!=="impresion";}).map(function(d){return d.ruc;});
+    rucsAll.forEach(function(ruc){
       var k="pyro_log_puntos_"+ruc;
       var v=localStorage.getItem(k);
       if(v)try{logsPuntos[ruc]=JSON.parse(v);}catch(e){}
@@ -5097,6 +5112,17 @@ function restaurarMetaDesdeNube(){
     if(m.costos){
       var localC={};try{localC=JSON.parse(localStorage.getItem("pyro_costos")||"{}");}catch(e){}
       if(!Object.keys(localC).length){localStorage.setItem("pyro_costos",JSON.stringify(m.costos));_costosCache=null;}
+    }
+    // Restaurar logs de puntos de distribuidores (solo si no existen localmente)
+    if(m.logs_puntos){
+      try{
+        Object.keys(m.logs_puntos).forEach(function(ruc){
+          var k="pyro_log_puntos_"+ruc;
+          if(!localStorage.getItem(k)){
+            try{localStorage.setItem(k,JSON.stringify(m.logs_puntos[ruc]));}catch(e){}
+          }
+        });
+      }catch(e){}
     }
   }).catch(function(){});
 }
