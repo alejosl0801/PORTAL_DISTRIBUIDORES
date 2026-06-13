@@ -1912,7 +1912,7 @@ function renderModoEntrega(){
   if(!sel||!ex)return;
   if(sel.value==="entrega"){
     var establecs=USER.establecimientos||[];
-    var ests=establecs.map(function(e,i){return'<option value="'+i+'">'+e.nm+" — "+e.dir+'</option>';}).join("");
+    var ests=establecs.map(function(e,i){return'<option value="'+i+'">'+escHtml((e.nm||"")+" — "+(e.dir||""))+'</option>';}).join("");
     var sinDirs=establecs.length===0;
     var hoy=new Date().toISOString().split("T")[0];
     ex.innerHTML='<label class="form-label">Dirección de entrega</label>'+
@@ -2066,7 +2066,10 @@ function confirmarPedido(){
   // Validar dirección si es entrega
   if(modo==="entrega"){
     var estSel=document.getElementById("cart-est");
-    if(estSel&&estSel.value==="nuevo"){
+    // "Dirección nueva" cuando: se eligió esa opción, O el cliente no tenía
+    // direcciones guardadas (sin selector, el formulario de dirección va directo).
+    var usarNueva=(estSel&&estSel.value==="nuevo")||(!estSel&&!!document.getElementById("nueva-dir-nm"));
+    if(usarNueva){
       var nmDir=document.getElementById("nueva-dir-nm");
       var dirDir=document.getElementById("nueva-dir-dir");
       if(!nmDir||!nmDir.value.trim()||!dirDir||!dirDir.value.trim()){
