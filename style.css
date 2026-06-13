@@ -10,7 +10,7 @@
   --som:0 2px 16px rgba(0,0,0,.10);--som2:0 8px 32px rgba(0,0,0,.16);
   --rad:16px;--rads:10px;
 }
-html[data-theme="dark"]{--g1:#1A1A1A;--g2:#2A2A2A;--g3:#888;--g4:#CCC;--blanco:#1e1e1e;--bg:#121212;--negro2:#111}
+html[data-theme="dark"]{--g1:#1A1A1A;--g2:#2A2A2A;--g3:#888;--g4:#CCC;--blanco:#1e1e1e;--bg:#121212;--negro:#eee;--negro2:#111;--verde:#27AE60;--azul:#5B9BD5;--rojo:#E74C3C;--rojo2:#C0392B;--rojo3:#FF6B6B;--amar:#F0B429;--oro:#F5C842;--verdec:#1a3a2a;--amarc:#3a2a00;--azulc:#0d1f3a;--rojoc:#3a0d0d}
 html[data-theme="dark"] .card,html[data-theme="dark"] .prod,html[data-theme="dark"] .item,html[data-theme="dark"] .resumen,html[data-theme="dark"] .acc-btn{background:#222!important;border-color:#333!important}
 html[data-theme="dark"] .form-input,html[data-theme="dark"] .form-select{background:#333;color:#eee;border-color:#444}
 html[data-theme="dark"] body{background:#111;color:#eee}

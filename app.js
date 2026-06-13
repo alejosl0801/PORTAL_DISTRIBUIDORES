@@ -1185,7 +1185,7 @@ function renderPedidoFrecuente(){
     '<div class="card-frecuente">'+
       '<div style="display:flex;align-items:center;gap:12px">'+
         '<div style="font-size:28px">🔁</div>'+
-        '<div style="flex:1"><div style="font-weight:700;font-size:14px">'+topProd.nm+'</div>'+
+        '<div style="flex:1"><div style="font-weight:700;font-size:14px">'+escHtml(topProd.nm)+'</div>'+
         '<div style="font-size:12px;color:var(--g3)">'+topCant+' unidades en '+mp.filter(function(p){return p.items.some(function(it){return it.id===topId;});}).length+' pedidos</div></div>'+
         '<button class="btn btn-p btn-sm" onclick="repetirPedido(\''+ultimoPed.id+'\')">Repetir pedido</button>'+
       '</div>'+
@@ -1472,7 +1472,7 @@ function renderProdCard(p){
   var descPctDisp=rv.descPct>0?Math.round(rv.descPct):0;
 
   if(CAT_GRID){
-    return '<div class="prod prod-grid'+(p.ago?" ago":"")+'">'+
+    return '<div class="prod prod-grid'+(p.ago?" ago":"")+'\" id="prod-card-'+p.id+'">'+
       '<div class="prod-grid-img">'+(imgSrc?'<img src="'+imgSrc+'" alt="'+escHtml(p.nm)+'" loading="lazy" onerror="this.onerror=null;this.src=IMG_PLACEHOLDER" onclick="zoomImg(\''+imgSrc+'\')" style="cursor:zoom-in">':'<div class="ph" style="font-size:36px">🧯</div>')+'</div>'+
       favBtn+
       '<div class="prod-grid-body">'+
@@ -1499,7 +1499,7 @@ function renderProdCard(p){
     proxDescHtml+
   '</div>';
 
-  return '<div class="prod'+(p.ago?" ago":"")+'\" style="position:relative">'+
+  return '<div class="prod'+(p.ago?" ago":"")+'\" id="prod-card-'+p.id+'" style="position:relative">'+
     favBtn+deseoBtn+calcBtn+
     '<div class="prod-img">'+imgHtml+'</div>'+
     '<div class="prod-info">'+
@@ -1638,11 +1638,9 @@ function cambiarCantCatalogo(id, d){
   if(msg)toast("⚠️ "+msg);
   guardarCarrito();
   actualizarBadge();
-  // Actualizar solo el input de esa tarjeta
-  var inp=document.getElementById("qty-cat-"+id);
-  if(inp)inp.value=nueva;
-  // Actualizar estilo del botón
-  renderCatalogo();
+  // Reemplazar solo la tarjeta de ese producto (evita re-render completo y pérdida de foco)
+  var cardEl=document.getElementById("prod-card-"+id);
+  if(cardEl){var newHtml=renderProdCard(p);cardEl.outerHTML=newHtml;}
   refrescarPromosSiVisible();
 }
 // Si la pestaña de inicio (con la promo de la semana) está visible, refresca los controles
@@ -1669,7 +1667,8 @@ function setCantCatalogo(id, val){
   if(msg)toast("⚠️ "+msg);
   guardarCarrito();
   actualizarBadge();
-  renderCatalogo();
+  var cardEl2=document.getElementById("prod-card-"+id);
+  if(cardEl2){var newHtml2=renderProdCard(p);cardEl2.outerHTML=newHtml2;}
   refrescarPromosSiVisible();
 }
 
@@ -1691,7 +1690,8 @@ function agregarAlCarrito(id){
   animarVueloCarrito(id);
   var cb=document.getElementById("cbadge");
   if(cb){cb.classList.remove("pop");void cb.offsetWidth;cb.classList.add("pop");}
-  renderCatalogo();
+  var cardEl3=document.getElementById("prod-card-"+id);
+  if(cardEl3){var p3=PRODUCTOS.find(function(x){return x.id===id;});if(p3)cardEl3.outerHTML=renderProdCard(p3);}
   refrescarPromosSiVisible();
 }
 
@@ -1989,10 +1989,11 @@ function quitarItem(id){
 }
 
 // ════════════════════ BORRADORES ════════════════════
+function _leerBorradores(){try{return JSON.parse(localStorage.getItem("pyro_borradores_"+(USER&&USER.ruc||"x"))||"[]");}catch(e){return[];}}
 function guardarBorrador(){
   if(!USER||!USER.ruc)return;
   if(!CARRITO.length){toast("⚠️ El carrito está vacío");return;}
-  var borradores=JSON.parse(localStorage.getItem("pyro_borradores_"+USER.ruc)||"[]");
+  var borradores=_leerBorradores();
   if(borradores.length>=3){toast("⚠️ Máximo 3 borradores. Elimina uno primero.");return;}
   borradores.push({ts:Date.now(),items:JSON.parse(JSON.stringify(CARRITO))});
   localStorage.setItem("pyro_borradores_"+USER.ruc,JSON.stringify(borradores));
@@ -2003,7 +2004,7 @@ function renderBorradores(){
   var bp=document.getElementById("borradores-panel");
   if(!bp)return;
   if(!USER||!USER.ruc){bp.innerHTML="";return;}
-  var borradores=JSON.parse(localStorage.getItem("pyro_borradores_"+USER.ruc)||"[]");
+  var borradores=_leerBorradores();
   if(!borradores.length){bp.innerHTML="";return;}
   bp.innerHTML='<div style="margin-bottom:10px"><div class="form-label">Borradores guardados</div>'+
     borradores.map(function(b,i){
@@ -2021,7 +2022,7 @@ function renderBorradores(){
 }
 function cargarBorrador(i){
   if(!USER||!USER.ruc)return;
-  var borradores=JSON.parse(localStorage.getItem("pyro_borradores_"+USER.ruc)||"[]");
+  var borradores=_leerBorradores();
   if(!borradores[i])return;
   CARRITO=JSON.parse(JSON.stringify(borradores[i].items));
   guardarCarrito(); renderCarrito(); actualizarBadge();
@@ -2029,7 +2030,7 @@ function cargarBorrador(i){
 }
 function eliminarBorrador(i){
   if(!USER||!USER.ruc)return;
-  var borradores=JSON.parse(localStorage.getItem("pyro_borradores_"+USER.ruc)||"[]");
+  var borradores=_leerBorradores();
   borradores.splice(i,1);
   localStorage.setItem("pyro_borradores_"+USER.ruc,JSON.stringify(borradores));
   renderBorradores(); toast("Borrador eliminado");
@@ -2107,7 +2108,7 @@ function confirmarPedido(){
   if(stockError.length){if(btnConf)btnConf.disabled=false;toast("⚠️ Stock insuficiente: "+stockError.join(", "));return;}
   if(!items.length){if(btnConf)btnConf.disabled=false;toast("⚠️ No hay productos válidos en el carrito");return;}
   var iva=parseFloat((subtotal*IVA).toFixed(2)), total=parseFloat((subtotal+iva).toFixed(2));
-  var pid="P"+Date.now()+Math.floor(Math.random()*1000);
+  var pid="P"+Date.now()+Math.floor(Math.random()*9000+1000);
   var now=new Date();
   var entregaInfo={};
   if(modo==="entrega"){
@@ -2454,8 +2455,8 @@ function verDetallePed(pid){
     ((p.modo==="entrega"&&p.entregaInfo&&p.entregaInfo.establecimiento)?
       '<div style="margin-top:8px;font-size:13px;color:var(--g4)"><b>Entrega a:</b> '+
       escHtml(p.entregaInfo.establecimiento.nm||"")+' — '+escHtml(p.entregaInfo.establecimiento.dir||"")+
-      (p.entregaInfo.fecha?'<br><b>Fecha solicitada:</b> '+p.entregaInfo.fecha:'')+
-      (p.entregaInfo.hora?'<br><b>Horario:</b> '+p.entregaInfo.hora:'')+
+      (p.entregaInfo.fecha?'<br><b>Fecha solicitada:</b> '+escHtml(p.entregaInfo.fecha):'')+
+      (p.entregaInfo.hora?'<br><b>Horario:</b> '+escHtml(p.entregaInfo.hora):'')+
       '</div>':'')+
     (p.notas?'<div style="margin-top:8px;font-size:13px;color:var(--g4)"><b>Notas:</b> '+escHtml(p.notas)+'</div>':'')+
     (p.puntos?'<div style="margin-top:8px;font-size:13px;color:#B8860B;font-weight:700">🏆 '+fmtPts(p.puntos)+' puntos '+(p.estado==="finalizado"?"acreditados":p.estado==="entregado"?"confirmados al finalizar":"pendientes")+'</div>':'')+
@@ -3115,7 +3116,7 @@ function generarProforma(pid){
       '<tr class="total-final"><td>TOTAL:</td><td style="text-align:right">'+fmt$(p.total)+'</td></tr>'+
     '</table></div>'+
     (ahorroTotal>0.005?'<div class="ahorro-box">🎉 Ahorro total en este pedido: '+fmt$(ahorroTotal)+'</div>':'')+
-    '<div style="margin-top:16px;font-size:11px"><b>Forma de pago:</b> '+p.pago+'</div>'+
+    '<div style="margin-top:16px;font-size:11px"><b>Forma de pago:</b> '+escHtml(p.pago||"—")+'</div>'+
     '<div class="footer">'+
       'Esta proforma tiene validez de 15 días a partir de la fecha de emisión.<br>'+
       'PyroShield — Soluciones contra incendios'+
@@ -3348,7 +3349,7 @@ function renderAdmDist(){
         (d.sinDescVol?'<span class="badge b-rojo">Sin desc. volumen</span>':'')+
         (d.entrega&&d.entrega.habilitada?'<span class="badge b-azul">🚚 Entrega $'+d.entrega.montoMin+'+</span>':'<span class="badge b-gris">Solo retiro</span>')+
         (d.bloqueado?'<span class="badge b-rojo">🚫 Bloqueado'+(d.bloqueoRazon?' — '+escHtml(d.bloqueoRazon):'')+' </span>':'')+
-        (d.saldoPendiente>0?'<span class="badge b-rojo">💲 Debe $'+(d.saldoPendiente).toFixed(2)+'</span>':'')+
+        (d.saldoPendiente>0?'<span class="badge b-rojo">💲 Debe $'+(+d.saldoPendiente||0).toFixed(2)+'</span>':'')+
       '</div>'+
       (d.notasInternas?'<div style="margin-top:6px;font-size:11px;color:var(--g3);background:var(--g1);border-radius:8px;padding:6px 8px">📝 '+escHtml(d.notasInternas)+'</div>':'')+
       '<div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap">'+
@@ -3581,7 +3582,8 @@ function confirmarLimpiarDatos(){
   // Claves fijas a borrar
   ["pyro_pedidos","pyro_stock","pyro_sesion","pyro_dist_extra",
    "pyro_cola_offline","pyro_sync_pendientes","pyro_ultimo_backup",
-   "pyro_log_accesos","pyro_notif_vistas","pyro_last_ruc"
+   "pyro_log_accesos","pyro_notif_vistas","pyro_last_ruc",
+   "pyro_descvol","pyro_dist_eliminados","pyro_ped_eliminados","pyro_cat_grid"
   ].forEach(function(k){try{localStorage.removeItem(k);}catch(e){}});
   // Claves por prefijo (por RUC o por sesión)
   var keys=[];try{for(var i=0;i<localStorage.length;i++)keys.push(localStorage.key(i));}catch(e){}
@@ -3590,7 +3592,8 @@ function confirmarLimpiarDatos(){
     "pyro_log_puntos_","pyro_avatar_","pyro_pwa_","pyro_biometria_",
     "pyro_bio_skip_","pyro_busquedas_","pyro_deseos_","pyro_favs_",
     "pyro_logro_madrug_","pyro_logro_noct_","pyro_primer_ingreso_",
-    "pyro_tut_resetado_","pyro_ultima_tab_"
+    "pyro_tut_resetado_","pyro_ultima_tab_",
+    "pyro_pass_alerta_","pyro_bienvenida_","pyro_umbral_"
   ];
   keys.filter(function(k){return k&&prefijos.some(function(p){return k.startsWith(p);});})
     .forEach(function(k){try{localStorage.removeItem(k);}catch(e){}});
@@ -3681,7 +3684,7 @@ function renderAdmStock(){
         var umbralBadge=(p.stock<=umbral&&p.stock>0)?'<span class="badge b-amar">⚠️ Bajo umbral</span>':'';
         var costoActual=costos[p.id]!=null?costos[p.id]:p.costo;
         return '<div class="card" style="margin-bottom:8px;'+bajoBorde+'"><div class="card-b">'+
-          '<div style="font-size:13px;font-weight:700;margin-bottom:8px">'+p.nm+' <span style="font-size:10px;color:var(--g3);font-weight:400">'+p.id+'</span></div>'+
+          '<div style="font-size:13px;font-weight:700;margin-bottom:8px">'+escHtml(p.nm)+' <span style="font-size:10px;color:var(--g3);font-weight:400">'+escHtml(p.id)+'</span></div>'+
           '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">'+
             '<span class="badge '+col+'">'+lab+'</span>'+umbralBadge+
             '<div style="display:flex;align-items:center;gap:4px">'+
@@ -4282,7 +4285,7 @@ function cargarDistribuidoresExtra(){
         if(!DISTRIBUIDORES[k].esAdmin&&DISTRIBUIDORES[k].rol!=="impresion"&&elim.indexOf(DISTRIBUIDORES[k].ruc)!==-1)DISTRIBUIDORES.splice(k,1);
       }
     }
-    var extra=JSON.parse(localStorage.getItem("pyro_dist_extra")||"[]");
+    var extra=[];try{extra=JSON.parse(localStorage.getItem("pyro_dist_extra")||"[]");}catch(e){}
     extra.forEach(function(d){
       if(elim.indexOf(d.ruc)!==-1)return;
       var idx=DISTRIBUIDORES.findIndex(function(x){return x.ruc===d.ruc;});
@@ -4574,7 +4577,7 @@ window.addEventListener("load",function(){
   }catch(e){}
   var lp=document.getElementById("login-pass"),lu=document.getElementById("login-user");
   if(lp)lp.addEventListener("keydown",function(e){if(e.key==="Enter")hacerLogin();});
-  if(lu)lu.addEventListener("keydown",function(e){if(e.key==="Enter")lp.focus();});
+  if(lu)lu.addEventListener("keydown",function(e){if(e.key==="Enter"&&lp)lp.focus();});
   // Recordar último RUC: prellenar y enfocar la contraseña
   try{var lastRuc=localStorage.getItem("pyro_last_ruc");if(lastRuc&&lu&&!lu.value){lu.value=lastRuc;if(lp)setTimeout(function(){lp.focus();},100);}}catch(e){}
   if('serviceWorker' in navigator){
@@ -4896,7 +4899,8 @@ function registrarBiometria(ruc,pw){
     authenticatorSelection:{userVerification:"preferred"},
     timeout:60000
   }}).then(function(cred){
-    var data={id:cred.id,ruc:ruc,pw:pw};
+    // Guardar hash en vez de la contraseña en texto plano
+    var data={id:cred.id,ruc:ruc,pw:sha256(pw)};
     localStorage.setItem("pyro_biometria_"+ruc,JSON.stringify(data));
     toast("✅ Biometría activada");
     mostrarBotonBiometria();
@@ -4913,9 +4917,13 @@ function loginBiometrico(){
       timeout:60000,
       allowCredentials:[{type:"public-key",id:_b64ToUint8(bio.id)}]
     }}).then(function(){
-      document.getElementById("login-user").value=bio.ruc;
-      document.getElementById("login-pass").value=bio.pw;
-      hacerLogin();
+      // Autenticar directamente con el hash almacenado (passCoincide soporta hash directo)
+      if(loginConCredenciales(bio.ruc,bio.pw)){
+        var errEl=document.getElementById("login-err");if(errEl)errEl.style.display="none";
+        finalizarLogin(bio.ruc,bio.pw);
+      } else {
+        toast("⚠️ Biometría: usuario no encontrado. Inicia sesión manualmente.");
+      }
     }).catch(function(e){toast("Biometría fallida: "+e.message);});
   }catch(e){toast("Error biometría: "+e);}
 }
@@ -4933,7 +4941,7 @@ function sincronizarDesdeNube(ruc){
   if(!GAS_URL)return;
   var url=GAS_URL+"?accion=obtenerPedidos&token="+encodeURIComponent(GAS_TOKEN)+(ruc?"&ruc="+encodeURIComponent(ruc):"");
   fetch(url).then(function(r){return r.json();}).then(function(data){
-    if(!data.ok||!data.pedidos||!data.pedidos.length)return;
+    if(!data||!data.ok||!data.pedidos||!data.pedidos.length)return;
     var local=[];try{local=JSON.parse(localStorage.getItem("pyro_pedidos")||"[]");}catch(e){}
     var porId={};local.forEach(function(p){porId[p.id]=p;});
     // Pedidos eliminados localmente (ej. al editar) — no resucitarlos desde la nube
