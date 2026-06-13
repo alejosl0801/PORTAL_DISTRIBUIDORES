@@ -3432,10 +3432,11 @@ function abrirEditarDist(ruc){
       '<input type="checkbox" id="ed-sinvol" '+(d.sinDescVol?"checked":"")+' style="width:18px;height:18px">'+
       '<label for="ed-sinvol" style="font-size:14px;color:var(--rojo)">Sin descuentos por volumen</label>'+
     '</div>'+
-    '<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">'+
+    '<div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">'+
       '<input type="checkbox" id="ed-bloqueado" '+(d.bloqueado?"checked":"")+' style="width:18px;height:18px">'+
       '<label for="ed-bloqueado" style="font-size:14px;color:var(--rojo)">🚫 Bloquear acceso (no puede iniciar sesión)</label>'+
     '</div>'+
+    '<input class="form-input" id="ed-bloqueo-razon" placeholder="Motivo del bloqueo (opcional)" value="'+escHtml(d.bloqueoRazon||"")+'" style="margin-bottom:12px">'+
     '<label class="form-label">Saldo pendiente ($)</label>'+
     '<input class="form-input" id="ed-saldo" type="number" step="0.01" value="'+(d.saldoPendiente||0)+'">'+
     '<div style="display:flex;gap:8px"><div style="flex:1"><label class="form-label">Latitud (mapa)</label>'+
