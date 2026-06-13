@@ -1983,7 +1983,7 @@ function cambiarCant(id,d){
     if(p&&p.stock!=null&&it.cant>=p.stock){toast("⚠️ Solo hay "+p.stock+" unidades disponibles");return;}
   }
   it.cant+=d;
-  if(it.cant<0)it.cant=0;
+  if(it.cant<=0){CARRITO=CARRITO.filter(function(i){return i.id!==id;});guardarCarrito();renderCarrito();actualizarBadge();return;}
   // Al bajar por debajo del mínimo del producto, ajustar al mínimo (o quitar si llega a 0)
   if(p&&d<0&&it.cant>0){
     var min=cantMinProducto(p);
