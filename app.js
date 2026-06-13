@@ -539,6 +539,8 @@ function primerIngresoGuardarPass(){
   if(v1!==v2){toast("⚠️ Las contraseñas no coinciden");return;}
   USER.pass=sha256(v1);
   USER.passModificado=true;
+  // Invalidar biometría: el hash almacenado ya no coincidirá con la nueva contraseña
+  try{localStorage.removeItem("pyro_biometria_"+USER.ruc);}catch(e){}
   guardarDistribuidores();
   try{localStorage.setItem("pyro_sesion",JSON.stringify({ruc:USER.ruc}));}catch(e){}
   toast("✅ Contraseña actualizada");
@@ -2273,7 +2275,7 @@ function renderHistorial(){
   var pedidosHtml=mp.length?mp.map(function(p){
     var confirmados=(p.estado==="finalizado");
     var ptsHtml=p.esBienvenida?
-      '<div class="ped-pts" style="color:#B8860B">🎁 Regalo de bienvenida</div>'+
+      '<div class="ped-pts" style="color:var(--oro)">🎁 Regalo de bienvenida</div>'+
       '<div style="font-size:11px;color:var(--g3);margin-top:3px">¡Gracias por unirte! Coordinaremos tu combo con tu primer pedido.</div>':
       p.esCanje?
       '<div class="ped-pts">🎁 Canjeaste '+fmtPts(p.canjePts)+' pts</div>'+
@@ -2459,7 +2461,7 @@ function verDetallePed(pid){
       (p.entregaInfo.hora?'<br><b>Horario:</b> '+escHtml(p.entregaInfo.hora):'')+
       '</div>':'')+
     (p.notas?'<div style="margin-top:8px;font-size:13px;color:var(--g4)"><b>Notas:</b> '+escHtml(p.notas)+'</div>':'')+
-    (p.puntos?'<div style="margin-top:8px;font-size:13px;color:#B8860B;font-weight:700">🏆 '+fmtPts(p.puntos)+' puntos '+(p.estado==="finalizado"?"acreditados":p.estado==="entregado"?"confirmados al finalizar":"pendientes")+'</div>':'')+
+    (p.puntos?'<div style="margin-top:8px;font-size:13px;color:var(--oro);font-weight:700">🏆 '+fmtPts(p.puntos)+' puntos '+(p.estado==="finalizado"?"acreditados":p.estado==="entregado"?"confirmados al finalizar":"pendientes")+'</div>':'')+
     (p.calificacion?'<div style="margin-top:8px;font-size:13px">Calificación: '+"⭐".repeat(Math.max(0,Math.min(5,p.calificacion.estrellas||0)))+'<br><i>'+escHtml(p.calificacion.comentario||"")+'</i></div>':'')+
     (!p.esCanje?renderTrackingPedido(p.estado):'')+
     ((!p.esCanje&&p.items&&p.items.length)?
@@ -2938,7 +2940,7 @@ function admVerPedido(pid){
       return '<div class="rrow"><span>'+escHtml(it.nm)+' x'+it.cant+'</span><span>'+fmt$(it.pr*it.cant)+'</span></div>';
     }).join("")+'<div class="rrow tot"><span>TOTAL</span><span>'+fmt$(p.total)+'</span></div>';
     html+='<div style="margin-top:10px;font-size:13px"><b>Pago:</b> '+escHtml(p.pago)+'</div>';
-    if(p.puntos)html+='<div style="font-size:13px;color:#B8860B;font-weight:700;margin-top:4px">🏆 '+fmtPts(p.puntos)+' puntos</div>';
+    if(p.puntos)html+='<div style="font-size:13px;color:var(--oro);font-weight:700;margin-top:4px">🏆 '+fmtPts(p.puntos)+' puntos</div>';
     if(p.calificacion)html+='<div style="margin-top:8px;font-size:13px">Calificación: '+"⭐".repeat(p.calificacion.estrellas)+' '+( p.calificacion.comentario?'<i>"'+escHtml(p.calificacion.comentario)+'"</i>':"")+' </div>';
     // Botones de acción
     html+='<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">'+
@@ -3298,7 +3300,7 @@ function renderAdmAlertas(){
   if(!alertas.length)return'<div style="background:var(--verdec);border:1.5px solid var(--verde);border-radius:10px;padding:12px 14px;font-size:13px;color:var(--verde);margin-bottom:14px">✅ Todo en orden — sin alertas críticas</div>';
   return'<div style="display:grid;gap:8px;margin-bottom:14px">'+alertas.map(function(a){
     var bg=a.tipo==="rojo"?"var(--rojoc)":"var(--amarc)";
-    var col=a.tipo==="rojo"?"var(--rojo)":"#8a6600";
+    var col=a.tipo==="rojo"?"var(--rojo)":"var(--amar)";
     var border=a.tipo==="rojo"?"var(--rojo)":"var(--amar)";
     return'<div onclick="'+a.accion+'" style="background:'+bg+';border:1.5px solid '+border+';border-radius:10px;padding:10px 14px;display:flex;align-items:center;gap:10px;cursor:pointer"><span style="font-size:20px">'+a.ico+'</span><span style="font-size:13px;font-weight:600;color:'+col+'">'+escHtml(a.msg)+'</span><span style="margin-left:auto;font-size:12px;color:'+col+'">Ver →</span></div>';
   }).join("")+'</div>';
@@ -3477,7 +3479,7 @@ function guardarEditarDist(ruc){
   d.tel=document.getElementById("ed-tel").value.trim();
   d.correo=document.getElementById("ed-correo").value.trim();
   var newPass=document.getElementById("ed-pass").value.trim();
-  if(newPass){d.pass=sha256(newPass);d.passModificado=true;}
+  if(newPass){d.pass=sha256(newPass);d.passModificado=true;try{localStorage.removeItem("pyro_biometria_"+d.ruc);}catch(e){}}
   d.sinDescVol=document.getElementById("ed-sinvol").checked;
   if(!d.entrega)d.entrega={};
   d.entrega.habilitada=document.getElementById("ed-entrega").checked;
@@ -3663,7 +3665,7 @@ function renderAdmStock(){
     '<label class="btn btn-s btn-sm" style="cursor:pointer">📤 Importar CSV<input type="file" accept=".csv" style="display:none" onchange="importarStock(event)"></label>'+
     '</div>'+
     '<details style="background:var(--g1);border-radius:10px;padding:12px 14px;margin-bottom:14px"><summary style="font-weight:700;font-size:14px;cursor:pointer;list-style:none">📈 Historial de cambios de precios ▸</summary><div style="margin-top:10px">'+renderHistorialPrecios()+'</div></details>'+
-  '<div style="background:var(--amarc);border:1.5px solid var(--amar);border-radius:10px;padding:10px 14px;margin-bottom:14px;font-size:12px;color:#8a6600">'+
+  '<div style="background:var(--amarc);border:1.5px solid var(--amar);border-radius:10px;padding:10px 14px;margin-bottom:14px;font-size:12px;color:var(--amar)">'+
     '💡 <b>Para importar:</b> Exporta el Excel, edita solo la columna <b>Stock</b> (número), guarda como CSV y reimporta. El estado se recalcula automáticamente.'+
   '</div>';
   // Notificación agrupada de productos bajo umbral
@@ -4019,7 +4021,7 @@ function renderAdmRecompensas(){
         '</div>'+
         '<div style="display:flex;gap:6px;flex-wrap:wrap">'+
           '<button class="btn btn-sm btn-s" onclick="editarRecompensa('+i+')">✏️ Editar</button>'+
-          '<button class="btn btn-sm" style="background:'+(r.agotado?"var(--verdec)":"var(--amarc)")+';color:'+(r.agotado?"var(--verde)":"#8a6600")+';border-color:'+(r.agotado?"var(--verde)":"var(--amar)")+'" onclick="toggleAgotadoRecompensa('+i+')">'+(r.agotado?"✅ Disponible":"⚠️ Agotar")+'</button>'+
+          '<button class="btn btn-sm" style="background:'+(r.agotado?"var(--verdec)":"var(--amarc)")+';color:'+(r.agotado?"var(--verde)":"var(--amar)")+';border-color:'+(r.agotado?"var(--verde)":"var(--amar)")+'" onclick="toggleAgotadoRecompensa('+i+')">'+(r.agotado?"✅ Disponible":"⚠️ Agotar")+'</button>'+
           '<button class="btn btn-sm" style="background:var(--rojoc);color:var(--rojo);border-color:var(--rojo)" onclick="eliminarRecompensa('+i+')">🗑</button>'+
         '</div>'+
       '</div>'+
