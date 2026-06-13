@@ -4878,7 +4878,7 @@ function guardarDescVol(){
   tiers.sort(function(a,b){return a[0]-b[0];});
   var dv={};try{dv=JSON.parse(localStorage.getItem("pyro_descvol")||"{}");}catch(e){}
   dv[_descvolId]=tiers;
-  localStorage.setItem("pyro_descvol",JSON.stringify(dv));
+  try{localStorage.setItem("pyro_descvol",JSON.stringify(dv));}catch(e){avisarStorage();}
   var p=PRODUCTOS.find(function(x){return x.id===_descvolId;});
   if(p)p.descVol=tiers;
   backupCambio();
