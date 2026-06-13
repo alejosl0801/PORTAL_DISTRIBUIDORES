@@ -2893,6 +2893,9 @@ function admVerPedido(pid){
   if(!p)return;
   // Estados editables por admin (finalizado se asigna automáticamente al facturar)
   var estadosAdmin=['pendiente','en_proceso','entregado','cancelado'];
+  // El estado actual SIEMPRE debe estar en la lista; si no (ej. facturado/finalizado),
+  // se antepone seleccionado para no degradar el pedido al guardar.
+  if(p.estado&&estadosAdmin.indexOf(p.estado)===-1)estadosAdmin=[p.estado].concat(estadosAdmin);
   var html='<div class="mhandle"></div><h3>'+(p.esCanje?"Canje":"Pedido")+" #"+p.id+'</h3>'+
     (p.esCanje&&p.canjeNm?'<div style="font-size:15px;font-weight:700;color:var(--oro);margin-bottom:8px">🎁 '+escHtml(p.canjeNm)+'</div>':'')+
     '<div style="font-size:12px;color:var(--g3);margin-bottom:12px">'+escHtml(p.razon)+' · '+tipoDocLabel(DISTRIBUIDORES.find(function(d){return d.ruc===p.ruc;})||{ruc:p.ruc})+': '+escHtml(p.ruc)+' · '+escHtml(p.fecha)+'</div>'+
@@ -2960,9 +2963,9 @@ function renderResumenDist(ruc){
   var esteMes=peds.filter(function(p){var d=parseFechaPed(p);return d.getMonth()===ahora.getMonth()&&d.getFullYear()===ahora.getFullYear();});
   var mesPas=peds.filter(function(p){var d=parseFechaPed(p);var m=ahora.getMonth()-1;var y=ahora.getFullYear();if(m<0){m=11;y--;}return d.getMonth()===m&&d.getFullYear()===y;});
   var anio=peds.filter(function(p){var d=parseFechaPed(p);return d.getFullYear()===ahora.getFullYear();});
-  var totEste=esteMes.reduce(function(s,p){return s+p.subtotal;},0);
-  var totPas=mesPas.reduce(function(s,p){return s+p.subtotal;},0);
-  var totAnio=anio.reduce(function(s,p){return s+p.subtotal;},0);
+  var totEste=esteMes.reduce(function(s,p){return s+(p.subtotal||0);},0);
+  var totPas=mesPas.reduce(function(s,p){return s+(p.subtotal||0);},0);
+  var totAnio=anio.reduce(function(s,p){return s+(p.subtotal||0);},0);
   var ptsAcum=peds.filter(function(p){return p.estado==="entregado"||p.estado==="finalizado";}).reduce(function(s,p){return s+(p.puntos||0);},0);
   return '<div style="background:var(--g1);border-radius:10px;padding:12px;margin-top:12px;font-size:12px">'+
     '<div style="font-weight:700;margin-bottom:8px">Resumen de compras (subtotales sin IVA)</div>'+
@@ -3205,8 +3208,8 @@ function generarWA(pid){
   var msg="*PyroShield — Pedido #"+p.id+"*\n\nHola "+p.razon+"!\n\n";
   if(p.items)p.items.forEach(function(it){msg+="• "+it.nm+" x"+it.cant+" — "+fmt$(it.pr*it.cant)+"\n";});
   msg+="\n*Subtotal:* "+fmt$(p.subtotal)+"\n*IVA 15%:* "+fmt$(p.iva)+"\n*Total:* "+fmt$(p.total)+"\n";
-  msg+="\n*Forma de pago:* "+p.pago+"\n";
-  var pg=p.pago.toUpperCase();
+  msg+="\n*Forma de pago:* "+(p.pago||"—")+"\n";
+  var pg=(p.pago||"").toUpperCase();
   if(pg.indexOf("EFECTIVO")!==-1)msg+="Por favor ten listo el pago en efectivo al momento de la entrega.";
   else if(pg.indexOf("TRANSFERENCIA")!==-1)msg+="Por favor ayúdanos con el comprobante de transferencia.";
   else if(pg.indexOf("CHEQUE")!==-1||pg.indexOf("CRÉDITO")!==-1||pg.indexOf("CREDITO")!==-1)msg+="Recuerda que el pago es únicamente válido con cheque a la fecha al momento de la entrega.";
