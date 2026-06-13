@@ -2628,7 +2628,7 @@ function canjear(idx){
   if(saldoPuntos()<pts){toast("⚠️ No tienes suficientes puntos confirmados");return;}
   confirmar("¿Canjear <b>"+fmtPts(pts)+" puntos</b> por <b>"+escHtml(nm)+"</b>?<br><small>Se coordinará con tu próximo pedido.</small>",function(){
     if(saldoPuntos()<pts){toast("⚠️ Ya no tienes suficientes puntos");renderRecompensas();return;}
-    var pid="C"+Date.now()+Math.floor(Math.random()*1000);
+    var pid="C"+Date.now()+Math.floor(Math.random()*9000+1000);
     var pedCanje={id:pid,ruc:USER.ruc,razon:USER.razon,fecha:new Date().toLocaleDateString("es-EC"),fechaISO:new Date().toISOString(),esCanje:true,canjePts:pts,canjeNm:nm,estado:"pendiente",total:0,puntos:0};
     PEDIDOS.push(pedCanje);
     guardarPedidos();
@@ -3583,7 +3583,7 @@ function confirmarLimpiarDatos(){
   ["pyro_pedidos","pyro_stock","pyro_sesion","pyro_dist_extra",
    "pyro_cola_offline","pyro_sync_pendientes","pyro_ultimo_backup",
    "pyro_log_accesos","pyro_notif_vistas","pyro_last_ruc",
-   "pyro_descvol","pyro_dist_eliminados","pyro_ped_eliminados","pyro_cat_grid"
+   "pyro_descvol","pyro_dist_eliminados","pyro_ped_eliminados","pyro_cat_grid","pyro_costos","pyro_umbrales"
   ].forEach(function(k){try{localStorage.removeItem(k);}catch(e){}});
   // Claves por prefijo (por RUC o por sesión)
   var keys=[];try{for(var i=0;i<localStorage.length;i++)keys.push(localStorage.key(i));}catch(e){}
@@ -4208,8 +4208,8 @@ function reintentarSyncPendientes(){
 }
 
 // ════════════════════ MODALES / UTIL ════════════════════
-function abrir(id){document.getElementById(id).classList.add("open");}
-function cerrarModal(id){document.getElementById(id).classList.remove("open");}
+function abrir(id){var el=document.getElementById(id);if(el)el.classList.add("open");}
+function cerrarModal(id){var el=document.getElementById(id);if(el)el.classList.remove("open");}
 function abrirContacto(){abrir("modal-contacto");}
 var _tt;
 function toast(m){var t=document.getElementById("toast");t.className="toast";t.textContent=m;t.classList.add("show");clearTimeout(_tt);_tt=setTimeout(function(){t.classList.remove("show");},2400);}

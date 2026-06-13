@@ -138,7 +138,7 @@ html[data-theme="dark"] body{background:#0a0a0a;}
 .badge{display:inline-block;padding:3px 9px;border-radius:20px;font-size:10px;font-weight:700}
 .b-rojo{background:var(--rojoc);color:var(--rojo)}.b-verde{background:var(--verdec);color:var(--verde)}
 .b-azul{background:var(--azulc);color:var(--azul)}.b-gris{background:var(--g2);color:var(--g4)}
-.b-amar{background:var(--amarc);color:#B8860B}.b-oro{background:rgba(232,185,35,.18);color:#B8860B}
+.b-amar{background:var(--amarc);color:var(--amar)}.b-oro{background:rgba(232,185,35,.18);color:var(--oro)}
 .btn{padding:14px 20px;border-radius:var(--rads);border:none;font-family:'Barlow',sans-serif;font-size:14px;font-weight:600;cursor:pointer;transition:.15s;min-height:48px}
 .btn:active{transform:scale(.97);opacity:.9}
 .btn-p{background:var(--rojo);color:#fff}.btn-s{background:var(--g1);color:var(--g4);border:1.5px solid var(--g2)}
