@@ -2663,7 +2663,7 @@ function admTab(t,btn){
   document.querySelectorAll(".adm-tab").forEach(function(b){b.classList.remove("active");});
   if(btn)btn.classList.add("active");
   document.querySelectorAll(".adm-panel").forEach(function(p){p.classList.remove("active");});
-  document.getElementById("adm-"+t).classList.add("active");
+  var panelEl=document.getElementById("adm-"+t);if(panelEl)panelEl.classList.add("active");
   if(t==="pedidos")renderAdmPedidos();
   if(t==="dashboard")renderAdmDashboard();
   if(t==="distribuidores")renderAdmDist();
@@ -2730,10 +2730,11 @@ function renderRolImpresion(){
     return '<button class="fbtn'+(ADM_PED_FILTRO===o.f?" active":"")+'" onclick="setAdmPedFiltro(\''+o.f+'\')">'+o.l+'</button>';
   }).join("")+'</div>';
   var lista=PEDIDOS.slice().reverse().filter(function(p){return!p.esCanje;}).filter(filtrarPedAdmin);
-  document.getElementById("adm-ped-lista").innerHTML=filtrosHtml+(lista.length?lista.map(function(p){
+  var admPedLista=document.getElementById("adm-ped-lista");if(!admPedLista)return;
+  admPedLista.innerHTML=filtrosHtml+(lista.length?lista.map(function(p){
     return '<div class="card"><div class="card-b">'+
       '<div style="display:flex;justify-content:space-between;align-items:center">'+
-        '<div><div style="font-weight:700">Pedido #'+p.id+'</div>'+
+        '<div><div style="font-weight:700">Pedido #'+escHtml(p.id)+'</div>'+
         '<div style="font-size:12px;color:var(--g3)">'+escHtml(p.razon)+' · '+escHtml(p.fecha)+'</div></div>'+
         '<span class="est-chip '+estadoClass(p.estado)+'">'+estadoLabelAdmin(p.estado)+'</span>'+
       '</div>'+
@@ -2805,7 +2806,7 @@ function renderAdmDashboard(){
   var canjesEntregadosArr=canjes.filter(function(p){return p.estado==="entregado"||p.estado==="finalizado";});
   var canjesEntregados=canjesEntregadosArr.length;
   var costoCanjes=costoCanjesEntregados(canjesEntregadosArr);
-  document.getElementById("adm-stats").innerHTML=
+  var admStats=document.getElementById("adm-stats");if(admStats)admStats.innerHTML=
     '<div class="adm-stat"><div class="v">'+nuevos+'</div><div class="l">Nuevos pedidos</div></div>'+
     '<div class="adm-stat"><div class="v">'+fmt$(totalVendido)+'</div><div class="l">Total vendido (subtotal)</div></div>'+
     '<div class="adm-stat"><div class="v">'+fmt$(utilidad)+'</div><div class="l">Utilidad generada</div></div>'+
@@ -2847,7 +2848,8 @@ function renderAdmPedidos(){
     return (p.id||"").toLowerCase().indexOf(busqPed)!==-1||(p.razon||"").toLowerCase().indexOf(busqPed)!==-1||(p.ruc||"").toLowerCase().indexOf(busqPed)!==-1;
   });
   var busqHtml='<div style="margin-bottom:8px"><input id="adm-ped-busq" class="form-input" placeholder="🔍 Buscar por pedido, distribuidor o RUC..." oninput="renderAdmPedidos()" style="font-size:13px;padding:6px 10px"></div>';
-  document.getElementById("adm-ped-lista").innerHTML=busqHtml+filtrosHtml+(lista.length?lista.map(function(p){
+  var admPL=document.getElementById("adm-ped-lista");if(!admPL)return;
+  admPL.innerHTML=busqHtml+filtrosHtml+(lista.length?lista.map(function(p){
     var facBadge="";
     if(!p.esCanje){
       if(p.azurFactura)facBadge='<span class="badge b-verde" style="font-size:10px">✔️ Facturado</span>';
@@ -3327,9 +3329,11 @@ function exportarExcelDist(){
 function renderAdmDist(){
   if(USER&&USER.rol==="impresion")return;
   var lista=DISTRIBUIDORES.filter(function(d){return!d.esAdmin;});
-  var q=(document.getElementById("adm-dist-search").value||"").toLowerCase();
+  var _dss=document.getElementById("adm-dist-search");
+  var q=(_dss?_dss.value||"":"").toLowerCase();
   if(q)lista=lista.filter(function(d){return norm(d.razon).indexOf(norm(q))!==-1||d.ruc.indexOf(q)!==-1;});
-  document.getElementById("adm-dist-lista").innerHTML='<div style="margin-bottom:10px"><button class="btn btn-s btn-sm" onclick="exportarExcelDist()">📥 Exportar Excel</button></div>'+(lista.length?lista.map(function(d){
+  var admDistLista=document.getElementById("adm-dist-lista");if(!admDistLista)return;
+  admDistLista.innerHTML='<div style="margin-bottom:10px"><button class="btn btn-s btn-sm" onclick="exportarExcelDist()">📥 Exportar Excel</button></div>'+(lista.length?lista.map(function(d){
     var nped=PEDIDOS.filter(function(p){return p.ruc===d.ruc&&!p.esCanje;}).length;
     var esp=d.preciosEsp?Object.keys(d.preciosEsp).length:0;
     return '<div class="card"><div class="card-b">'+
@@ -4027,7 +4031,7 @@ function renderAdmRecompensas(){
       '</div>'+
     '</div></div>';
   }).join(""):'<div class="empty"><div class="ico">🎁</div><p>No hay recompensas configuradas</p></div>');
-  document.getElementById("adm-recompensas").innerHTML=html;
+  var admRwEl=document.getElementById("adm-recompensas");if(admRwEl)admRwEl.innerHTML=html;
 }
 
 function abrirNuevaRecompensa(){
