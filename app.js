@@ -242,6 +242,10 @@ function saldoPuntos(){
 // SHA-256 síncrono (impl. compacta de Geraint Luff, dominio público) para
 // soportar contraseñas guardadas como hash (ej. ADMIN) sin texto plano.
 function sha256(ascii){
+  // Normalizar a bytes UTF-8: sin esto, tildes/ñ dan un hash no estándar y los
+  // caracteres fuera de Latin-1 (emojis, etc.) hacían que la función devolviera
+  // undefined → la contraseña se guardaba vacía y el cliente quedaba bloqueado.
+  try{ascii=unescape(encodeURIComponent(ascii));}catch(e){}
   function rightRotate(value,amount){return(value>>>amount)|(value<<(32-amount));}
   var mathPow=Math.pow;var maxWord=mathPow(2,32);var result="";
   var words=[];var asciiBitLength=ascii.length*8;
