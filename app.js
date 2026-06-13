@@ -1521,7 +1521,7 @@ function toggleFav(id){
   else FAVORITOS.splice(idx,1);
   try{localStorage.setItem("pyro_favs_"+USER.ruc,JSON.stringify(FAVORITOS));}catch(e){}
   // En modo Favoritos hay que re-renderizar para que la tarjeta desaparezca; en el resto solo actualizarla
-  if(FILTRO==="favs"){renderCatalogo();return;}
+  if(FILTRO==="favoritos"){renderCatalogo();return;}
   var p=PRODUCTOS.find(function(x){return x.id===id;});
   var cardEl=document.getElementById("prod-card-"+id);
   if(p&&cardEl){cardEl.outerHTML=renderProdCard(p);}else{renderCatalogo();}
@@ -2178,7 +2178,7 @@ function estadoLabel(e){
     autorizado:"🚚 En proceso",
     entrega:"🚚 En proceso",
     entregado:"📦 Entregado",
-    facturado:"🚚 En proceso",
+    facturado:"🧾 Facturado",
     finalizado:"✔️ Finalizado",
     cancelado:"✕ Cancelado"
   };
@@ -2291,7 +2291,7 @@ function renderHistorial(){
       '<div style="font-size:11px;color:var(--g3);margin-top:3px">Tu regalo será entregado en 0 a 7 días laborables.</div>':
       (confirmados
         ?'<div class="ped-pts" style="color:var(--verde)">🏆 '+fmtPts(p.puntos||0)+' puntos acreditados</div>'
-        :(p.estado==="entregado"
+        :((p.estado==="entregado"||p.estado==="facturado")
           ?'<div class="ped-pts" style="color:var(--amar)">⏳ '+fmtPts(p.puntos||0)+' puntos confirmados al finalizar</div>'
           :(p.estado!=="cancelado"?'<div class="ped-pts" style="color:var(--amar)">⏳ '+fmtPts(p.puntos||0)+' puntos pendientes</div>':'')));
     var califShow=p.calificacion?'<div style="font-size:11px;color:var(--g3);margin-top:4px">Calificación: '+"⭐".repeat(Math.max(0,Math.min(5,p.calificacion.estrellas||0)))+'</div>':"";
@@ -3610,7 +3610,7 @@ function confirmarLimpiarDatos(){
    "pyro_cola_offline","pyro_sync_pendientes","pyro_ultimo_backup",
    "pyro_log_accesos","pyro_notif_vistas","pyro_last_ruc",
    "pyro_descvol","pyro_dist_eliminados","pyro_ped_eliminados","pyro_cat_grid","pyro_costos","pyro_umbrales",
-   "pyro_rewards","pyro_hist_precios"
+   "pyro_rewards","pyro_hist_precios","pyro_recuerdo"
   ].forEach(function(k){try{localStorage.removeItem(k);}catch(e){}});
   // Claves por prefijo (por RUC o por sesión)
   var keys=[];try{for(var i=0;i<localStorage.length;i++)keys.push(localStorage.key(i));}catch(e){}
@@ -3658,9 +3658,9 @@ function guardarNuevoDist(){
   var soloNum=ruc.replace(/[^0-9]/g,"");
   if(tipoDoc==="cedula"&&soloNum.length!==10){toast("⚠️ La cédula debe tener 10 dígitos");if(btnNd)btnNd.disabled=false;return;}
   if(tipoDoc==="ruc"&&soloNum.length!==13){toast("⚠️ El RUC debe tener 13 dígitos");if(btnNd)btnNd.disabled=false;return;}
-  var existe=DISTRIBUIDORES.find(function(d){return d.ruc.toLowerCase()===ruc.toLowerCase();});
+  var existe=DISTRIBUIDORES.find(function(d){return d.ruc.toLowerCase()===soloNum.toLowerCase();});
   if(existe){toast("⚠️ Ya existe un distribuidor con ese documento");if(btnNd)btnNd.disabled=false;return;}
-  var nd={ruc:ruc,tipoDoc:tipoDoc,razon:r,pass:sha256(pw),tel:tel,correo:co,entrega:{habilitada:ent,montoMin:min},sinDescVol:sinVol,_nuevo:true};
+  var nd={ruc:soloNum,tipoDoc:tipoDoc,razon:r,pass:sha256(pw),tel:tel,correo:co,entrega:{habilitada:ent,montoMin:min},sinDescVol:sinVol,_nuevo:true};
   if(emp)nd.empresa=emp;
   if(enc)nd.encargado=enc;
   if(dir)nd.establecimientos=[{nm:"Local principal",dir:dir,obs:""}];
@@ -3670,7 +3670,7 @@ function guardarNuevoDist(){
   renderAdmDist();
   var credRucEl=document.getElementById("nd-cred-ruc");
   var credPassEl=document.getElementById("nd-cred-pass");
-  if(credRucEl)credRucEl.textContent=ruc;
+  if(credRucEl)credRucEl.textContent=soloNum;
   if(credPassEl)credPassEl.textContent=pw;
   abrir("modal-cred-nuevo");
   ["nd-razon","nd-empresa","nd-encargado","nd-ruc","nd-tel","nd-correo","nd-pass","nd-dir"].forEach(function(x){var el=document.getElementById(x);if(el)el.value="";});
