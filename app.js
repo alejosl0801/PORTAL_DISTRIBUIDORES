@@ -862,7 +862,7 @@ function renderInicio(){
   var saludoNm=USER.encargado||primerNombre(USER.razon);
   var empresaNm=USER.empresa||USER.razon;
   var heroTxt=(empresaNm&&empresaNm!==saludoNm)?saludoNm+" / "+empresaNm:saludoNm;
-  document.getElementById("hero-nombre").textContent=heroTxt;
+  var heroNm=document.getElementById("hero-nombre");if(heroNm)heroNm.textContent=heroTxt;
   var fe=document.getElementById("hero-frase");
   if(fe&&!fe.textContent){fe.textContent=FRASES_MOTIVACIONALES[Math.floor(Math.random()*FRASES_MOTIVACIONALES.length)];}
   setTopbarPts(saldoPuntos());
@@ -1998,7 +1998,7 @@ function guardarBorrador(){
   var borradores=_leerBorradores();
   if(borradores.length>=3){toast("⚠️ Máximo 3 borradores. Elimina uno primero.");return;}
   borradores.push({ts:Date.now(),items:JSON.parse(JSON.stringify(CARRITO))});
-  localStorage.setItem("pyro_borradores_"+USER.ruc,JSON.stringify(borradores));
+  try{localStorage.setItem("pyro_borradores_"+USER.ruc,JSON.stringify(borradores));}catch(e){avisarStorage();return;}
   toast("💾 Borrador guardado");
   renderBorradores();
 }
@@ -2285,7 +2285,7 @@ function renderHistorial(){
         :(p.estado==="entregado"
           ?'<div class="ped-pts" style="color:var(--amar)">⏳ '+fmtPts(p.puntos||0)+' puntos confirmados al finalizar</div>'
           :(p.estado!=="cancelado"?'<div class="ped-pts" style="color:var(--amar)">⏳ '+fmtPts(p.puntos||0)+' puntos pendientes</div>':'')));
-    var califShow=p.calificacion?'<div style="font-size:11px;color:var(--g3);margin-top:4px">Calificación: '+"⭐".repeat(p.calificacion.estrellas)+'</div>':"";
+    var califShow=p.calificacion?'<div style="font-size:11px;color:var(--g3);margin-top:4px">Calificación: '+"⭐".repeat(Math.max(0,Math.min(5,p.calificacion.estrellas||0)))+'</div>':"";
     var accBtns='<button class="btn btn-sm btn-s" onclick="verDetallePed(\''+p.id+'\')">Ver detalle</button>';
     if(!p.esCanje){
       if(p.estado==="pendiente"){
@@ -2573,14 +2573,14 @@ function renderRecompensas(){
   var saldo=saldoPuntos();
   var pendiente=puntosPendientes();
   setTopbarPts(saldo);
-  document.getElementById("rec-pts-v").textContent=fmtPts(saldo);
+  var recPtsV=document.getElementById("rec-pts-v");if(recPtsV)recPtsV.textContent=fmtPts(saldo);
   var pendHtml=pendiente>0?'<div class="rec-pts-pend">⏳ '+fmtPts(pendiente)+' pts pendientes de entrega</div>':'';
   document.getElementById("rec-pts-pend-box").innerHTML=pendHtml;
   renderDetallePuntos();
   var activas=REWARDS.filter(function(r){return!r.agotado;});
   var siguiente=activas.find(function(r){return r.pts>saldo;});
   var mot=siguiente?"¡Te faltan "+fmtPts(siguiente.pts-saldo)+" puntos para "+siguiente.nm+"!":"🎉 ¡Tienes puntos para canjear!";
-  document.getElementById("rec-mot").textContent=mot;
+  var recMot=document.getElementById("rec-mot");if(recMot)recMot.textContent=mot;
   document.getElementById("rec-lista").innerHTML=REWARDS.map(function(r,i){
     var pct=r.pts>0?Math.min(100,Math.round(saldo/r.pts*100)):100;
     var puede=saldo>=r.pts&&!r.agotado;
@@ -2769,11 +2769,13 @@ function cargarCostos(){
   try{return JSON.parse(localStorage.getItem("pyro_costos")||"{}");}catch(e){return{};}
 }
 function guardarCostos(costos){
+  _costosCache=null;
   try{localStorage.setItem("pyro_costos",JSON.stringify(costos));}catch(e){}
 }
+var _costosCache=null;
 function getCostoProducto(id){
-  var costos=cargarCostos();
-  if(costos[id]!=null)return costos[id];
+  if(!_costosCache)_costosCache=cargarCostos();
+  if(_costosCache[id]!=null)return _costosCache[id];
   var p=PRODUCTOS.find(function(x){return x.id===id;});
   return p?p.costo:0;
 }
@@ -2943,7 +2945,7 @@ function admVerPedido(pid){
     }).join("")+'<div class="rrow tot"><span>TOTAL</span><span>'+fmt$(p.total)+'</span></div>';
     html+='<div style="margin-top:10px;font-size:13px"><b>Pago:</b> '+escHtml(p.pago)+'</div>';
     if(p.puntos)html+='<div style="font-size:13px;color:var(--oro);font-weight:700;margin-top:4px">🏆 '+fmtPts(p.puntos)+' puntos</div>';
-    if(p.calificacion)html+='<div style="margin-top:8px;font-size:13px">Calificación: '+"⭐".repeat(p.calificacion.estrellas)+' '+( p.calificacion.comentario?'<i>"'+escHtml(p.calificacion.comentario)+'"</i>':"")+' </div>';
+    if(p.calificacion)html+='<div style="margin-top:8px;font-size:13px">Calificación: '+"⭐".repeat(Math.max(0,Math.min(5,p.calificacion.estrellas||0)))+' '+( p.calificacion.comentario?'<i>"'+escHtml(p.calificacion.comentario)+'"</i>':"")+' </div>';
     // Botones de acción
     html+='<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">'+
       '<button class="btn btn-s" style="flex:1;background:#25D366;color:#fff;border-color:#25D366" onclick="generarWA(\''+p.id+'\')">📲 WhatsApp</button>'+
@@ -3589,7 +3591,8 @@ function confirmarLimpiarDatos(){
   ["pyro_pedidos","pyro_stock","pyro_sesion","pyro_dist_extra",
    "pyro_cola_offline","pyro_sync_pendientes","pyro_ultimo_backup",
    "pyro_log_accesos","pyro_notif_vistas","pyro_last_ruc",
-   "pyro_descvol","pyro_dist_eliminados","pyro_ped_eliminados","pyro_cat_grid","pyro_costos","pyro_umbrales"
+   "pyro_descvol","pyro_dist_eliminados","pyro_ped_eliminados","pyro_cat_grid","pyro_costos","pyro_umbrales",
+   "pyro_rewards","pyro_hist_precios"
   ].forEach(function(k){try{localStorage.removeItem(k);}catch(e){}});
   // Claves por prefijo (por RUC o por sesión)
   var keys=[];try{for(var i=0;i<localStorage.length;i++)keys.push(localStorage.key(i));}catch(e){}
@@ -3599,10 +3602,12 @@ function confirmarLimpiarDatos(){
     "pyro_bio_skip_","pyro_busquedas_","pyro_deseos_","pyro_favs_",
     "pyro_logro_madrug_","pyro_logro_noct_","pyro_primer_ingreso_",
     "pyro_tut_resetado_","pyro_ultima_tab_",
-    "pyro_pass_alerta_","pyro_bienvenida_","pyro_umbral_"
+    "pyro_pass_alerta_","pyro_bienvenida_","pyro_umbral_",
+    "pyro_inst_mobile_","pyro_inst_desktop_"
   ];
   keys.filter(function(k){return k&&prefijos.some(function(p){return k.startsWith(p);});})
     .forEach(function(k){try{localStorage.removeItem(k);}catch(e){}});
+  _costosCache=null;
   toast("✅ Datos de prueba eliminados. Recargando...");
   setTimeout(function(){window.location.reload();},1200);
 }
@@ -5091,7 +5096,7 @@ function restaurarMetaDesdeNube(){
     }
     if(m.costos){
       var localC={};try{localC=JSON.parse(localStorage.getItem("pyro_costos")||"{}");}catch(e){}
-      if(!Object.keys(localC).length)localStorage.setItem("pyro_costos",JSON.stringify(m.costos));
+      if(!Object.keys(localC).length){localStorage.setItem("pyro_costos",JSON.stringify(m.costos));_costosCache=null;}
     }
   }).catch(function(){});
 }
