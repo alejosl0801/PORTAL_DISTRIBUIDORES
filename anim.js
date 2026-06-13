@@ -342,7 +342,7 @@
       var img=document.querySelector("#perfil-ov img, .perfil-foto");
       if(img && ROOT.USER){
         var host=img.parentNode;
-        var pts=ROOT.USER.puntos||0;
+        var pts=(ROOT.saldoPuntos?ROOT.saldoPuntos():0)||0;
         ROOT.montarRingEn(host, (pts%1000)/1000);
       }
     },80);

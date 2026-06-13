@@ -310,6 +310,8 @@ function loginConCredenciales(ruc,pw){
   var d=DISTRIBUIDORES.find(function(x){return x.ruc.toLowerCase()===ruc.toLowerCase()&&passCoincide(x.pass,pw);});
   if(!d)return false;
   if(d.bloqueado&&!d.esAdmin)return false;
+  // Modo mantenimiento: bloquear a no-admin por CUALQUIER vía (autologin, biometría)
+  if(typeof MODO_MANTENIMIENTO!=="undefined"&&MODO_MANTENIMIENTO&&!d.esAdmin)return false;
   USER=d; PEDIDOS=cargarPedidos(); cargarStock(); cargarDescVol();
   // Log de accesos (#25)
   try{
@@ -432,17 +434,20 @@ function hacerLogin(){
   var pw=document.getElementById("login-pass").value.trim();
   var err=document.getElementById("login-err");
   err.style.display="none";
+  // Modo mantenimiento: bloquear a no-admin ANTES de loginConCredenciales,
+  // porque esa función ya navega a s-main (dejaría USER=null en pantalla rota).
+  if(typeof MODO_MANTENIMIENTO!=="undefined"&&MODO_MANTENIMIENTO){
+    var _cand=DISTRIBUIDORES.find(function(x){return x.ruc.toLowerCase()===u.toLowerCase();});
+    if(_cand&&!_cand.esAdmin){
+      err.textContent=(typeof MANTENIMIENTO_MSG!=="undefined"?MANTENIMIENTO_MSG:"Portal en mantenimiento");
+      err.style.display="block";
+      return;
+    }
+  }
   if(!loginConCredenciales(u,pw)){
     err.style.display="block";return;
   }
   _loginAttempts=0;
-  // Modo mantenimiento: solo ADMIN puede entrar
-  if(typeof MODO_MANTENIMIENTO!=="undefined"&&MODO_MANTENIMIENTO&&!USER.esAdmin){
-    USER=null;
-    err.textContent=(typeof MANTENIMIENTO_MSG!=="undefined"?MANTENIMIENTO_MSG:"Portal en mantenimiento");
-    err.style.display="block";
-    return;
-  }
   // Recordarme
   var chkRec=document.getElementById("login-recordar");
   if(chkRec&&chkRec.checked){guardarRecuerdo(u,pw);}else{borrarRecuerdo();}
