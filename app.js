@@ -1747,6 +1747,7 @@ function renderCarrito(){
   // Preservar selección de pago/entrega entre re-renders
   var prevPago=(document.getElementById("cart-pago")||{}).value||"";
   var prevModo=(document.getElementById("cart-modo")||{}).value||"";
+  var prevNotas=(document.getElementById("cart-notas")||{}).value||"";
   var cont=document.getElementById("cart-lista");
   var res=document.getElementById("cart-resumen");
   renderBorradores();
@@ -1852,9 +1853,10 @@ function renderCarrito(){
       '</div>'+
       '<div id="confirmar-hint" style="font-size:11px;color:var(--g3);text-align:center;font-style:italic">Selecciona forma de pago y modo de entrega para continuar</div>'+
     '</div>';
-  // Restaurar selección previa
+  // Restaurar selección previa y notas
   if(prevPago){var pe=document.getElementById("cart-pago");if(pe)pe.value=prevPago;}
   if(prevModo){var me=document.getElementById("cart-modo");if(me)me.value=prevModo;}
+  if(prevNotas){var ne=document.getElementById("cart-notas");if(ne)ne.value=prevNotas;}
   renderModoEntrega();
   validarConfirmar();
 }
@@ -3345,7 +3347,7 @@ function exportarExcelDist(){
 }
 function renderAdmDist(){
   if(USER&&USER.rol==="impresion")return;
-  var lista=DISTRIBUIDORES.filter(function(d){return!d.esAdmin;});
+  var lista=DISTRIBUIDORES.filter(function(d){return!d.esAdmin&&d.rol!=="impresion";});
   var _dss=document.getElementById("adm-dist-search");
   var q=(_dss?_dss.value||"":"").toLowerCase();
   if(q)lista=lista.filter(function(d){return norm(d.razon).indexOf(norm(q))!==-1||d.ruc.indexOf(q)!==-1;});
