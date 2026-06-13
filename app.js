@@ -3662,6 +3662,7 @@ function guardarUmbral(id,val){var u=cargarUmbrales();u[id]=val;try{localStorage
 function renderAdmStock(){
   if(USER&&USER.rol==="impresion")return;
   var cont=document.getElementById("adm-stock-lista");
+  if(!cont)return;
   var costos=cargarCostos();
   var umbrales=cargarUmbrales();
   var topHtml='<div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">'+
