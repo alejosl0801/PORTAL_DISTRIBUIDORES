@@ -1332,7 +1332,7 @@ function renderSearchRecientes(){
   if(!busqs.length){el.innerHTML="";return;}
   el.innerHTML='<div class="busq-recientes">'+
     '<span style="font-size:10px;color:var(--g3);font-weight:600;letter-spacing:.5px;text-transform:uppercase;margin-right:4px">Recientes:</span>'+
-    busqs.map(function(b){return'<button class="busq-chip" onclick="usarBusquedaReciente(\''+escHtml(b)+'\')">'+escHtml(b)+'</button>';}).join("")+
+    busqs.map(function(b){return'<button class="busq-chip" onclick="usarBusquedaReciente('+JSON.stringify(b)+')">'+escHtml(b)+'</button>';}).join("")+
   '</div>';
 }
 
@@ -2387,6 +2387,7 @@ function editarPedido(pid){
     });
     PEDIDOS=PEDIDOS.filter(function(x){return x.id!==pid;});
     guardarPedidos(); guardarCarrito(); actualizarBadge();
+    if((p.puntos||0)>0)registrarLogPuntos(p.ruc,"revertido",p.puntos,"Pedido #"+pid+" devuelto al carrito para editar");
     marcarPedidoEliminado(pid);
     // En la nube queda como cancelado (el pedido nuevo se creará con otro número)
     var copia=null;try{copia=JSON.parse(JSON.stringify(p));}catch(e){}
@@ -2596,7 +2597,7 @@ var REWARDS=[
   {pts:3000,ico:"💳",nm:"Tarjeta consumo $30",costoReal:30},
   {pts:5000,ico:"💳",nm:"Tarjeta consumo $50",costoReal:50}
 ];
-function cargarRewards(){try{var r=JSON.parse(localStorage.getItem("pyro_rewards")||"null");if(r&&r.length)REWARDS=r;}catch(e){}}
+function cargarRewards(){try{var r=JSON.parse(localStorage.getItem("pyro_rewards")||"null");if(r&&Array.isArray(r))REWARDS=r;}catch(e){}}
 function guardarRewards(){try{localStorage.setItem("pyro_rewards",JSON.stringify(REWARDS));backupCambio();}catch(e){}}
 cargarRewards();
 
