@@ -1166,7 +1166,7 @@ function renderPedidoFrecuente(){
   if(!el)return;
   var prev=document.getElementById("card-frecuente-wrap");
   if(prev)prev.remove();
-  var mp=misPedidos().filter(function(p){return!p.esCanje&&p.items&&p.items.length;});
+  var mp=misPedidos().filter(function(p){return!p.esCanje&&p.estado!=="cancelado"&&p.items&&p.items.length;});
   if(!mp.length)return;
   var conteo={};
   mp.forEach(function(p){p.items.forEach(function(it){conteo[it.id]=(conteo[it.id]||0)+it.cant;});});
