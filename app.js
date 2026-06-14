@@ -5040,7 +5040,7 @@ function sincronizarDesdeNube(ruc){
       if(pc.obsAdmin&&pc.obsAdmin!==pl.obsAdmin){pl.obsAdmin=pc.obsAdmin;cambio=true;}
     });
     if(!cambio)return;
-    local.sort(function(a,b){return (b.fechaISO||b.fecha||"")>(a.fechaISO||a.fecha||"")?1:-1;});
+    local.sort(function(a,b){var da=a.fechaISO||a.fecha||"",db=b.fechaISO||b.fecha||"";return da>db?1:da<db?-1:0;});
     localStorage.setItem("pyro_pedidos",JSON.stringify(local));
     PEDIDOS=local;
     _logrosCache=null;
