@@ -2992,7 +2992,7 @@ function admVerPedido(pid){
 function parseFechaPed(p){try{if(p.fechaISO)return new Date(p.fechaISO);var parts=(p.fecha||"").split("/");if(parts.length===3)return new Date(parseInt(parts[2],10),parseInt(parts[1],10)-1,parseInt(parts[0],10));return new Date(p.fecha||0);}catch(e){return new Date(0);}}
 
 function renderResumenDist(ruc){
-  var peds=PEDIDOS.filter(function(p){return p.ruc===ruc&&!p.esCanje;});
+  var peds=PEDIDOS.filter(function(p){return p.ruc===ruc&&!p.esCanje&&p.estado!=="cancelado";});
   var ahora=new Date();
   var esteMes=peds.filter(function(p){var d=parseFechaPed(p);return d.getMonth()===ahora.getMonth()&&d.getFullYear()===ahora.getFullYear();});
   var mesPas=peds.filter(function(p){var d=parseFechaPed(p);var m=ahora.getMonth()-1;var y=ahora.getFullYear();if(m<0){m=11;y--;}return d.getMonth()===m&&d.getFullYear()===y;});
@@ -3339,8 +3339,8 @@ function renderAdmAlertas(){
 function exportarExcelDist(){
   var todos=DISTRIBUIDORES.filter(function(d){return!d.esAdmin&&d.rol!=="impresion";});
   var rows=todos.map(function(d){
-    var misPeds=PEDIDOS.filter(function(p){return p.ruc===d.ruc&&!p.esCanje;});
-    var total=misPeds.reduce(function(s,p){return s+(p.total||0);},0);
+    var misPeds=PEDIDOS.filter(function(p){return p.ruc===d.ruc&&!p.esCanje&&p.estado!=="cancelado";});
+    var total=misPeds.reduce(function(s,p){return s+(p.subtotal||0);},0);
     var sorted=misPeds.slice().sort(function(a,b){return(b.fechaISO||b.fecha||"")>(a.fechaISO||a.fecha||"")?1:-1;});
     var ultimo=sorted.length?sorted[0].fecha:"Nunca";
     return[d.ruc,d.razon||"",d.encargado||"",d.correo||"",d.tel||"",misPeds.length,fmt$(total),ultimo,d.bloqueado?"Bloqueado":"Activo"];
