@@ -3065,6 +3065,14 @@ function guardarEstadoPed(pid){
   if(!p.esCanje&&(p.puntos||0)>0&&sel.value==="cancelado"&&confirmaEstados.indexOf(estadoViejo)!==-1){
     registrarLogPuntos(p.ruc,"revertido",p.puntos,"Pedido #"+p.id+" cancelado (puntos revertidos)");
   }
+  // Bug 89: Registrar reversión cuando admin regresa un pedido de confirmado a pendiente
+  if(!p.esCanje&&(p.puntos||0)>0&&pendiaEstados.indexOf(sel.value)!==-1&&confirmaEstados.indexOf(estadoViejo)!==-1){
+    registrarLogPuntos(p.ruc,"revertido",p.puntos,"Pedido #"+p.id+" revertido a "+sel.value);
+  }
+  // Bug 92: Registrar reversión de canje cuando admin cancela un canje
+  if(p.esCanje&&(p.canjePts||0)>0&&sel.value==="cancelado"&&estadoViejo!=="cancelado"){
+    registrarLogPuntos(p.ruc,"revertido",p.canjePts,"Canje cancelado por admin: "+(p.canjeNm||p.id));
+  }
   guardarPedidos();
   sincronizarConSheets(p,true);
   cerrarModal("modal-pedido-det"); renderAdmPedidos();
@@ -3084,7 +3092,8 @@ function guardarEstadoPed(pid){
       var msgWA=encodeURIComponent(msgWATexto);
       setTimeout(function(){
         if(confirm("¿Notificar al distribuidor por WhatsApp?")){
-          window.open("https://wa.me/593"+telWA.replace(/^0/,"")+"?text="+msgWA,"_blank");
+          var telNorm=telWA.replace(/^593/,"").replace(/^0/,"");
+        window.open("https://wa.me/593"+telNorm+"?text="+msgWA,"_blank");
         }
       },300);
     }
@@ -3382,7 +3391,8 @@ function exportarExcelDist(){
     +'</Table></Worksheet></Workbook>';
   var blob=new Blob([xml],{type:"application/vnd.ms-excel"});
   var a=document.createElement("a");var u=URL.createObjectURL(blob);a.href=u;
-  a.download="distribuidores_pyroshield_"+new Date().toISOString().slice(0,10)+".xls";a.click();
+  a.download="distribuidores_pyroshield_"+new Date().toISOString().slice(0,10)+".xls";
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
   setTimeout(function(){URL.revokeObjectURL(u);},1000);
 }
 function renderAdmDist(){
@@ -3919,9 +3929,10 @@ function exportarExcelFiltrado(){
   var distFiltro=document.getElementById("exp-dist")?document.getElementById("exp-dist").value:"";
   var ov=document.getElementById("export-filter-ov");if(ov)ov.remove();
   var estadosMap={pendiente:"Pendiente",en_proceso:"En proceso",autorizado:"En proceso",entrega:"En proceso",entregado:"Entregado",facturado:"Facturado",finalizado:"Finalizado",cancelado:"Cancelado"};
+  function parseFiltroFecha(str){var p=str.split("-");return new Date(parseInt(p[0],10),parseInt(p[1],10)-1,parseInt(p[2],10));}
   var pedsFiltrados=PEDIDOS.slice().reverse().filter(function(p){
-    if(desde){var fd=parseFechaPed(p);if(fd<new Date(desde))return false;}
-    if(hasta){var fd2=parseFechaPed(p);var hastaD=new Date(hasta);hastaD.setHours(23,59,59,999);if(fd2>hastaD)return false;}
+    if(desde){var fd=parseFechaPed(p);if(fd<parseFiltroFecha(desde))return false;}
+    if(hasta){var fd2=parseFechaPed(p);var hastaD=parseFiltroFecha(hasta);hastaD.setHours(23,59,59,999);if(fd2>hastaD)return false;}
     if(estadoFiltro){
       var estNorm=(p.estado==="autorizado"||p.estado==="entrega")?"en_proceso":p.estado;
       if(estNorm!==estadoFiltro)return false;
