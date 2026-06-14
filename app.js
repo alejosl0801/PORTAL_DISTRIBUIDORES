@@ -1747,6 +1747,7 @@ function renderCarrito(){
   // Preservar selección de pago/entrega entre re-renders
   var prevPago=(document.getElementById("cart-pago")||{}).value||"";
   var prevModo=(document.getElementById("cart-modo")||{}).value||"";
+  var prevEst=(document.getElementById("cart-est")||{}).value||"";
   var prevNotas=(document.getElementById("cart-notas")||{}).value||"";
   var cont=document.getElementById("cart-lista");
   var res=document.getElementById("cart-resumen");
@@ -1858,6 +1859,7 @@ function renderCarrito(){
   if(prevModo){var me=document.getElementById("cart-modo");if(me)me.value=prevModo;}
   if(prevNotas){var ne=document.getElementById("cart-notas");if(ne)ne.value=prevNotas;}
   renderModoEntrega();
+  if(prevEst){var ee=document.getElementById("cart-est");if(ee){ee.value=prevEst;var box=document.getElementById("nueva-dir-box");if(box)box.style.display=(prevEst==="nuevo")?"block":"none";}}
   validarConfirmar();
 }
 
@@ -2586,7 +2588,7 @@ function renderRecompensas(){
   var pendHtml=pendiente>0?'<div class="rec-pts-pend">⏳ '+fmtPts(pendiente)+' pts pendientes de entrega</div>':'';
   document.getElementById("rec-pts-pend-box").innerHTML=pendHtml;
   renderDetallePuntos();
-  var activas=REWARDS.filter(function(r){return!r.agotado;});
+  var activas=REWARDS.filter(function(r){return!r.agotado;}).slice().sort(function(a,b){return a.pts-b.pts;});
   var siguiente=activas.find(function(r){return r.pts>saldo;});
   var mot=siguiente?"¡Te faltan "+fmtPts(siguiente.pts-saldo)+" puntos para "+siguiente.nm+"!":"🎉 ¡Tienes puntos para canjear!";
   var recMot=document.getElementById("rec-mot");if(recMot)recMot.textContent=mot;
@@ -3812,7 +3814,7 @@ function importarStock(event){
   if(!file)return;
   var reader=new FileReader();
   reader.onload=function(e){
-    var lines=e.target.result.replace(/\r/g,"").split("\n");
+    var lines=e.target.result.replace(/^﻿/,"").replace(/\r/g,"").split("\n");
     if(!lines.length){toast("⚠️ Archivo vacío");return;}
     var header=lines[0].toLowerCase().split(",").map(function(h){return h.trim();});
     var idIdx=header.indexOf("id");
