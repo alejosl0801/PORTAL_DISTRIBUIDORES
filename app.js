@@ -1393,12 +1393,14 @@ function renderCatalogo(){
   }
 
   if(FILTRO==="todos"){
-    var prodsEnPromo=[];
+    var prodsEnPromo=[],_promoIds={};
     promosVigentes().forEach(function(pr){
       pr.items.forEach(function(it){
+        if(_promoIds[it.id])return;
         var p=PRODUCTOS.find(function(x){return x.id===it.id;});
         if(!p||p.ago)return;
         if(q&&!coincideBusqueda(p,q))return;
+        _promoIds[it.id]=true;
         prodsEnPromo.push(p);
       });
     });
@@ -3802,7 +3804,7 @@ function exportarExcelStock(){
     cat.subs.forEach(function(sn){
       PRODUCTOS.filter(function(p){return p.cat===ck&&p.sub===sn;}).forEach(function(p){
         var costoAct=costos[p.id]!=null?costos[p.id]:p.costo;
-        var umbStock=umbComp[p.id]||20;filas.push([p.id,p.nm,cat.nombre,sn,p.stock,p.ago?"Agotado":p.stock<umbStock?"Bajo":"OK",costoAct]);
+        var umbStock=umbComp[p.id]||20;filas.push([p.id,p.nm,cat.nombre,sn,p.stock,p.ago?"Agotado":p.stock<=umbStock?"Bajo":"OK",costoAct]);
       });
     });
   });
