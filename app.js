@@ -614,6 +614,7 @@ function logout(){
   if(_autoguardadoInterval){clearInterval(_autoguardadoInterval);_autoguardadoInterval=null;}
   if(_nubeInterval){clearInterval(_nubeInterval);_nubeInterval=null;}
   try{localStorage.removeItem("pyro_sesion");}catch(e){}
+  borrarRecuerdo();
   mostrar("s-login");
   document.getElementById("login-user").value="";
   document.getElementById("login-pass").value="";
