@@ -158,7 +158,7 @@ function validarCantMinMsg(p,cant){
 
 // Descuento por volumen — respeta flag sinDescVol del distribuidor
 function precioConVolumen(p, cant){
-  var pv=p.pv;
+  var pv=p.pv||1;
   var precioBase=precioCliente(p);
   var descBase=(pv-precioBase)/pv*100;
   var dvPct=0;
