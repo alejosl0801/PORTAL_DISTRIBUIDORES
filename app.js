@@ -444,10 +444,18 @@ function hacerLogin(){
       return;
     }
   }
+  if(_loginBlocked){err.textContent="⛔ Demasiados intentos fallidos. Espera 60 segundos.";err.style.display="block";return;}
   if(!loginConCredenciales(u,pw)){
-    err.style.display="block";return;
+    _loginAttempts++;
+    if(_loginAttempts>=5){
+      _loginBlocked=true;
+      err.textContent="⛔ Demasiados intentos fallidos. Espera 60 segundos.";
+      err.style.display="block";
+      setTimeout(function(){_loginBlocked=false;_loginAttempts=0;},60000);
+    }else{err.style.display="block";}
+    return;
   }
-  _loginAttempts=0;
+  _loginAttempts=0;_loginBlocked=false;
   // Recordarme
   var chkRec=document.getElementById("login-recordar");
   if(chkRec&&chkRec.checked){guardarRecuerdo(u,pw);}else{borrarRecuerdo();}
@@ -2619,8 +2627,8 @@ function renderRecompensas(){
     if(ultimos.length){
       logHtml2+='<div style="background:var(--g1);border-radius:12px;overflow:hidden">'
         +ultimos.map(function(e,i){
-          var col2=e.tipo==="canjeados"?"var(--rojo)":e.tipo==="confirmado"?"var(--verde)":"var(--amar)";
-          var signo2=e.tipo==="canjeados"?"−":"+";
+          var col2=e.tipo==="canjeados"||e.tipo==="revertido"?"var(--rojo)":e.tipo==="confirmado"?"var(--verde)":"var(--amar)";
+          var signo2=(e.tipo==="canjeados"||e.tipo==="revertido")?"−":"+";
           var fechaFmt=escHtml(e.fecha||"")+(e.hora?" · "+escHtml(e.hora):"");
           return '<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;'+(i>0?"border-top:1px solid var(--g2)":"")+'">'
             +'<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+escHtml(e.detalle)+'</div>'
@@ -2975,7 +2983,7 @@ function admVerPedido(pid){
     if(p.azurFactura){
       html+='<div style="margin-top:10px;background:var(--verdec);border:1.5px solid var(--verde);border-radius:10px;padding:10px 12px;font-size:12px;color:var(--verde)">✅ <b>Factura emitida en Azur</b><br><span style="font-size:10px;word-break:break-all;color:var(--g4)">Clave: '+p.azurFactura+'</span></div>';
       html+='<button class="btn btn-s btn-full" style="margin-top:8px" onclick="generarAzur(\''+p.id+'\')">🔄 Re-enviar a Azur</button>';
-    } else {
+    } else if(p.estado!=="cancelado"){
       html+='<button class="btn btn-s btn-full" style="margin-top:8px" onclick="generarAzur(\''+p.id+'\')">🧾 Generar factura en Azur</button>';
     }
     html+=renderResumenDist(p.ruc);
@@ -3036,6 +3044,10 @@ function guardarEstadoPed(pid){
   var pendiaEstados=["pendiente","en_proceso","autorizado","entrega","facturado"];
   if(!p.esCanje&&(p.puntos||0)>0&&confirmaEstados.indexOf(sel.value)!==-1&&pendiaEstados.indexOf(estadoViejo)!==-1){
     registrarLogPuntos(p.ruc,"confirmado",p.puntos,"Pedido #"+p.id+" confirmado");
+  }
+  // Registrar reversión de puntos cuando un pedido ya confirmado es cancelado
+  if(!p.esCanje&&(p.puntos||0)>0&&sel.value==="cancelado"&&confirmaEstados.indexOf(estadoViejo)!==-1){
+    registrarLogPuntos(p.ruc,"revertido",p.puntos,"Pedido #"+p.id+" cancelado (puntos revertidos)");
   }
   guardarPedidos();
   sincronizarConSheets(p,true);
