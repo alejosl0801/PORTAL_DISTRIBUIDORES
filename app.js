@@ -3322,7 +3322,7 @@ function renderAdmAlertas(){
   if(agotados.length)alertas.push({tipo:"rojo",ico:"🚨",msg:agotados.length+" productos agotados",accion:"admTab('stock')"});
   var inactivos=DISTRIBUIDORES.filter(function(d){
     if(d.esAdmin||d.rol==="impresion")return false;
-    var misPeds=PEDIDOS.filter(function(p){return p.ruc===d.ruc&&!p.esCanje;});
+    var misPeds=PEDIDOS.filter(function(p){return p.ruc===d.ruc&&!p.esCanje&&p.estado!=="cancelado";});
     if(!misPeds.length)return true;
     var ultimo=misPeds.slice().sort(function(a,b){return(b.fechaISO||b.fecha||"")>(a.fechaISO||a.fecha||"")?1:-1;})[0];
     var f=parseFechaPed(ultimo);return !f||(ahora-f)>30*24*60*60*1000;
@@ -4688,7 +4688,7 @@ function renderTop5MesActual(){
 }
 function renderDistribuidoresInactivos(){
   var ahora=Date.now(),umbral30=30*24*60*60*1000,ultPedido={};
-  PEDIDOS.forEach(function(p){if(p.esCanje)return;var fd=parseFechaPed(p),ts=fd.getTime();if(!ultPedido[p.ruc]||ts>ultPedido[p.ruc].ts)ultPedido[p.ruc]={ts:ts,fecha:p.fecha};});
+  PEDIDOS.forEach(function(p){if(p.esCanje||p.estado==="cancelado")return;var fd=parseFechaPed(p),ts=fd.getTime();if(!ultPedido[p.ruc]||ts>ultPedido[p.ruc].ts)ultPedido[p.ruc]={ts:ts,fecha:p.fecha};});
   var inactivos=[];
   DISTRIBUIDORES.forEach(function(d){if(d.esAdmin||d.bloqueado||d.rol==="impresion")return;var ul=ultPedido[d.ruc];if(!ul){inactivos.push({razon:d.razon,fecha:"Sin pedidos"});return;}if(ahora-ul.ts>umbral30)inactivos.push({razon:d.razon,fecha:ul.fecha});});
   if(!inactivos.length)return'';
