@@ -446,6 +446,13 @@ function hacerLogin(){
   }
   if(_loginBlocked){err.textContent="⛔ Demasiados intentos fallidos. Espera 60 segundos.";err.style.display="block";return;}
   if(!loginConCredenciales(u,pw)){
+    // Verificar si las credenciales son correctas pero el acceso está bloqueado
+    var _dBloq=DISTRIBUIDORES.find(function(x){return x.ruc.toLowerCase()===u.toLowerCase()&&passCoincide(x.pass,pw);});
+    if(_dBloq&&_dBloq.bloqueado&&!_dBloq.esAdmin){
+      err.textContent="🚫 Tu acceso ha sido suspendido."+(_dBloq.bloqueoRazon?" Motivo: "+_dBloq.bloqueoRazon:" Contacta a PyroShield.");
+      err.style.display="block";
+      return;
+    }
     _loginAttempts++;
     if(_loginAttempts>=5){
       _loginBlocked=true;
@@ -547,8 +554,9 @@ function primerIngresoGuardarPass(){
   if(v1!==v2){toast("⚠️ Las contraseñas no coinciden");return;}
   USER.pass=sha256(v1);
   USER.passModificado=true;
-  // Invalidar biometría: el hash almacenado ya no coincidirá con la nueva contraseña
+  // Invalidar biometría y recuerdo: el hash y las credenciales guardadas ya no coinciden
   try{localStorage.removeItem("pyro_biometria_"+USER.ruc);}catch(e){}
+  borrarRecuerdo();
   guardarDistribuidores();
   try{localStorage.setItem("pyro_sesion",JSON.stringify({ruc:USER.ruc}));}catch(e){}
   toast("✅ Contraseña actualizada");
@@ -1175,7 +1183,7 @@ function renderPedidoFrecuente(){
   if(!el)return;
   var prev=document.getElementById("card-frecuente-wrap");
   if(prev)prev.remove();
-  var mp=misPedidos().filter(function(p){return!p.esCanje&&p.estado!=="cancelado"&&p.items&&p.items.length;});
+  var mp=misPedidos().filter(function(p){return!p.esCanje&&p.estado!=="cancelado"&&p.items&&p.items.length;}).slice().sort(function(a,b){return(b.fechaISO||b.fecha||"")>(a.fechaISO||a.fecha||"")?1:-1;});
   if(!mp.length)return;
   var conteo={};
   mp.forEach(function(p){p.items.forEach(function(it){conteo[it.id]=(conteo[it.id]||0)+it.cant;});});
@@ -4204,7 +4212,12 @@ function chequearPedidosNuevos(){
     });
     vistos.push(p.id);
   });
-  if(nuevos.length)try{localStorage.setItem("pyro_notif_vistas",JSON.stringify(vistos));}catch(e){}
+  if(nuevos.length){
+    // Mantener solo IDs de pedidos que aún existan para evitar crecimiento ilimitado
+    var idsPedidos=PEDIDOS.map(function(p){return p.id;});
+    vistos=vistos.filter(function(id){return idsPedidos.indexOf(id)!==-1;});
+    try{localStorage.setItem("pyro_notif_vistas",JSON.stringify(vistos));}catch(e){}
+  }
 }
 
 // ════════════════════ SINCRONIZACIÓN GOOGLE SHEETS ════════════════════
@@ -4616,8 +4629,8 @@ function iniciarAutoguardado(){
 document.addEventListener("click",function(e){if(e.target.classList.contains("ov"))e.target.classList.remove("open");});
 window.addEventListener("load",function(){
   actualizarBannerOffline();
-  window.addEventListener("online",function(){actualizarBannerOffline();reintentarSyncPendientes();mostrarBannerOffline(false);});
-  window.addEventListener("offline",function(){actualizarBannerOffline();mostrarBannerOffline(true);});
+  window.addEventListener("online",function(){actualizarBannerOffline();reintentarSyncPendientes();});
+  window.addEventListener("offline",function(){actualizarBannerOffline();});
   setTimeout(function(){
     var sp=document.getElementById("splash");
     if(sp){sp.classList.add("hide");setTimeout(function(){sp.style.display="none";},600);}
