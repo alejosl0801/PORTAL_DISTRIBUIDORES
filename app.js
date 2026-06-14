@@ -2362,7 +2362,7 @@ function editarPedido(pid){
       var prod=PRODUCTOS.find(function(x){return x.id===it.id;});
       if(!prod)return;
       var exist=CARRITO.find(function(c){return c.id===it.id;});
-      if(exist)exist.cant=it.cant;
+      if(exist)exist.cant+=it.cant;
       else CARRITO.push({id:it.id,cant:it.cant});
     });
     PEDIDOS=PEDIDOS.filter(function(x){return x.id!==pid;});
@@ -3245,7 +3245,7 @@ function generarWA(pid){
   if(!p)return;
   var dist=DISTRIBUIDORES.find(function(d){return d.ruc===p.ruc;});
   var tel=dist&&dist.tel?dist.tel.replace(/[^0-9]/g,""):"593978997247";
-  if(tel.startsWith("09"))tel="593"+tel.slice(1);
+  if(tel.charAt(0)==="0")tel="593"+tel.slice(1);
   var msg="*PyroShield — Pedido #"+p.id+"*\n\nHola "+p.razon+"!\n\n";
   if(p.items)p.items.forEach(function(it){msg+="• "+it.nm+" x"+it.cant+" — "+fmt$(it.pr*it.cant)+"\n";});
   msg+="\n*Subtotal:* "+fmt$(p.subtotal)+"\n*IVA 15%:* "+fmt$(p.iva)+"\n*Total:* "+fmt$(p.total)+"\n";
