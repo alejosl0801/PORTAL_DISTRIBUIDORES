@@ -2037,9 +2037,9 @@ function cargarBorrador(i){
   if(!USER||!USER.ruc)return;
   var borradores=_leerBorradores();
   if(!borradores[i])return;
-  CARRITO=JSON.parse(JSON.stringify(borradores[i].items));
-  guardarCarrito(); renderCarrito(); actualizarBadge();
-  toast("✏️ Borrador cargado.");
+  function _cargar(){CARRITO=JSON.parse(JSON.stringify(borradores[i].items));guardarCarrito();renderCarrito();actualizarBadge();toast("✏️ Borrador cargado.");}
+  if(CARRITO.length){confirmar("¿Reemplazar el carrito actual con este borrador?",_cargar);}
+  else{_cargar();}
 }
 function eliminarBorrador(i){
   if(!USER||!USER.ruc)return;
@@ -2480,7 +2480,7 @@ function verDetallePed(pid){
       (USER&&USER.rol==="impresion"?'<button class="btn btn-s btn-full" style="margin-top:8px" onclick="generarNotaEntrega(\''+p.id+'\')">📋 Nota de entrega</button>':'')+
       (p.azurFactura
         ?'<button class="btn btn-p btn-full" style="margin-top:8px;background:var(--verde)" onclick="descargarFacturaPDF(\''+p.id+'\')">🧾 Descargar Factura PDF</button>'
-        :(p.estado==="finalizado"?'<button class="btn btn-s btn-full" style="margin-top:8px;opacity:.5" disabled>🧾 Pendiente de facturar</button>':''))
+        :((p.estado==="finalizado"||p.estado==="entregado")?'<button class="btn btn-s btn-full" style="margin-top:8px;opacity:.5" disabled>🧾 Pendiente de facturar</button>':''))
     :'')+
     '<button class="btn btn-s btn-full" style="margin-top:10px" onclick="cerrarModal(\'modal-pedido-det\')">Cerrar</button>';
   document.getElementById("modal-pedido-det-c").innerHTML=html;
