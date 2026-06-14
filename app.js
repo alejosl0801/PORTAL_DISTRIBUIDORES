@@ -2186,8 +2186,8 @@ function estadoLabel(e){
 }
 function estadoClass(e){
   if(e==="pendiente")return"est-pendiente";
-  if(e==="en_proceso"||e==="autorizado"||e==="entrega"||e==="facturado")return"est-en-proceso";
-  if(e==="entregado"||e==="finalizado")return"est-finalizado";
+  if(e==="en_proceso"||e==="autorizado"||e==="entrega")return"est-en-proceso";
+  if(e==="entregado"||e==="facturado"||e==="finalizado")return"est-finalizado";
   if(e==="cancelado")return"est-cancelado";
   return"est-pendiente";
 }
@@ -2282,7 +2282,7 @@ function renderHistorial(){
     '</div>';
   var histEl=document.getElementById("hist-lista");
   var pedidosHtml=mp.length?mp.map(function(p){
-    var confirmados=(p.estado==="finalizado");
+    var confirmados=(p.estado==="entregado"||p.estado==="finalizado");
     var ptsHtml=p.esBienvenida?
       '<div class="ped-pts" style="color:var(--oro)">🎁 Regalo de bienvenida</div>'+
       '<div style="font-size:11px;color:var(--g3);margin-top:3px">¡Gracias por unirte! Coordinaremos tu combo con tu primer pedido.</div>':
@@ -2291,8 +2291,8 @@ function renderHistorial(){
       '<div style="font-size:11px;color:var(--g3);margin-top:3px">Tu regalo será entregado en 0 a 7 días laborables.</div>':
       (confirmados
         ?'<div class="ped-pts" style="color:var(--verde)">🏆 '+fmtPts(p.puntos||0)+' puntos acreditados</div>'
-        :((p.estado==="entregado"||p.estado==="facturado")
-          ?'<div class="ped-pts" style="color:var(--amar)">⏳ '+fmtPts(p.puntos||0)+' puntos confirmados al finalizar</div>'
+        :(p.estado==="facturado"
+          ?'<div class="ped-pts" style="color:var(--amar)">⏳ '+fmtPts(p.puntos||0)+' puntos confirmados al entregar</div>'
           :(p.estado!=="cancelado"?'<div class="ped-pts" style="color:var(--amar)">⏳ '+fmtPts(p.puntos||0)+' puntos pendientes</div>':'')));
     var califShow=p.calificacion?'<div style="font-size:11px;color:var(--g3);margin-top:4px">Calificación: '+"⭐".repeat(Math.max(0,Math.min(5,p.calificacion.estrellas||0)))+'</div>':"";
     var accBtns='<button class="btn btn-sm btn-s" onclick="verDetallePed(\''+p.id+'\')">Ver detalle</button>';
@@ -2300,7 +2300,7 @@ function renderHistorial(){
       if(p.estado==="pendiente"){
         accBtns+='<button class="btn btn-sm btn-s" onclick="editarPedido(\''+p.id+'\')">✏️ Editar</button>';
         accBtns+='<button class="btn btn-sm" style="background:var(--rojoc);color:var(--rojo);border:1.5px solid var(--rojo)" onclick="cancelarPedido(\''+p.id+'\')">Cancelar</button>';
-      } else if(p.estado==="entregado"||p.estado==="finalizado"){
+      } else if(p.estado==="finalizado"){
         accBtns+='<button class="btn btn-sm btn-s" onclick="repetirPedido(\''+p.id+'\')">↩ Repetir</button>';
         if(!p.calificacion)accBtns+='<button class="btn btn-sm btn-s" onclick="abrirCalif(\''+p.id+'\')">⭐ Calificar</button>';
       } else if(p.estado==="cancelado"){
@@ -2470,7 +2470,7 @@ function verDetallePed(pid){
       (p.entregaInfo.hora?'<br><b>Horario:</b> '+escHtml(p.entregaInfo.hora):'')+
       '</div>':'')+
     (p.notas?'<div style="margin-top:8px;font-size:13px;color:var(--g4)"><b>Notas:</b> '+escHtml(p.notas)+'</div>':'')+
-    (p.puntos?'<div style="margin-top:8px;font-size:13px;color:var(--oro);font-weight:700">🏆 '+fmtPts(p.puntos)+' puntos '+(p.estado==="finalizado"?"acreditados":p.estado==="entregado"?"confirmados al finalizar":"pendientes")+'</div>':'')+
+    (p.puntos?'<div style="margin-top:8px;font-size:13px;color:var(--oro);font-weight:700">🏆 '+fmtPts(p.puntos)+' puntos '+((p.estado==="finalizado"||p.estado==="entregado")?"acreditados":p.estado==="facturado"?"confirmados al entregar":"pendientes")+'</div>':'')+
     (p.calificacion?'<div style="margin-top:8px;font-size:13px">Calificación: '+"⭐".repeat(Math.max(0,Math.min(5,p.calificacion.estrellas||0)))+'<br><i>'+escHtml(p.calificacion.comentario||"")+'</i></div>':'')+
     (!p.esCanje?renderTrackingPedido(p.estado):'')+
     ((!p.esCanje&&p.items&&p.items.length)?
@@ -2923,7 +2923,7 @@ function admVerPedido(pid){
   var p=PEDIDOS.find(function(x){return x.id===pid;});
   if(!p)return;
   // Estados editables por admin (finalizado se asigna automáticamente al facturar)
-  var estadosAdmin=['pendiente','en_proceso','entregado','cancelado'];
+  var estadosAdmin=['pendiente','en_proceso','entregado','facturado','finalizado','cancelado'];
   // El estado actual SIEMPRE debe estar en la lista; si no (ej. facturado/finalizado),
   // se antepone seleccionado para no degradar el pedido al guardar.
   if(p.estado&&estadosAdmin.indexOf(p.estado)===-1)estadosAdmin=[p.estado].concat(estadosAdmin);
@@ -3018,7 +3018,7 @@ function guardarEstadoPed(pid){
   if(obsSel&&obsSel.value)p.obsAdmin=obsSel.value;
   // Guardar forma de pago editada (si el selector existe y el pedido no está finalizado)
   var pagoSel=document.getElementById("adm-pago-sel");
-  if(pagoSel&&p.estado!=="finalizado")p.pago=pagoSel.value;
+  if(pagoSel&&p.estado!=="finalizado"&&!p.azurFactura)p.pago=pagoSel.value;
   // Restaurar stock si cancela
   if(sel.value==="cancelado"&&estadoViejo!=="cancelado"&&p.items){
     p.items.forEach(function(it){
