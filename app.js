@@ -1175,9 +1175,9 @@ function renderPedidoFrecuente(){
   if(!topId)return;
   var topProd=PRODUCTOS.find(function(x){return x.id===topId;});
   if(!topProd)return;
-  // Último pedido que contenía ese producto
+  // Último pedido que contenía ese producto (mp está ordenado de más nuevo a más viejo)
   var ultimoPed=null;
-  for(var i=mp.length-1;i>=0;i--){
+  for(var i=0;i<mp.length;i++){
     if(mp[i].items.some(function(it){return it.id===topId;})){ultimoPed=mp[i];break;}
   }
   if(!ultimoPed)return;
@@ -3029,6 +3029,12 @@ function guardarEstadoPed(pid){
     });
     guardarStock();
   }
+  // Registrar confirmación de puntos cuando el pedido pasa a entregado/finalizado
+  var confirmaEstados=["entregado","finalizado"];
+  var pendiaEstados=["pendiente","en_proceso","autorizado","entrega","facturado"];
+  if(!p.esCanje&&(p.puntos||0)>0&&confirmaEstados.indexOf(sel.value)!==-1&&pendiaEstados.indexOf(estadoViejo)!==-1){
+    registrarLogPuntos(p.ruc,"confirmado",p.puntos,"Pedido #"+p.id+" confirmado");
+  }
   guardarPedidos();
   sincronizarConSheets(p,true);
   cerrarModal("modal-pedido-det"); renderAdmPedidos();
@@ -3423,7 +3429,7 @@ function abrirEditarDist(ruc){
     '<label class="form-label">Correo</label>'+
     '<input class="form-input" id="ed-correo" value="'+escHtml(d.correo||"")+'">'+
     '<label class="form-label">Contraseña <span style="font-weight:400;color:var(--g3);font-size:11px">(dejar vacío para no cambiarla)</span></label>'+
-    '<input class="form-input" id="ed-pass" type="text" value="" placeholder="Escribe una nueva para resetear el acceso" autocomplete="off">'+
+    '<input class="form-input" id="ed-pass" type="password" value="" placeholder="Escribe una nueva para resetear el acceso" autocomplete="new-password">'+
     '<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">'+
       '<input type="checkbox" id="ed-entrega" '+(d.entrega&&d.entrega.habilitada?"checked":"")+' style="width:18px;height:18px">'+
       '<label for="ed-entrega" style="font-size:14px">Entrega a domicilio habilitada</label>'+
@@ -4348,7 +4354,8 @@ function renderTrackingPedido(estado){
   var iconos=["⏳","🚚","📦","✅"];
   // Normalizar estados
   var estadoNorm=estado;
-  if(estado==="autorizado"||estado==="facturado"||estado==="entrega")estadoNorm="en_proceso";
+  if(estado==="autorizado"||estado==="entrega")estadoNorm="en_proceso";
+  if(estado==="facturado")estadoNorm="entregado";
   var idxActual=pasos.indexOf(estadoNorm);
   if(idxActual===-1)idxActual=estado==="cancelado"?-2:0;
   if(estado==="cancelado"){
