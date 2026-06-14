@@ -2046,7 +2046,7 @@ function eliminarBorrador(i){
   if(!USER||!USER.ruc)return;
   var borradores=_leerBorradores();
   borradores.splice(i,1);
-  localStorage.setItem("pyro_borradores_"+USER.ruc,JSON.stringify(borradores));
+  try{localStorage.setItem("pyro_borradores_"+USER.ruc,JSON.stringify(borradores));}catch(e){avisarStorage();}
   renderBorradores(); toast("Borrador eliminado");
 }
 
@@ -3365,7 +3365,7 @@ function renderAdmDist(){
   if(q)lista=lista.filter(function(d){return norm(d.razon).indexOf(norm(q))!==-1||d.ruc.indexOf(q)!==-1;});
   var admDistLista=document.getElementById("adm-dist-lista");if(!admDistLista)return;
   admDistLista.innerHTML='<div style="margin-bottom:10px"><button class="btn btn-s btn-sm" onclick="exportarExcelDist()">📥 Exportar Excel</button></div>'+(lista.length?lista.map(function(d){
-    var nped=PEDIDOS.filter(function(p){return p.ruc===d.ruc&&!p.esCanje;}).length;
+    var nped=PEDIDOS.filter(function(p){return p.ruc===d.ruc&&!p.esCanje&&p.estado!=="cancelado";}).length;
     var esp=d.preciosEsp?Object.keys(d.preciosEsp).length:0;
     return '<div class="card"><div class="card-b">'+
       '<div style="display:flex;justify-content:space-between;align-items:flex-start">'+
