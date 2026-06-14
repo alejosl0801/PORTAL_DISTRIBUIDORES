@@ -2734,6 +2734,7 @@ function renderRolImpresion(){
     {f:"pendiente",l:"⏳ Pendientes"},
     {f:"proceso",l:"🔄 En proceso"},
     {f:"entregado",l:"📦 Entregados"},
+    {f:"facturado",l:"🧾 Facturados"},
     {f:"finalizado",l:"✔️ Finalizados"},
     {f:"cancelado",l:"✕ Cancelados"}
   ];
@@ -2807,14 +2808,14 @@ function renderAdmDashboard(){
   var ped=PEDIDOS.filter(function(p){return!p.esCanje;});
   var canjes=PEDIDOS.filter(function(p){return p.esCanje;});
   var nuevos=ped.filter(function(p){return p.estado==="pendiente";}).length;
-  var totalVendido=ped.filter(function(p){return p.estado==="entregado"||p.estado==="finalizado";})
+  var totalVendido=ped.filter(function(p){return p.estado==="entregado"||p.estado==="facturado"||p.estado==="finalizado";})
     .reduce(function(s,p){return s+(p.subtotal||0);},0);
-  var utilidad=ped.filter(function(p){return p.estado==="entregado"||p.estado==="finalizado";})
+  var utilidad=ped.filter(function(p){return p.estado==="entregado"||p.estado==="facturado"||p.estado==="finalizado";})
     .reduce(function(s,p){
       var costoTotal=(p.items||[]).reduce(function(cs,it){return cs+getCostoProducto(it.id)*(it.cant||0);},0);
       return s+(p.subtotal||0)-costoTotal;
     },0);
-  var distActivos=new Set(ped.filter(function(p){return p.estado==="entregado"||p.estado==="finalizado";}).map(function(p){return p.ruc;})).size;
+  var distActivos=new Set(ped.filter(function(p){return p.estado==="entregado"||p.estado==="facturado"||p.estado==="finalizado";}).map(function(p){return p.ruc;})).size;
   var canjesPend=canjes.filter(function(p){return p.estado==="pendiente";}).length;
   var canjesEntregadosArr=canjes.filter(function(p){return p.estado==="entregado"||p.estado==="finalizado";});
   var canjesEntregados=canjesEntregadosArr.length;
@@ -3041,7 +3042,7 @@ function guardarEstadoPed(pid){
   toast("✅ Estado actualizado");
   // Notificación WhatsApp al distribuidor
   var nuevoEstado=sel.value;
-  if(nuevoEstado==="en_proceso"||nuevoEstado==="entregado"||nuevoEstado==="finalizado"){
+  if(nuevoEstado==="en_proceso"||nuevoEstado==="entregado"||nuevoEstado==="facturado"||nuevoEstado==="finalizado"){
     var distWA=DISTRIBUIDORES.find(function(x){return x.ruc===p.ruc;});
     var telWA=(distWA&&distWA.tel)?distWA.tel.replace(/\D/g,""):"";
     if(telWA){
@@ -3049,6 +3050,7 @@ function guardarEstadoPed(pid){
       var msgWATexto;
       if(nuevoEstado==="en_proceso")msgWATexto="Hola "+nmWA+", tu pedido #"+p.id+" está siendo preparado 🔄";
       else if(nuevoEstado==="entregado")msgWATexto="Hola "+nmWA+", tu pedido #"+p.id+" está listo para entrega/retiro 📦";
+      else if(nuevoEstado==="facturado")msgWATexto="Hola "+nmWA+", tu pedido #"+p.id+" ha sido facturado 🧾 Pronto lo recibirás.";
       else msgWATexto="Hola "+nmWA+", tu pedido #"+p.id+" ha sido finalizado ✅ ¡Gracias por tu preferencia!";
       var msgWA=encodeURIComponent(msgWATexto);
       setTimeout(function(){
@@ -3939,7 +3941,7 @@ function exportarExcelFiltrado(){
 // ════════════════════ TOP 5 DISTRIBUIDORES ════════════════════
 function renderTop5Distribuidores(){
   var montosDist={};
-  PEDIDOS.filter(function(p){return!p.esCanje&&(p.estado==="entregado"||p.estado==="finalizado");}).forEach(function(p){
+  PEDIDOS.filter(function(p){return!p.esCanje&&(p.estado==="entregado"||p.estado==="facturado"||p.estado==="finalizado");}).forEach(function(p){
     if(!montosDist[p.ruc])montosDist[p.ruc]={ruc:p.ruc,razon:p.razon,total:0,utilidad:0};
     montosDist[p.ruc].total+=(p.subtotal||0);
     var costoTotal=(p.items||[]).reduce(function(cs,it){return cs+getCostoProducto(it.id)*(it.cant||0);},0);
@@ -4767,7 +4769,7 @@ function dibujarGraficasCanvas(){
     ctx.clearRect(0,0,W,H);
     var mp={};
     PEDIDOS.forEach(function(p){
-      if(p.esCanje||!(p.estado==="entregado"||p.estado==="finalizado"))return;
+      if(p.esCanje||!(p.estado==="entregado"||p.estado==="facturado"||p.estado==="finalizado"))return;
       if(!mp[p.ruc])mp[p.ruc]={ruc:p.ruc,razon:p.razon,total:0};
       mp[p.ruc].total+=(p.subtotal||0);
     });
@@ -4795,9 +4797,11 @@ function dibujarGraficasCanvas(){
       {key:"pendiente",label:"Pendiente",color:"#E8B923"},
       {key:"en_proceso",label:"En proceso",color:"#2980B9"},
       {key:"entregado",label:"Entregado",color:"#27AE60"},
-      {key:"facturado",label:"Facturado",color:"#16a085"}
+      {key:"facturado",label:"Facturado",color:"#16a085"},
+      {key:"finalizado",label:"Finalizado",color:"#1e8449"},
+      {key:"cancelado",label:"Cancelado",color:"#888"}
     ];
-    var counts={pendiente:0,en_proceso:0,entregado:0,facturado:0};
+    var counts={pendiente:0,en_proceso:0,entregado:0,facturado:0,finalizado:0,cancelado:0};
     PEDIDOS.forEach(function(p){
       if(p.esCanje)return;
       var est=(p.estado==="autorizado"||p.estado==="entrega")?"en_proceso":p.estado;
@@ -5013,7 +5017,7 @@ function sincronizarDesdeNube(ruc){
         var tabAct=document.querySelector(".tab-btn.active");
         if(tabAct){var t=tabAct.dataset.tab;if(t==="inicio"||t==="historial"||t==="recompensas")irTab(t);}
       } else if(USER&&USER.esAdmin&&document.getElementById("s-admin")&&document.getElementById("s-admin").classList.contains("active")){
-        if(ADM_TAB==="pedidos")renderAdmPedidos();
+        if(ADM_TAB==="pedidos"){if(USER&&USER.rol==="impresion")renderRolImpresion();else renderAdmPedidos();}
         chequearPedidosNuevos();
       }
     }catch(e){}
