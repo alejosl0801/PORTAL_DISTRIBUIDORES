@@ -848,3 +848,10 @@ html.theme-fade,html.theme-fade body,html.theme-fade .content,html.theme-fade #a
    9998 primer-ingreso
    9999 saludo flash
    ════════════════════════════════════════════════════════════ */
+
+/* ═══ SUPABASE SYNC DOT ═══ */
+.sb-dot{display:inline-block;width:10px;height:10px;border-radius:50%;flex-shrink:0;transition:background .4s}
+.sb-ok{background:#27ae60}
+.sb-sync{background:#f39c12;animation:sb-pulse .8s infinite alternate}
+.sb-err{background:#e74c3c}
+@keyframes sb-pulse{from{opacity:.4}to{opacity:1}}

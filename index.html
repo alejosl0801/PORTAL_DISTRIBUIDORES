@@ -195,7 +195,10 @@
       <img src="img/logo.jpg" alt="Logo" onerror="this.onerror=null;this.style.display='none'">
       <span class="topbar-name" style="color:var(--oro)">ADMIN</span>
     </div>
-    <button class="btn-logout" onclick="logout()">Salir</button>
+    <div style="display:flex;align-items:center;gap:10px">
+      <span id="sb-sync-dot" class="sb-dot sb-ok" title="Nube sincronizada"></span>
+      <button class="btn-logout" onclick="logout()">Salir</button>
+    </div>
   </div>
   <div class="adm-tabs">
     <button class="adm-tab active" onclick="admTab('pedidos',this)">📦 Pedidos</button>
@@ -421,6 +424,8 @@
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="./supabase-sync.js?v=20260614"></script>
 <script src="./datos.js?v=20260709"></script>
 <script src="./app.js?v=20260709"></script>
 <script src="./anim.js?v=20260710"></script>

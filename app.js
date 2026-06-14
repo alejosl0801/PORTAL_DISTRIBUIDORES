@@ -312,7 +312,7 @@ function loginConCredenciales(ruc,pw){
   if(d.bloqueado&&!d.esAdmin)return false;
   // Modo mantenimiento: bloquear a no-admin por CUALQUIER vía (autologin, biometría)
   if(typeof MODO_MANTENIMIENTO!=="undefined"&&MODO_MANTENIMIENTO&&!d.esAdmin)return false;
-  USER=d; PEDIDOS=cargarPedidos(); cargarStock(); cargarDescVol();
+  USER=d; window._USER=d; PEDIDOS=cargarPedidos(); cargarStock(); cargarDescVol();
   // Log de accesos (#25)
   try{
     var logAccesos=[];
@@ -323,6 +323,9 @@ function loginConCredenciales(ruc,pw){
     localStorage.setItem("pyro_log_accesos",JSON.stringify(logAccesos));
   }catch(e){}
   setTimeout(reintentarSyncPendientes,2000);
+  // Pull datos de Supabase en background después del login
+  if(typeof sbPullAll==="function")setTimeout(function(){sbPullAll(d.esAdmin||d.rol==="impresion");},1500);
+  if((d.esAdmin||d.rol==="impresion")&&typeof sbSuscribirPedidos==="function")setTimeout(sbSuscribirPedidos,3000);
   if(d.rol==="impresion"){
     // Rol de impresión: usa la pantalla admin con UI reducida (solo pedidos)
     mostrar("s-admin");
@@ -617,10 +620,11 @@ function mostrarOverlayBienvenida(){
   document.body.appendChild(ov);
 }
 function logout(){
-  USER=null;CARRITO=[];
+  USER=null;window._USER=null;CARRITO=[];
   if(_notifInterval){clearInterval(_notifInterval);_notifInterval=null;}
   if(_autoguardadoInterval){clearInterval(_autoguardadoInterval);_autoguardadoInterval=null;}
   if(_nubeInterval){clearInterval(_nubeInterval);_nubeInterval=null;}
+  if(typeof sbDesuscribir==="function")sbDesuscribir();
   try{localStorage.removeItem("pyro_sesion");}catch(e){}
   borrarRecuerdo();
   mostrar("s-login");
@@ -2602,7 +2606,7 @@ var REWARDS=[
   {pts:5000,ico:"💳",nm:"Tarjeta consumo $50",costoReal:50}
 ];
 function cargarRewards(){try{var r=JSON.parse(localStorage.getItem("pyro_rewards")||"null");if(r&&Array.isArray(r))REWARDS=r;}catch(e){}}
-function guardarRewards(){try{localStorage.setItem("pyro_rewards",JSON.stringify(REWARDS));backupCambio();}catch(e){}}
+function guardarRewards(){try{localStorage.setItem("pyro_rewards",JSON.stringify(REWARDS));backupCambio();}catch(e){}if(typeof sbPushRewards==="function")sbPushRewards();}
 cargarRewards();
 
 function renderRecompensas(){
@@ -4351,8 +4355,8 @@ function podarPedidosAdmin(){
   }
   return false;
 }
-function guardarPedidos(){_logrosCache=null;checkStorageQuota();try{localStorage.setItem("pyro_pedidos",JSON.stringify(PEDIDOS));backupCambio();}catch(e){avisarStorage();}}
-function guardarStock(){var st={};PRODUCTOS.forEach(function(p){st[p.id]={stock:p.stock,ago:p.ago};});try{localStorage.setItem("pyro_stock",JSON.stringify(st));backupCambio();}catch(e){}}
+function guardarPedidos(){_logrosCache=null;checkStorageQuota();try{localStorage.setItem("pyro_pedidos",JSON.stringify(PEDIDOS));backupCambio();}catch(e){avisarStorage();}if(typeof sbPushPedidos==="function")sbPushPedidos();}
+function guardarStock(){var st={};PRODUCTOS.forEach(function(p){st[p.id]={stock:p.stock,ago:p.ago};});try{localStorage.setItem("pyro_stock",JSON.stringify(st));backupCambio();}catch(e){}if(typeof sbPushStock==="function")sbPushStock();}
 function cargarStock(){try{var st=JSON.parse(localStorage.getItem("pyro_stock")||"{}");PRODUCTOS.forEach(function(p){if(st[p.id]!=null){p.stock=st[p.id].stock;p.ago=st[p.id].ago;}});}catch(e){}}
 function guardarDistribuidores(){
   try{
@@ -4361,6 +4365,7 @@ function guardarDistribuidores(){
     localStorage.setItem("pyro_dist_extra",JSON.stringify(todos));
     backupCambio();
   }catch(e){avisarStorage();}
+  if(typeof sbPushDistribuidores==="function")sbPushDistribuidores();
 }
 function cargarDistribuidoresExtra(){
   try{
