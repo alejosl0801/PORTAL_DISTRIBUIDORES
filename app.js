@@ -1596,12 +1596,13 @@ function renderDetallePuntos(){
     html+='<div style="background:var(--g1);border-radius:12px;overflow:hidden;margin-bottom:10px">';
     mp.forEach(function(p){
       var esConf=p.estado==="entregado"||p.estado==="finalizado";
+      var esPend=p.estado==="pendiente"||p.estado==="en_proceso"||p.estado==="facturado"||p.estado==="autorizado"||p.estado==="entrega";
       html+='<div style="display:flex;justify-content:space-between;align-items:center;padding:9px 14px;border-bottom:1px solid var(--g2)">'+
         '<div><div style="font-size:12px;font-weight:600">Pedido #'+escHtml(p.id)+'</div>'+
         '<div style="font-size:11px;color:var(--g3)">'+escHtml(p.fecha||"")+'</div>'+
         '<span class="est-chip '+estadoClass(p.estado)+'" style="font-size:10px;padding:1px 6px">'+estadoLabel(p.estado)+'</span></div>'+
-        '<div style="text-align:right"><div style="font-weight:700;color:'+(esConf?"var(--verde)":"var(--amar)")+'">🏆 '+fmtPts(p.puntos||0)+'</div>'+
-        '<div style="font-size:10px;color:var(--g3)">'+(esConf?"Confirmados":"Pendientes")+'</div></div></div>';
+        '<div style="text-align:right"><div style="font-weight:700;color:'+(esConf?"var(--verde)":esPend?"var(--amar)":"var(--g3)")+'">🏆 '+fmtPts(p.puntos||0)+'</div>'+
+        '<div style="font-size:10px;color:var(--g3)">'+(esConf?"Confirmados":esPend?"Pendientes":"Cancelado")+'</div></div></div>';
     });
     html+='</div>';
   } else {html+='<div class="empty" style="padding:16px"><p>Aún no tienes pedidos con puntos</p></div>';}
@@ -2871,7 +2872,7 @@ function renderAdmPedidos(){
     var facBadge="";
     if(!p.esCanje){
       if(p.azurFactura)facBadge='<span class="badge b-verde" style="font-size:10px">✔️ Facturado</span>';
-      else if(p.estado==="entregado")facBadge='<span class="badge b-amar" style="font-size:10px">⚠️ Pendiente facturar</span>';
+      else if(p.estado==="entregado"||p.estado==="finalizado")facBadge='<span class="badge b-amar" style="font-size:10px">⚠️ Pendiente facturar</span>';
     }
     return '<div class="card" onclick="admVerPedido(\''+p.id+'\')" style="cursor:pointer"><div class="card-b">'+
       '<div style="display:flex;justify-content:space-between;align-items:center">'+
@@ -4715,7 +4716,7 @@ function renderProductosSinMovimiento(){
 }
 function renderAnalisisABC(){
   var ventas={};
-  PEDIDOS.forEach(function(p){if(p.esCanje||p.estado==="cancelado")return;(p.items||[]).forEach(function(it){if(!ventas[it.id])ventas[it.id]={id:it.id,nm:it.nm,total:0};ventas[it.id].total+=((it.pr||0)*(it.cant||0));});});
+  PEDIDOS.forEach(function(p){if(p.esCanje||p.estado==="cancelado"||p.estado==="pendiente"||p.estado==="en_proceso"||p.estado==="autorizado"||p.estado==="entrega")return;(p.items||[]).forEach(function(it){if(!ventas[it.id])ventas[it.id]={id:it.id,nm:it.nm,total:0};ventas[it.id].total+=((it.pr||0)*(it.cant||0));});});
   var lista=Object.values(ventas).sort(function(a,b){return b.total-a.total;});
   if(!lista.length)return'';
   var gran=lista.reduce(function(s,x){return s+x.total;},0),acum=0;
