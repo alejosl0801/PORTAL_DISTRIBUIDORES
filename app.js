@@ -1401,8 +1401,9 @@ function renderCatalogo(){
     return;
   }
 
+  var _promoIds={};
   if(FILTRO==="todos"){
-    var prodsEnPromo=[],_promoIds={};
+    var prodsEnPromo=[];
     promosVigentes().forEach(function(pr){
       pr.items.forEach(function(it){
         if(_promoIds[it.id])return;
@@ -1426,6 +1427,7 @@ function renderCatalogo(){
       if(SUB_FILTRO&&SUB_FILTRO!==sn)return;
       var ps=PRODUCTOS.filter(function(p){
         if(p.cat!==ck||p.sub!==sn)return false;
+        if(_promoIds[p.id])return false;
         if(q&&!coincideBusqueda(p,q))return false;
         if(FILTRO_MARGEN_MIN>0){var pc2=precioCliente(p);var costo2=getCostoProducto(p.id);if(pc2>0&&(pc2-costo2)/pc2*100<FILTRO_MARGEN_MIN)return false;}
         if(FILTRO_STOCK_MIN>0&&p.stock<=0)return false;
@@ -2355,6 +2357,8 @@ function cancelarPedido(pid){
         guardarStock();
       }
     }
+    if(p&&!p.esCanje&&(p.puntos||0)>0)registrarLogPuntos(p.ruc,"revertido",p.puntos,"Pedido #"+pid+" cancelado");
+    if(p&&p.esCanje&&(p.canjePts||0)>0)registrarLogPuntos(p.ruc,"revertido",p.canjePts,"Canje cancelado: "+(p.canjeNm||pid));
     guardarPedidos();
     if(p)sincronizarConSheets(p,true);
     renderHistorial(); toast("✕ Pedido cancelado");
@@ -4213,11 +4217,11 @@ function chequearPedidosNuevos(){
     });
     vistos.push(p.id);
   });
-  if(nuevos.length){
-    // Mantener solo IDs de pedidos que aún existan para evitar crecimiento ilimitado
-    var idsPedidos=PEDIDOS.map(function(p){return p.id;});
-    vistos=vistos.filter(function(id){return idsPedidos.indexOf(id)!==-1;});
-    try{localStorage.setItem("pyro_notif_vistas",JSON.stringify(vistos));}catch(e){}
+  // Siempre podar IDs de pedidos eliminados para evitar crecimiento ilimitado
+  var idsPedidos=PEDIDOS.map(function(p){return p.id;});
+  var vistosLimpios=vistos.filter(function(id){return idsPedidos.indexOf(id)!==-1;});
+  if(nuevos.length||vistosLimpios.length!==vistos.length){
+    try{localStorage.setItem("pyro_notif_vistas",JSON.stringify(vistosLimpios));}catch(e){}
   }
 }
 
