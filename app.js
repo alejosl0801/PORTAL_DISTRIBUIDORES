@@ -4129,7 +4129,7 @@ function setCostoRealRecompensa(idx,val){
   var r=REWARDS[idx];
   if(!r)return;
   var n=parseFloat(val);
-  r.costoReal=isNaN(n)?0:n;
+  r.costoReal=isNaN(n)||val===""?null:n;
   guardarRewards();
   toast("✅ Costo real actualizado");
 }
