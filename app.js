@@ -4697,7 +4697,7 @@ function renderDistribuidoresInactivos(){
 }
 function renderTicketPromedioDist(){
   var map={};
-  PEDIDOS.forEach(function(p){if(p.esCanje)return;if(!map[p.ruc])map[p.ruc]={ruc:p.ruc,total:0,n:0};map[p.ruc].total+=(p.subtotal||0);map[p.ruc].n++;});
+  PEDIDOS.forEach(function(p){if(p.esCanje||p.estado==="cancelado")return;if(!map[p.ruc])map[p.ruc]={ruc:p.ruc,total:0,n:0};map[p.ruc].total+=(p.subtotal||0);map[p.ruc].n++;});
   var lista=Object.values(map).sort(function(a,b){return(b.n?b.total/b.n:0)-(a.n?a.total/a.n:0);});
   if(!lista.length)return'';
   return '<details style="background:var(--g1);border-radius:10px;padding:12px 14px;margin-bottom:14px"><summary style="font-weight:700;font-size:14px;cursor:pointer;list-style:none">🎫 Ticket promedio por distribuidor ▸</summary>'+
@@ -4707,14 +4707,14 @@ function renderTicketPromedioDist(){
 }
 function renderProductosSinMovimiento(){
   var ahora=Date.now(),umbral=60*24*60*60*1000,movidos={};
-  PEDIDOS.forEach(function(p){if(p.esCanje)return;var fd=parseFechaPed(p);if(ahora-fd.getTime()>umbral)return;(p.items||[]).forEach(function(it){movidos[it.id]=true;});});
+  PEDIDOS.forEach(function(p){if(p.esCanje||p.estado==="cancelado")return;var fd=parseFechaPed(p);if(ahora-fd.getTime()>umbral)return;(p.items||[]).forEach(function(it){movidos[it.id]=true;});});
   var sinMov=PRODUCTOS.filter(function(p){return!movidos[p.id];});
   if(!sinMov.length)return'';
   return '<details style="background:var(--rojoc);border:1.5px solid var(--rojo);border-radius:10px;padding:12px 14px;margin-bottom:14px"><summary style="font-weight:700;font-size:14px;cursor:pointer;list-style:none;color:var(--rojo)">🚫 Sin movimiento en 60 días ('+sinMov.length+') ▸</summary><div style="margin-top:8px">'+sinMov.map(function(p){return '<div style="font-size:12px;padding:3px 0;border-bottom:1px solid var(--g2)">'+escHtml(p.nm)+'<span style="color:var(--g3);margin-left:6px">'+p.id+'</span></div>';}).join("")+'</div></details>';
 }
 function renderAnalisisABC(){
   var ventas={};
-  PEDIDOS.forEach(function(p){if(p.esCanje)return;(p.items||[]).forEach(function(it){if(!ventas[it.id])ventas[it.id]={id:it.id,nm:it.nm,total:0};ventas[it.id].total+=((it.pr||0)*(it.cant||0));});});
+  PEDIDOS.forEach(function(p){if(p.esCanje||p.estado==="cancelado")return;(p.items||[]).forEach(function(it){if(!ventas[it.id])ventas[it.id]={id:it.id,nm:it.nm,total:0};ventas[it.id].total+=((it.pr||0)*(it.cant||0));});});
   var lista=Object.values(ventas).sort(function(a,b){return b.total-a.total;});
   if(!lista.length)return'';
   var gran=lista.reduce(function(s,x){return s+x.total;},0),acum=0;
