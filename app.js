@@ -2473,7 +2473,7 @@ function verDetallePed(pid){
       (p.entregaInfo.hora?'<br><b>Horario:</b> '+escHtml(p.entregaInfo.hora):'')+
       '</div>':'')+
     (p.notas?'<div style="margin-top:8px;font-size:13px;color:var(--g4)"><b>Notas:</b> '+escHtml(p.notas)+'</div>':'')+
-    (p.puntos?'<div style="margin-top:8px;font-size:13px;color:var(--oro);font-weight:700">🏆 '+fmtPts(p.puntos)+' puntos '+((p.estado==="finalizado"||p.estado==="entregado")?"acreditados":p.estado==="facturado"?"confirmados al entregar":"pendientes")+'</div>':'')+
+    (p.puntos&&p.estado!=="cancelado"?'<div style="margin-top:8px;font-size:13px;color:var(--oro);font-weight:700">🏆 '+fmtPts(p.puntos)+' puntos '+((p.estado==="finalizado"||p.estado==="entregado")?"acreditados":p.estado==="facturado"?"confirmados al entregar":"pendientes")+'</div>':'')+
     (p.calificacion?'<div style="margin-top:8px;font-size:13px">Calificación: '+"⭐".repeat(Math.max(0,Math.min(5,p.calificacion.estrellas||0)))+'<br><i>'+escHtml(p.calificacion.comentario||"")+'</i></div>':'')+
     (!p.esCanje?renderTrackingPedido(p.estado):'')+
     ((!p.esCanje&&p.items&&p.items.length)?
@@ -3575,11 +3575,11 @@ function guardarPreciosEsp(ruc){
       }
     }
   });
-  if(errores.length){toast("⚠️ Precio(s) por debajo del costo: "+errores.slice(0,2).join(", ")+(errores.length>2?" y "+(errores.length-2)+" más":""));return;}
   guardarDistribuidores();
   cerrarModal("modal-precios-esp");
   renderAdmDist();
-  toast("✅ Precios especiales guardados");
+  if(errores.length){toast("⚠️ "+errores.length+" precio(s) omitidos por debajo del costo: "+errores.slice(0,2).join(", ")+(errores.length>2?" y "+(errores.length-2)+" más":""));}
+  else{toast("✅ Precios especiales guardados");}
 }
 
 function verResumenDist(ruc){
@@ -4359,7 +4359,7 @@ function renderTrackingPedido(estado){
   // Normalizar estados
   var estadoNorm=estado;
   if(estado==="autorizado"||estado==="entrega")estadoNorm="en_proceso";
-  if(estado==="facturado")estadoNorm="entregado";
+  if(estado==="facturado")estadoNorm="en_proceso";
   var idxActual=pasos.indexOf(estadoNorm);
   if(idxActual===-1)idxActual=estado==="cancelado"?-2:0;
   if(estado==="cancelado"){
@@ -4397,10 +4397,13 @@ function renderPtsHistorial(){
   lista.innerHTML='<div class="sec-titulo" style="font-size:16px">Pedidos con puntos</div>'+
     mp.map(function(p){
       var confirmado=p.estado==="entregado"||p.estado==="finalizado";
+      var cancelado=p.estado==="cancelado";
+      var color=cancelado?"var(--g3)":confirmado?"var(--verde)":"var(--amar)";
+      var label=cancelado?"cancelado":confirmado?"acreditados":"pendientes";
       return '<div class="ped" style="padding:10px 14px">'+
         '<div style="display:flex;justify-content:space-between;align-items:center">'+
           '<div><div style="font-size:12px;color:var(--g3)">Pedido #'+p.id+' · '+p.fecha+'</div>'+
-          '<div style="font-size:13px;font-weight:700;color:'+(confirmado?"var(--verde)":"var(--amar)")+'">🏆 '+fmtPts(p.puntos)+' pts '+(confirmado?"acreditados":"pendientes")+'</div></div>'+
+          '<div style="font-size:13px;font-weight:700;color:'+color+'">🏆 '+fmtPts(p.puntos)+' pts '+label+'</div></div>'+
           '<span class="est-chip '+estadoClass(p.estado)+'">'+estadoLabel(p.estado)+'</span>'+
         '</div>'+
       '</div>';
