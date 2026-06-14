@@ -3571,7 +3571,7 @@ function guardarPreciosEsp(ruc){
       }
     }
   });
-  if(errores.length){alert("⚠️ Precios por debajo del costo:\n"+errores.join("\n"));return;}
+  if(errores.length){toast("⚠️ Precio(s) por debajo del costo: "+errores.slice(0,2).join(", ")+(errores.length>2?" y "+(errores.length-2)+" más":""));return;}
   guardarDistribuidores();
   cerrarModal("modal-precios-esp");
   renderAdmDist();
