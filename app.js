@@ -2524,7 +2524,7 @@ function verDetallePed(pid){
       (USER&&USER.rol==="impresion"?'<button class="btn btn-s btn-full" style="margin-top:8px" onclick="generarNotaEntrega(\''+p.id+'\')">📋 Nota de entrega</button>':'')+
       (p.azurFactura
         ?'<button class="btn btn-p btn-full" style="margin-top:8px;background:var(--verde)" onclick="descargarFacturaPDF(\''+p.id+'\')">🧾 Descargar Factura PDF</button>'
-        :((p.estado==="finalizado"||p.estado==="entregado")?'<button class="btn btn-s btn-full" style="margin-top:8px;opacity:.5" disabled>🧾 Pendiente de facturar</button>':''))
+        :(p.estado==="entregado"?'<button class="btn btn-s btn-full" style="margin-top:8px;opacity:.5" disabled>🧾 Pendiente de facturar</button>':''))
     :'')+
     '<button class="btn btn-s btn-full" style="margin-top:10px" onclick="cerrarModal(\'modal-pedido-det\')">Cerrar</button>';
   document.getElementById("modal-pedido-det-c").innerHTML=html;
@@ -2918,7 +2918,7 @@ function renderAdmPedidos(){
     var facBadge="";
     if(!p.esCanje){
       if(p.azurFactura)facBadge='<span class="badge b-verde" style="font-size:10px">✔️ Facturado</span>';
-      else if(p.estado==="entregado"||p.estado==="finalizado")facBadge='<span class="badge b-amar" style="font-size:10px">⚠️ Pendiente facturar</span>';
+      else if(p.estado==="entregado")facBadge='<span class="badge b-amar" style="font-size:10px">⚠️ Pendiente facturar</span>';
     }
     return '<div class="card" onclick="admVerPedido(\''+p.id+'\')" style="cursor:pointer"><div class="card-b">'+
       '<div style="display:flex;justify-content:space-between;align-items:center">'+
@@ -3841,8 +3841,10 @@ function ajustarCosto(id,val){
 function ajustarStock(id,val){
   var p=PRODUCTOS.find(function(x){return x.id===id;});
   if(!p)return;
-  var n=parseInt(val,10);
-  if(isNaN(n)||n<0){toast("⚠️ Ingresa un número válido");return;}
+  var sVal=String(val).trim();
+  if(sVal===""||sVal==="∞"){p.stock=null;p.ago=false;guardarStock();backupCambio();renderAdmStock();toast("✅ Stock ilimitado: "+p.nm);return;}
+  var n=parseInt(sVal,10);
+  if(isNaN(n)||n<0){toast("⚠️ Ingresa un número válido (o deja vacío para ilimitado)");return;}
   p.stock=n; p.ago=(n===0);
   guardarStock(); backupCambio(); renderAdmStock();
   toast("✅ Stock actualizado: "+p.nm);
