@@ -2396,7 +2396,7 @@ function editarPedido(pid){
     if(!p||!p.items)return;
     p.items.forEach(function(it){
       var prod=PRODUCTOS.find(function(x){return x.id===it.id;});
-      if(prod){prod.stock+=it.cant;prod.ago=false;}
+      if(prod){if(prod.stock!=null)prod.stock+=it.cant;prod.ago=false;}
     });
     guardarStock();
     p.items.forEach(function(it){
@@ -3074,7 +3074,7 @@ function guardarEstadoPed(pid){
   if(sel.value==="cancelado"&&estadoViejo!=="cancelado"&&estadosPreEntrega.indexOf(estadoViejo)!==-1&&p.items){
     p.items.forEach(function(it){
       var prod=PRODUCTOS.find(function(x){return x.id===it.id;});
-      if(prod){prod.stock+=it.cant;prod.ago=false;}
+      if(prod){if(prod.stock!=null)prod.stock+=it.cant;prod.ago=false;}
     });
     guardarStock();
   }
@@ -3798,7 +3798,7 @@ function renderAdmStock(){
             '<span class="badge '+col+'">'+lab+'</span>'+umbralBadge+
             '<div style="display:flex;align-items:center;gap:4px">'+
               '<span style="font-size:11px;color:var(--g3)">Stock:</span>'+
-              '<input type="number" min="0" value="'+p.stock+'" id="st-'+p.id+'" style="width:70px;padding:6px 8px;border:1.5px solid var(--g2);border-radius:8px;font-size:14px;font-weight:700;text-align:center">'+
+              '<input type="number" min="0" value="'+(p.stock!=null?p.stock:'')+'" id="st-'+p.id+'" style="width:70px;padding:6px 8px;border:1.5px solid var(--g2);border-radius:8px;font-size:14px;font-weight:700;text-align:center" placeholder="∞">'+
               '<button class="btn btn-sm btn-p" style="padding:7px 12px;min-height:0" onclick="ajustarStock(\''+p.id+'\',document.getElementById(\'st-'+p.id+'\').value)">✓</button>'+
             '</div>'+
             '<div style="display:flex;align-items:center;gap:4px;border-left:1.5px solid var(--g2);padding-left:8px">'+
@@ -3858,7 +3858,7 @@ function exportarExcelStock(){
     cat.subs.forEach(function(sn){
       PRODUCTOS.filter(function(p){return p.cat===ck&&p.sub===sn;}).forEach(function(p){
         var costoAct=costos[p.id]!=null?costos[p.id]:p.costo;
-        var umbStock=umbComp[p.id]||20;filas.push([p.id,p.nm,cat.nombre,sn,p.stock!=null?p.stock:"∞",p.ago?"Agotado":(p.stock!=null&&p.stock<=umbStock&&p.stock>0)?"Bajo":"OK",costoAct]);
+        var umbStock=umbComp[p.id]||20;filas.push([p.id,p.nm,cat.nombre,sn,p.stock!=null?p.stock:"Ilimitado",p.ago?"Agotado":(p.stock!=null&&p.stock<=umbStock&&p.stock>0)?"Bajo":"OK",costoAct]);
       });
     });
   });
@@ -3873,7 +3873,7 @@ function exportarExcelStock(){
   filas.forEach(function(fila){
     xml+='<Row>';
     fila.forEach(function(cel,i){
-      xml+='<Cell><Data ss:Type="'+(i===4||i===6?"Number":"String")+'">'+esc(String(cel))+'</Data></Cell>';
+      var isNum=(i===4||i===6)&&typeof cel==="number";xml+='<Cell><Data ss:Type="'+(isNum?"Number":"String")+'">'+esc(String(cel))+'</Data></Cell>';
     });
     xml+='</Row>';
   });
@@ -4047,7 +4047,7 @@ function generarReporteMensual(){
   });
   var totalVentas=pedMes.reduce(function(s,p){return s+(p.subtotal||0);},0);
   var totalCosto=pedMes.reduce(function(s,p){
-    return s+(p.items||[]).reduce(function(cs,it){return cs+getCostoProducto(it.id)*(it.cant||0);},0);
+    return s+(p.items||[]).reduce(function(cs,it){return cs+(it.costo!=null?it.costo:getCostoProducto(it.id))*(it.cant||0);},0);
   },0);
   var utilidad=totalVentas-totalCosto;
   var numPedidos=pedMes.length;
