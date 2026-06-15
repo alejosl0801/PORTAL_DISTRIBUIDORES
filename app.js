@@ -4379,8 +4379,7 @@ function podarPedidosAdmin(){
   var antes=PEDIDOS.length;
   PEDIDOS=PEDIDOS.filter(_conservarPedidoAdmin);
   if(PEDIDOS.length!==antes){
-    _logrosCache=null;
-    try{localStorage.setItem("pyro_pedidos",JSON.stringify(PEDIDOS));}catch(e){}
+    guardarPedidos();
     return true;
   }
   return false;
