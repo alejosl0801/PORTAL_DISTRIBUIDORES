@@ -1442,7 +1442,7 @@ function renderCatalogo(){
         if(_promoIds[p.id])return false;
         if(q&&!coincideBusqueda(p,q))return false;
         if(FILTRO_MARGEN_MIN>0){var pc2=precioCliente(p);var costo2=getCostoProducto(p.id);if(pc2>0&&(pc2-costo2)/pc2*100<FILTRO_MARGEN_MIN)return false;}
-        if(FILTRO_STOCK_MIN>0&&p.stock<=0)return false;
+        if(FILTRO_STOCK_MIN>0&&p.ago)return false;
         return true;
       });
       if(!ps.length)return;
@@ -5592,7 +5592,7 @@ function confirmarEditarEstablecimiento(idx){
   var obs=(document.getElementById("est-obs")||{}).value||"";
   if(!nm.trim()||!dir.trim()){toast("⚠️ Nombre y dirección son obligatorios");return;}
   var dist=DISTRIBUIDORES.find(function(d){return d.ruc===USER.ruc;});
-  if(!dist)return;
+  if(!dist||!dist.establecimientos||!dist.establecimientos[idx])return;
   dist.establecimientos[idx]={nm:nm.trim(),dir:dir.trim(),obs:obs.trim()};
   USER.establecimientos=dist.establecimientos;
   guardarDistribuidores();
@@ -5605,7 +5605,7 @@ function confirmarEditarEstablecimiento(idx){
 function eliminarEstablecimiento(idx){
   confirmar("¿Eliminar este establecimiento?",function(){
     var dist=DISTRIBUIDORES.find(function(d){return d.ruc===USER.ruc;});
-    if(!dist)return;
+    if(!dist||!dist.establecimientos)return;
     dist.establecimientos.splice(idx,1);
     USER.establecimientos=dist.establecimientos;
     guardarDistribuidores();
