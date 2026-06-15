@@ -4954,7 +4954,6 @@ function _renderDescVolRows(tiers){
   }).join("");
 }
 function agregarDescVolRow(){
-  var p=PRODUCTOS.find(function(x){return x.id===_descvolId;});
   var tiers=_leerDescVolRows();
   tiers.push([tiers.length?tiers[tiers.length-1][0]+5:5,5]);
   _renderDescVolRows(tiers);
