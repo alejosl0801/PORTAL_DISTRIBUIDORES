@@ -3305,7 +3305,8 @@ function generarWA(pid){
   var p=PEDIDOS.find(function(x){return x.id===pid;});
   if(!p)return;
   var dist=DISTRIBUIDORES.find(function(d){return d.ruc===p.ruc;});
-  var tel=dist&&dist.tel?dist.tel.replace(/[^0-9]/g,""):"593978997247";
+  var tel=dist&&dist.tel?dist.tel.replace(/[^0-9]/g,""):"";
+  if(!tel)tel="593978997247";
   if(tel.charAt(0)==="0")tel="593"+tel.slice(1);
   var msg="*PyroShield — Pedido #"+p.id+"*\n\nHola "+p.razon+"!\n\n";
   if(p.items)p.items.forEach(function(it){msg+="• "+it.nm+" x"+it.cant+" — "+fmt$(it.pr*it.cant)+"\n";});
