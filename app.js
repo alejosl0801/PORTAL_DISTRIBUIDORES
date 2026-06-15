@@ -3571,7 +3571,7 @@ function eliminarDirEditar(ruc,i){
 function guardarEditarDist(ruc){
   var d=DISTRIBUIDORES.find(function(x){return x.ruc===ruc;});
   if(!d)return;
-  d.razon=document.getElementById("ed-razon").value.trim()||d.razon;
+  var _edRazon=document.getElementById("ed-razon").value.trim();if(_edRazon)d.razon=_edRazon;
   d.empresa=document.getElementById("ed-empresa").value.trim()||"";
   var encEl=document.getElementById("ed-encargado");
   if(encEl)d.encargado=encEl.value.trim();
@@ -4352,7 +4352,7 @@ function checkStorageQuota(){
     for(var k in localStorage){if(localStorage.hasOwnProperty(k))total+=localStorage[k].length+k.length;}
     var mb=(total*2/1024/1024).toFixed(1);
     if(total*2>4*1024*1024&&USER&&USER.esAdmin){
-      toast("⚠️ Almacenamiento local al "+Math.round(total*2/5/1024/1024*100)+"% ("+mb+"MB) — haz backup desde Config");
+      toast("⚠️ Almacenamiento local al "+Math.round(total*2/4/1024/1024*100)+"% ("+mb+"MB) — haz backup desde Config");
     }
   }catch(e){}
 }
