@@ -924,7 +924,8 @@ function renderInicio(){
     if(bannerColaEl)bannerColaEl.remove();
   }
   var up=mp.slice().reverse().slice(0,3);
-  document.getElementById("ultimos-pedidos").innerHTML=up.length?up.map(function(p){
+  var _upEl=document.getElementById("ultimos-pedidos");if(!_upEl)return;
+  _upEl.innerHTML=up.length?up.map(function(p){
     return '<div class="ped" onclick="verDetallePed(\''+p.id+'\')" style="cursor:pointer">'+
       '<div class="ped-top"><div><div class="ped-id">Pedido #'+p.id+'</div>'+
       '<div style="font-size:12px;color:var(--g3)">'+p.fecha+'</div></div>'+
@@ -2628,13 +2629,14 @@ function renderRecompensas(){
   setTopbarPts(saldo);
   var recPtsV=document.getElementById("rec-pts-v");if(recPtsV)recPtsV.textContent=fmtPts(saldo);
   var pendHtml=pendiente>0?'<div class="rec-pts-pend">⏳ '+fmtPts(pendiente)+' pts pendientes de entrega</div>':'';
-  document.getElementById("rec-pts-pend-box").innerHTML=pendHtml;
+  var _recPend=document.getElementById("rec-pts-pend-box");if(_recPend)_recPend.innerHTML=pendHtml;
   renderDetallePuntos();
   var activas=REWARDS.filter(function(r){return!r.agotado;}).slice().sort(function(a,b){return a.pts-b.pts;});
   var siguiente=activas.find(function(r){return r.pts>saldo;});
   var mot=siguiente?"¡Te faltan "+fmtPts(siguiente.pts-saldo)+" puntos para "+siguiente.nm+"!":"🎉 ¡Tienes puntos para canjear!";
   var recMot=document.getElementById("rec-mot");if(recMot)recMot.textContent=mot;
-  document.getElementById("rec-lista").innerHTML=REWARDS.map(function(r,i){
+  var _recLista=document.getElementById("rec-lista");if(!_recLista)return;
+  _recLista.innerHTML=REWARDS.map(function(r,i){
     var pct=r.pts>0?Math.min(100,Math.round(saldo/r.pts*100)):100;
     var puede=saldo>=r.pts&&!r.agotado;
     return '<div class="rec-item">'+
