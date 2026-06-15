@@ -2471,7 +2471,7 @@ function confirmarRepetirPedido(pid){
     var exist=CARRITO.find(function(c){return c.id===it.id;});
     var yaEnCarrito=exist?exist.cant:0;
     // No exceder el stock contando lo que ya hay en el carrito
-    if(yaEnCarrito+cant>prod.stock)cant=prod.stock-yaEnCarrito;
+    if(prod.stock!=null&&yaEnCarrito+cant>prod.stock)cant=prod.stock-yaEnCarrito;
     if(cant<=0){omitidos.push(it.nm);return;}
     if(exist)exist.cant+=cant;
     else CARRITO.push({id:it.id,cant:cant});
@@ -2858,7 +2858,7 @@ function renderAdmDashboard(){
     .reduce(function(s,p){return s+(p.subtotal||0);},0);
   var utilidad=ped.filter(function(p){return p.estado==="entregado"||p.estado==="facturado"||p.estado==="finalizado";})
     .reduce(function(s,p){
-      var costoTotal=(p.items||[]).reduce(function(cs,it){return cs+getCostoProducto(it.id)*(it.cant||0);},0);
+      var costoTotal=(p.items||[]).reduce(function(cs,it){return cs+(it.costo!=null?it.costo:getCostoProducto(it.id))*(it.cant||0);},0);
       return s+(p.subtotal||0)-costoTotal;
     },0);
   var distActivos=new Set(ped.filter(function(p){return p.estado==="entregado"||p.estado==="facturado"||p.estado==="finalizado";}).map(function(p){return p.ruc;})).size;
@@ -2930,7 +2930,7 @@ function renderAdmPedidos(){
         '</div>'+
       '</div>'+
       (!p.esCanje?'<div style="font-size:18px;font-weight:800;font-family:\'Barlow Condensed\',sans-serif;margin-top:6px">'+fmt$(p.total)+'</div>':'')+
-      (function(){if(p.esCanje)return'';var mg=(p.items||[]).reduce(function(s,it){return s+(it.cant||0)*((it.pr||0)-getCostoProducto(it.id));},0);var pct=p.subtotal>0?(mg/p.subtotal*100):0;var col=mg>=0?"var(--verde)":"var(--rojo)";return'<div style="font-size:11px;color:'+col+';margin-top:2px">Margen est.: '+fmt$(mg)+' ('+pct.toFixed(1)+'%)</div>';}())+
+      (function(){if(p.esCanje)return'';var mg=(p.items||[]).reduce(function(s,it){return s+(it.cant||0)*((it.pr||0)-(it.costo!=null?it.costo:getCostoProducto(it.id)));},0);var pct=p.subtotal>0?(mg/p.subtotal*100):0;var col=mg>=0?"var(--verde)":"var(--rojo)";return'<div style="font-size:11px;color:'+col+';margin-top:2px">Margen est.: '+fmt$(mg)+' ('+pct.toFixed(1)+'%)</div>';}())+
     '</div></div>';
   }).join(""):'<div class="empty"><div class="ico">📦</div><p>No hay pedidos en esta categoría.</p></div>');
   // Restaurar foco en el buscador si el usuario estaba escribiendo
@@ -4015,7 +4015,7 @@ function renderTop5Distribuidores(){
   PEDIDOS.filter(function(p){return!p.esCanje&&(p.estado==="entregado"||p.estado==="facturado"||p.estado==="finalizado");}).forEach(function(p){
     if(!montosDist[p.ruc])montosDist[p.ruc]={ruc:p.ruc,razon:p.razon,total:0,utilidad:0};
     montosDist[p.ruc].total+=(p.subtotal||0);
-    var costoTotal=(p.items||[]).reduce(function(cs,it){return cs+getCostoProducto(it.id)*(it.cant||0);},0);
+    var costoTotal=(p.items||[]).reduce(function(cs,it){return cs+(it.costo!=null?it.costo:getCostoProducto(it.id))*(it.cant||0);},0);
     montosDist[p.ruc].utilidad+=(p.subtotal||0)-costoTotal;
   });
   var top5=Object.values(montosDist).sort(function(a,b){return b.total-a.total;}).slice(0,5);
