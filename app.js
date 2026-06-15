@@ -1239,7 +1239,7 @@ function renderPromosHome(){
         addCtl='<div class="prod-add-row" style="align-items:center;margin-top:8px">'+
           '<div class="qty-inline">'+
             '<button class="qb-sm" onclick="cambiarCantCatalogo(\''+prod.id+'\',-1)" '+(cantActual===0?'style="opacity:.3;pointer-events:none"':'')+'>−</button>'+
-            '<input class="qty-inp" id="qty-cat-'+prod.id+'" type="number" min="0" max="'+prod.stock+'" value="'+cantActual+'" onchange="setCantCatalogo(\''+prod.id+'\',this.value)" onclick="this.select()">'+
+            '<input class="qty-inp" id="qty-cat-'+prod.id+'" type="number" min="0"'+(prod.stock!=null?' max="'+prod.stock+'"':'')+' value="'+cantActual+'" onchange="setCantCatalogo(\''+prod.id+'\',this.value)" onclick="this.select()">'+
             '<button class="qb-sm" onclick="cambiarCantCatalogo(\''+prod.id+'\',1)">+</button>'+
           '</div>'+
           '<button class="badd'+(cantActual>0?' inc':'')+'" onclick="agregarAlCarrito(\''+prod.id+'\')">'+(cantActual>0?'✓ Añadir':'+ Añadir')+'</button>'+
