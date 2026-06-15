@@ -206,8 +206,8 @@ async function sbPullAll(esAdmin) {
       local.forEach(function(p) { mapaLocal[p.id] = p; });
       pedCloud.forEach(function(p) { mapaLocal[p.id] = p; });
       var fusionados = Object.values(mapaLocal);
-      // Mantener orden de inserción (id numérico ascendente)
-      fusionados.sort(function(a, b) { return Number(a.id) - Number(b.id); });
+      // Mantener orden cronológico por fecha ISO
+      fusionados.sort(function(a,b){var da=a.fechaISO||"",db=b.fechaISO||"";return da>db?1:da<db?-1:0;});
       localStorage.setItem("pyro_pedidos", JSON.stringify(fusionados));
       changed = true;
     }

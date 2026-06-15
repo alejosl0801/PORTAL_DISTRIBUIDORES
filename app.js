@@ -1187,7 +1187,7 @@ function renderPedidoFrecuente(){
   if(!el)return;
   var prev=document.getElementById("card-frecuente-wrap");
   if(prev)prev.remove();
-  var mp=misPedidos().filter(function(p){return!p.esCanje&&p.estado!=="cancelado"&&p.items&&p.items.length;}).slice().sort(function(a,b){return(b.fechaISO||b.fecha||"")>(a.fechaISO||a.fecha||"")?1:-1;});
+  var mp=misPedidos().filter(function(p){return!p.esCanje&&p.estado!=="cancelado"&&p.items&&p.items.length;}).slice().sort(function(a,b){return parseFechaPed(b).getTime()-parseFechaPed(a).getTime();});
   if(!mp.length)return;
   var conteo={};
   mp.forEach(function(p){p.items.forEach(function(it){conteo[it.id]=(conteo[it.id]||0)+it.cant;});});
@@ -1336,7 +1336,7 @@ function renderSearchRecientes(){
   if(!busqs.length){el.innerHTML="";return;}
   el.innerHTML='<div class="busq-recientes">'+
     '<span style="font-size:10px;color:var(--g3);font-weight:600;letter-spacing:.5px;text-transform:uppercase;margin-right:4px">Recientes:</span>'+
-    busqs.map(function(b){return'<button class="busq-chip" onclick="usarBusquedaReciente('+JSON.stringify(b)+')">'+escHtml(b)+'</button>';}).join("")+
+    busqs.map(function(b){return'<button class="busq-chip" data-q="'+escHtml(b)+'" onclick="usarBusquedaReciente(this.dataset.q)">'+escHtml(b)+'</button>';}).join("")+
   '</div>';
 }
 
@@ -2352,6 +2352,7 @@ function cancelarPedido(pid){
   confirmar("¿Cancelar el pedido #"+pid+"? Esta acción no se puede deshacer.",function(){
     var p=PEDIDOS.find(function(x){return x.id===pid;});
     if(p){
+      var estadoViejo=p.estado;
       p.estado="cancelado";
       if(p.items){
         p.items.forEach(function(it){
@@ -2360,9 +2361,11 @@ function cancelarPedido(pid){
         });
         guardarStock();
       }
+      // Solo revertir puntos si ya estaban confirmados (entregado/finalizado)
+      var eraConfirmado=estadoViejo==="entregado"||estadoViejo==="finalizado";
+      if(!p.esCanje&&(p.puntos||0)>0&&eraConfirmado)registrarLogPuntos(p.ruc,"revertido",p.puntos,"Pedido #"+pid+" cancelado");
+      if(p.esCanje&&(p.canjePts||0)>0)registrarLogPuntos(p.ruc,"revertido",p.canjePts,"Canje cancelado: "+(p.canjeNm||pid));
     }
-    if(p&&!p.esCanje&&(p.puntos||0)>0)registrarLogPuntos(p.ruc,"revertido",p.puntos,"Pedido #"+pid+" cancelado");
-    if(p&&p.esCanje&&(p.canjePts||0)>0)registrarLogPuntos(p.ruc,"revertido",p.canjePts,"Canje cancelado: "+(p.canjeNm||pid));
     guardarPedidos();
     if(p)sincronizarConSheets(p,true);
     renderHistorial(); toast("✕ Pedido cancelado");
@@ -2395,7 +2398,9 @@ function editarPedido(pid){
     });
     PEDIDOS=PEDIDOS.filter(function(x){return x.id!==pid;});
     guardarPedidos(); guardarCarrito(); actualizarBadge();
-    if((p.puntos||0)>0)registrarLogPuntos(p.ruc,"revertido",p.puntos,"Pedido #"+pid+" devuelto al carrito para editar");
+    // Solo revertir puntos confirmados (el botón Editar solo está en pendiente, pero por seguridad)
+    var eraConfirmadoEdit=p.estado==="entregado"||p.estado==="finalizado";
+    if((p.puntos||0)>0&&eraConfirmadoEdit)registrarLogPuntos(p.ruc,"revertido",p.puntos,"Pedido #"+pid+" devuelto al carrito para editar");
     marcarPedidoEliminado(pid);
     // En la nube queda como cancelado (el pedido nuevo se creará con otro número)
     var copia=null;try{copia=JSON.parse(JSON.stringify(p));}catch(e){}
@@ -3050,7 +3055,7 @@ function guardarEstadoPed(pid){
   if(obsSel&&obsSel.value)p.obsAdmin=obsSel.value;
   // Guardar forma de pago editada (si el selector existe y el pedido no está finalizado)
   var pagoSel=document.getElementById("adm-pago-sel");
-  if(pagoSel&&p.estado!=="finalizado"&&!p.azurFactura)p.pago=pagoSel.value;
+  if(pagoSel&&estadoViejo!=="finalizado"&&!p.azurFactura)p.pago=pagoSel.value;
   // Restaurar stock si cancela
   if(sel.value==="cancelado"&&estadoViejo!=="cancelado"&&p.items){
     p.items.forEach(function(it){
@@ -3367,7 +3372,7 @@ function renderAdmAlertas(){
     if(d.esAdmin||d.rol==="impresion")return false;
     var misPeds=PEDIDOS.filter(function(p){return p.ruc===d.ruc&&!p.esCanje&&p.estado!=="cancelado";});
     if(!misPeds.length)return true;
-    var ultimo=misPeds.slice().sort(function(a,b){return(b.fechaISO||b.fecha||"")>(a.fechaISO||a.fecha||"")?1:-1;})[0];
+    var ultimo=misPeds.slice().sort(function(a,b){return parseFechaPed(b).getTime()-parseFechaPed(a).getTime();})[0];
     var f=parseFechaPed(ultimo);return !f||(ahora-f)>30*24*60*60*1000;
   });
   if(inactivos.length)alertas.push({tipo:"amar",ico:"😴",msg:inactivos.length+" distribuidor(es) sin pedidos en 30+ días",accion:"admTab('distribuidores')"});
@@ -3384,7 +3389,7 @@ function exportarExcelDist(){
   var rows=todos.map(function(d){
     var misPeds=PEDIDOS.filter(function(p){return p.ruc===d.ruc&&!p.esCanje&&p.estado!=="cancelado";});
     var total=misPeds.reduce(function(s,p){return s+(p.subtotal||0);},0);
-    var sorted=misPeds.slice().sort(function(a,b){return(b.fechaISO||b.fecha||"")>(a.fechaISO||a.fecha||"")?1:-1;});
+    var sorted=misPeds.slice().sort(function(a,b){return parseFechaPed(b).getTime()-parseFechaPed(a).getTime();});
     var ultimo=sorted.length?sorted[0].fecha:"Nunca";
     return[d.ruc,d.razon||"",d.encargado||"",d.correo||"",d.tel||"",misPeds.length,fmt$(total),ultimo,d.bloqueado?"Bloqueado":"Activo"];
   });
@@ -3538,12 +3543,14 @@ function agregarDirEditar(ruc){
   if(!d.establecimientos)d.establecimientos=[];
   d.establecimientos.push({nm:nm,dir:dir,obs:""});
   if(nmEl)nmEl.value="";if(dirEl)dirEl.value="";
+  guardarDistribuidores();
   renderDirsEditar(ruc);
 }
 function eliminarDirEditar(ruc,i){
   var d=DISTRIBUIDORES.find(function(x){return x.ruc===ruc;});
   if(!d||!d.establecimientos)return;
   d.establecimientos.splice(i,1);
+  guardarDistribuidores();
   renderDirsEditar(ruc);
 }
 
@@ -3867,7 +3874,7 @@ function importarStock(event){
   var reader=new FileReader();
   reader.onload=function(e){
     var lines=e.target.result.replace(/^﻿/,"").replace(/\r/g,"").split("\n");
-    if(!lines.length){toast("⚠️ Archivo vacío");return;}
+    if(lines.length<2){toast("⚠️ Archivo vacío");return;}
     var header=lines[0].toLowerCase().split(",").map(function(h){return h.trim();});
     var idIdx=header.indexOf("id");
     var stIdx=header.indexOf("stock");
@@ -5060,7 +5067,7 @@ function sincronizarDesdeNube(ruc){
       if(pc.obsAdmin&&pc.obsAdmin!==pl.obsAdmin){pl.obsAdmin=pc.obsAdmin;cambio=true;}
     });
     if(!cambio)return;
-    local.sort(function(a,b){var da=a.fechaISO||a.fecha||"",db=b.fechaISO||b.fecha||"";return da>db?1:da<db?-1:0;});
+    local.sort(function(a,b){return parseFechaPed(a).getTime()-parseFechaPed(b).getTime();});
     localStorage.setItem("pyro_pedidos",JSON.stringify(local));
     PEDIDOS=local;
     _logrosCache=null;
@@ -5068,8 +5075,8 @@ function sincronizarDesdeNube(ruc){
     try{
       if(document.querySelector(".ov.open"))return;
       if(document.getElementById("s-main")&&document.getElementById("s-main").classList.contains("active")){
-        var tabAct=document.querySelector(".tab-btn.active");
-        if(tabAct){var t=tabAct.dataset.tab;if(t==="inicio"||t==="historial"||t==="recompensas")irTab(t);}
+        var tabAct=document.querySelector("#s-main .bnav.active");
+        if(tabAct){var t=tabAct.id.replace("bnav-","");if(t==="inicio"||t==="historial"||t==="recompensas")irTab(t);}
       } else if(USER&&USER.esAdmin&&document.getElementById("s-admin")&&document.getElementById("s-admin").classList.contains("active")){
         if(ADM_TAB==="pedidos"){if(USER&&USER.rol==="impresion")renderRolImpresion();else renderAdmPedidos();}
         chequearPedidosNuevos();
