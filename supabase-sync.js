@@ -241,11 +241,17 @@ async function sbPullAll(esAdmin) {
     _sbSetStatus("ok");
 
     // Refrescar la UI si algo cambió
-    if (changed && typeof renderAdmin === "function" && window._USER && window._USER.esAdmin) {
-      try { renderAdmin(); } catch (e) {}
-    }
-    if (changed && typeof cargarStock === "function") {
-      try { cargarStock(); } catch (e) {}
+    if (changed) {
+      // Reload in-memory globals from localStorage before re-rendering
+      if (typeof cargarPedidos === "function") {
+        try { window.PEDIDOS = cargarPedidos(); } catch (e) {}
+      }
+      if (typeof cargarStock === "function") {
+        try { cargarStock(); } catch (e) {}
+      }
+      if (typeof renderAdmin === "function" && window._USER && window._USER.esAdmin) {
+        try { renderAdmin(); } catch (e) {}
+      }
     }
 
   } catch (e) {
