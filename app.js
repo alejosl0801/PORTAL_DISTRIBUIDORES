@@ -2374,7 +2374,7 @@ function cancelarPedido(pid){
       // Solo revertir puntos si ya estaban confirmados (entregado/finalizado)
       var eraConfirmado=estadoViejo==="entregado"||estadoViejo==="finalizado";
       if(!p.esCanje&&(p.puntos||0)>0&&eraConfirmado)registrarLogPuntos(p.ruc,"revertido",p.puntos,"Pedido #"+pid+" cancelado");
-      if(p.esCanje&&(p.canjePts||0)>0)registrarLogPuntos(p.ruc,"revertido",p.canjePts,"Canje cancelado: "+(p.canjeNm||pid));
+      if(p.esCanje&&(p.canjePts||0)>0&&estadoViejo!=="cancelado")registrarLogPuntos(p.ruc,"revertido",p.canjePts,"Canje cancelado: "+(p.canjeNm||pid));
     }
     guardarPedidos();
     if(p)sincronizarConSheets(p,true);
@@ -3908,10 +3908,11 @@ function importarStock(event){
       var cols=line.split(sep);
       if(!cols[idIdx])return;
       var id=cols[idIdx].trim().replace(/^"|"$/g,"");
-      var stock=parseInt(cols[stIdx],10);
-      if(isNaN(stock))return;
+      var rawSt=(cols[stIdx]||"").trim().replace(/^"|"$/g,"");
       var p=PRODUCTOS.find(function(x){return x.id===id;});
-      if(p){p.stock=Math.max(0,stock);p.ago=(p.stock===0);actualizados++;}
+      if(!p)return;
+      if(rawSt===""||rawSt.toLowerCase()==="ilimitado"||rawSt==="∞"){p.stock=null;p.ago=false;actualizados++;}
+      else{var stock=parseInt(rawSt,10);if(isNaN(stock))return;p.stock=Math.max(0,stock);p.ago=(p.stock===0);actualizados++;}
     });
     guardarStock(); renderAdmStock();
     toast("✅ "+actualizados+" productos actualizados desde CSV");
