@@ -347,7 +347,9 @@ function loginConCredenciales(ruc,pw){
     activarPullToRefresh();
     iniciarAutoguardado();
     // Restaurar última tab (si ya vio tutorial y no hay bienvenida pendiente)
+    var _tabsValidas=["inicio","catalogo","carrito","historial","recompensas"];
     var ultimaTab=localStorage.getItem("pyro_ultima_tab_"+USER.ruc)||"inicio";
+    if(_tabsValidas.indexOf(ultimaTab)===-1)ultimaTab="inicio";
     var keyTut="pyro_tut_"+USER.ruc;
     var yaVioTut=localStorage.getItem(keyTut)==="1";
     var yaTieneBienvenida=PEDIDOS.some(function(p){return p.ruc===USER.ruc&&p.esBienvenida;});
@@ -462,7 +464,7 @@ function hacerLogin(){
       err.textContent="⛔ Demasiados intentos fallidos. Espera 60 segundos.";
       err.style.display="block";
       setTimeout(function(){_loginBlocked=false;_loginAttempts=0;},60000);
-    }else{err.style.display="block";}
+    }else{err.textContent="RUC o contraseña incorrectos";err.style.display="block";}
     return;
   }
   _loginAttempts=0;_loginBlocked=false;
@@ -484,7 +486,7 @@ function finalizarLogin(u,pw){
         localStorage.setItem(llave,"1");
         confirmar(
           "⚠️ <b>Tu contraseña es muy fácil de adivinar</b><br><br>Por seguridad, te recomendamos cambiarla ahora.<br><small style='color:var(--g3)'>Ve a Perfil → Cambiar contraseña</small>",
-          function(){irTab("perfil");setTimeout(mostrarCambioPassOpcional,400);}
+          function(){abrirPerfil();setTimeout(mostrarCambioPassOpcional,400);}
         );
       }
     },1800);
@@ -3056,7 +3058,7 @@ function guardarEstadoPed(pid){
   if(!p||!sel)return;
   var estadoViejo=p.estado;
   p.estado=sel.value;
-  if(obsSel&&obsSel.value)p.obsAdmin=obsSel.value;
+  if(obsSel)p.obsAdmin=obsSel.value;
   // Guardar forma de pago editada (si el selector existe y el pedido no está finalizado)
   var pagoSel=document.getElementById("adm-pago-sel");
   if(pagoSel&&estadoViejo!=="finalizado"&&!p.azurFactura)p.pago=pagoSel.value;
@@ -3731,6 +3733,7 @@ function guardarNuevoDist(){
   if(dir)nd.establecimientos=[{nm:"Local principal",dir:dir,obs:""}];
   DISTRIBUIDORES.push(nd);
   guardarDistribuidores();
+  if(btnNd)btnNd.disabled=false;
   cerrarModal("modal-nuevo-dist");
   renderAdmDist();
   var credRucEl=document.getElementById("nd-cred-ruc");
