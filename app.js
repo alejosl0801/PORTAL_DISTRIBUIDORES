@@ -825,6 +825,7 @@ function irTab(t){
   document.querySelectorAll("#s-main .bnav").forEach(function(b){b.classList.remove("active");});
   var bn=document.getElementById("bnav-"+t);if(bn)bn.classList.add("active");
   if(t==="inicio")renderInicio();
+  if(t==="catalogo")renderCatalogo();
   if(t==="carrito")renderCarrito();
   if(t==="historial")renderHistorial();
   if(t==="recompensas")renderRecompensas();
@@ -3067,8 +3068,9 @@ function guardarEstadoPed(pid){
   // Guardar forma de pago editada (si el selector existe y el pedido no está finalizado)
   var pagoSel=document.getElementById("adm-pago-sel");
   if(pagoSel&&estadoViejo!=="finalizado"&&!p.azurFactura)p.pago=pagoSel.value;
-  // Restaurar stock si cancela
-  if(sel.value==="cancelado"&&estadoViejo!=="cancelado"&&p.items){
+  // Restaurar stock si cancela — solo si los items aún no salieron del almacén
+  var estadosPreEntrega=["pendiente","en_proceso","autorizado","entrega","facturado"];
+  if(sel.value==="cancelado"&&estadoViejo!=="cancelado"&&estadosPreEntrega.indexOf(estadoViejo)!==-1&&p.items){
     p.items.forEach(function(it){
       var prod=PRODUCTOS.find(function(x){return x.id===it.id;});
       if(prod){prod.stock+=it.cant;prod.ago=false;}
