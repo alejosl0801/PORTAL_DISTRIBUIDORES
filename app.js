@@ -1581,7 +1581,7 @@ function renderDeseosSec(){
     html+='<div class="ped" style="padding:10px 14px;display:flex;align-items:center;gap:12px">'+
       '<div style="flex:1"><div style="font-weight:700;font-size:14px">'+escHtml(p.nm)+'</div>'+
       '<div style="font-size:13px;color:var(--azul);font-weight:600">'+fmt$(pc)+'</div>'+
-      (p.ago?'<span class="badge b-rojo" style="font-size:10px">Agotado</span>':'<span class="badge b-verde" style="font-size:10px">Stock: '+p.stock+'</span>')+
+      (p.ago?'<span class="badge b-rojo" style="font-size:10px">Agotado</span>':'<span class="badge b-verde" style="font-size:10px">'+(p.stock!=null?'Stock: '+p.stock:'Disponible')+'</span>')+
       '</div><div style="display:flex;flex-direction:column;gap:6px">'+
       (!p.ago?'<button class="btn btn-p btn-sm" onclick="agregarAlCarrito(\''+p.id+'\')">+ Carrito</button>':'')+
       '<button class="btn btn-s btn-sm" onclick="toggleDeseo(\''+p.id+'\')">🗑️ Quitar</button>'+
@@ -3380,7 +3380,7 @@ function renderAdmAlertas(){
   var umbrales={};try{umbrales=JSON.parse(localStorage.getItem("pyro_umbrales")||"{}");}catch(e){}
   var stockCrit=PRODUCTOS.filter(function(p){var u=umbrales[p.id]!=null?umbrales[p.id]:20;return p.stock<=u&&p.stock>0;});
   if(stockCrit.length)alertas.push({tipo:"amar",ico:"📦",msg:stockCrit.length+" productos con stock bajo umbral",accion:"admTab('stock')"});
-  var agotados=PRODUCTOS.filter(function(p){return p.stock<=0;});
+  var agotados=PRODUCTOS.filter(function(p){return p.ago||(p.stock!=null&&p.stock<=0);});
   if(agotados.length)alertas.push({tipo:"rojo",ico:"🚨",msg:agotados.length+" productos agotados",accion:"admTab('stock')"});
   var inactivos=DISTRIBUIDORES.filter(function(d){
     if(d.esAdmin||d.rol==="impresion")return false;
@@ -3785,11 +3785,12 @@ function renderAdmStock(){
       html+='<div class="subcat">'+cat.ico+' '+cat.nombre+' · '+sn+'</div>';
       html+=ps.map(function(p){
         var umbral=umbrales[p.id]!=null?umbrales[p.id]:20;
-        var bajoBorde=(p.stock<=umbral&&p.stock>0)?"border:2px solid var(--amar);":"";
-        if(p.stock<=umbral&&p.stock>0)bajosUmbral.push(p.nm);
-        var col=p.ago?"b-rojo":p.stock<=umbral?"b-amar":"b-verde";
-        var lab=p.ago?"Agotado":p.stock<=umbral?"Bajo umbral":"OK";
-        var umbralBadge=(p.stock<=umbral&&p.stock>0)?'<span class="badge b-amar">⚠️ Bajo umbral</span>':'';
+        var _bajoUmbral=(p.stock!=null&&p.stock<=umbral&&p.stock>0);
+        var bajoBorde=_bajoUmbral?"border:2px solid var(--amar);":"";
+        if(_bajoUmbral)bajosUmbral.push(p.nm);
+        var col=p.ago?"b-rojo":_bajoUmbral?"b-amar":"b-verde";
+        var lab=p.ago?"Agotado":_bajoUmbral?"Bajo umbral":"OK";
+        var umbralBadge=_bajoUmbral?'<span class="badge b-amar">⚠️ Bajo umbral</span>':'';
         var costoActual=costos[p.id]!=null?costos[p.id]:p.costo;
         return '<div class="card" style="margin-bottom:8px;'+bajoBorde+'"><div class="card-b">'+
           '<div style="font-size:13px;font-weight:700;margin-bottom:8px">'+escHtml(p.nm)+' <span style="font-size:10px;color:var(--g3);font-weight:400">'+escHtml(p.id)+'</span></div>'+
@@ -3857,7 +3858,7 @@ function exportarExcelStock(){
     cat.subs.forEach(function(sn){
       PRODUCTOS.filter(function(p){return p.cat===ck&&p.sub===sn;}).forEach(function(p){
         var costoAct=costos[p.id]!=null?costos[p.id]:p.costo;
-        var umbStock=umbComp[p.id]||20;filas.push([p.id,p.nm,cat.nombre,sn,p.stock,p.ago?"Agotado":p.stock<=umbStock?"Bajo":"OK",costoAct]);
+        var umbStock=umbComp[p.id]||20;filas.push([p.id,p.nm,cat.nombre,sn,p.stock!=null?p.stock:"∞",p.ago?"Agotado":(p.stock!=null&&p.stock<=umbStock&&p.stock>0)?"Bajo":"OK",costoAct]);
       });
     });
   });
