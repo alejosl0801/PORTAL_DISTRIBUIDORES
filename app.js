@@ -1464,7 +1464,7 @@ function renderProdCard(p){
   var pc=rv.precio;
   var pts=calcPuntos(pc,p.costo);
   var isFav=FAVORITOS.indexOf(p.id)!==-1;
-  var stockBadge=p.ago?'<span class="badge b-rojo">Agotado</span>':(p.stock<=20&&p.stock>0?'<span class="badge b-amar">⚠️ Pocas ('+p.stock+')</span>':'<span class="badge b-verde">Stock: '+p.stock+'</span>');
+  var stockBadge=p.ago?'<span class="badge b-rojo">Agotado</span>':(p.stock!=null&&p.stock<=20&&p.stock>0?'<span class="badge b-amar">⚠️ Pocas ('+p.stock+')</span>':'<span class="badge b-verde">'+(p.stock!=null?'Stock: '+p.stock:'Disponible')+'</span>');
   var promoBadge=promoIt?'<span class="badge b-rojo" style="font-size:9px">🔥 PROMO</span>':'';
   var volBadge=(!USER||!USER.sinDescVol)&&p.descVol&&!promoIt?'<span class="badge b-azul" style="font-size:9px">Desc. volumen disponible</span>':'';
   var imgSrc=p.img&&IMGS[p.img]?IMGS[p.img]:null;
@@ -2185,7 +2185,7 @@ function confirmarPedido(){
   registrarLogPuntos(USER.ruc,"pendiente",ptsTotal,"Pedido #"+pid);
   items.forEach(function(it){
     var p=PRODUCTOS.find(function(x){return x.id===it.id;});
-    if(p){p.stock=Math.max(0,p.stock-it.cant);if(p.stock===0)p.ago=true;}
+    if(p&&p.stock!=null){p.stock=Math.max(0,p.stock-it.cant);if(p.stock===0)p.ago=true;}
   });
   guardarStock();
   CARRITO=[];
