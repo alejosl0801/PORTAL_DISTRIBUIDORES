@@ -590,7 +590,7 @@ function otorgarBienvenida(){
   if(yaTiene){try{localStorage.setItem(flag,"1");}catch(e){}return;}
   if(localStorage.getItem(flag))return;
   var now=new Date();
-  var bid="B"+now.getTime().toString().slice(-5);
+  var bid="B"+now.getTime()+Math.floor(Math.random()*900+100);
   var pedBienv={
     id:bid,ruc:USER.ruc,razon:USER.razon,
     fecha:now.toLocaleDateString("es-EC"),fechaISO:now.toISOString(),
@@ -2892,14 +2892,15 @@ function renderAdmPedidos(){
   }).join("")+'</div>';
 
   var _busqEl=document.getElementById("adm-ped-busq");
-  var busqPed=(_busqEl||{value:""}).value.toLowerCase().trim();
+  var busqPedRaw=(_busqEl||{value:""}).value.trim();
+  var busqPed=busqPedRaw.toLowerCase();
   var _busqFocused=_busqEl&&document.activeElement===_busqEl;
   // Excluir canjes/bienvenida de la lista de pedidos admin
   var lista=PEDIDOS.slice().reverse().filter(function(p){return!p.esCanje;}).filter(filtrarPedAdmin).filter(function(p){
     if(!busqPed)return true;
     return (p.id||"").toLowerCase().indexOf(busqPed)!==-1||(p.razon||"").toLowerCase().indexOf(busqPed)!==-1||(p.ruc||"").toLowerCase().indexOf(busqPed)!==-1;
   });
-  var busqHtml='<div style="margin-bottom:8px"><input id="adm-ped-busq" class="form-input" placeholder="🔍 Buscar por pedido, distribuidor o RUC..." oninput="renderAdmPedidos()" value="'+escHtml(busqPed)+'" style="font-size:13px;padding:6px 10px"></div>';
+  var busqHtml='<div style="margin-bottom:8px"><input id="adm-ped-busq" class="form-input" placeholder="🔍 Buscar por pedido, distribuidor o RUC..." oninput="renderAdmPedidos()" value="'+escHtml(busqPedRaw)+'" style="font-size:13px;padding:6px 10px"></div>';
   var admPL=document.getElementById("adm-ped-lista");if(!admPL)return;
   admPL.innerHTML=busqHtml+filtrosHtml+(lista.length?lista.map(function(p){
     var facBadge="";
@@ -4485,9 +4486,11 @@ function mostrarBannerOffline(offline){
     bar.style.display="block";
   } else {
     var bar2=document.getElementById(ID);
-    if(bar2)bar2.style.display="none";
-    toast("✅ Conexión restaurada — sincronizando...");
-    procesarColaOffline();
+    if(bar2){
+      var _eraVisible=bar2.style.display!=="none";
+      bar2.style.display="none";
+      if(_eraVisible){toast("✅ Conexión restaurada — sincronizando...");procesarColaOffline();}
+    }
   }
 }
 
