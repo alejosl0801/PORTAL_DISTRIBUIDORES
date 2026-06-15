@@ -1825,7 +1825,7 @@ function renderCarrito(){
       '</div>'+
       '<div class="qty">'+
         '<button class="qb" onclick="cambiarCant(\''+it.id+'\',-1)"'+(it.cant===0?' disabled style="opacity:.3;pointer-events:none"':'')+'>−</button>'+
-        '<input class="qty-cart-inp" type="number" min="0" max="'+p.stock+'" value="'+it.cant+'" onchange="setCantCarrito(\''+it.id+'\',this.value)" onclick="this.select()">'+
+        '<input class="qty-cart-inp" type="number" min="0"'+(p.stock!=null?' max="'+p.stock+'"':'')+' value="'+it.cant+'" onchange="setCantCarrito(\''+it.id+'\',this.value)" onclick="this.select()">'+
         '<button class="qb" onclick="cambiarCant(\''+it.id+'\',1)">+</button>'+
       '</div>'+
       '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">'+
@@ -2435,9 +2435,9 @@ function repetirPedido(pid){
       '<div style="flex:1;min-width:0">'+
         '<div style="font-size:13px;font-weight:600;margin-bottom:2px">'+escHtml(it.nm)+'</div>'+
         (agotado?'<span style="font-size:11px;color:var(--rojo,#e03c31);font-weight:700">⚠️ Sin stock</span>':
-          '<span style="font-size:11px;color:var(--verde,#27ae60)">✓ Disponible ('+((prod&&prod.stock)||0)+' en stock)</span>')+
+          '<span style="font-size:11px;color:var(--verde,#27ae60)">✓ Disponible ('+(prod&&prod.stock!=null?prod.stock+' en stock':'sin límite')+')</span>')+
       '</div>'+
-      '<input type="number" id="rep-cant-'+idx+'" min="0" max="'+(prod?prod.stock:0)+'" value="'+(agotado?0:it.cant)+'" '+(agotado?'disabled':'')+
+      '<input type="number" id="rep-cant-'+idx+'" min="0"'+(prod&&prod.stock!=null?' max="'+prod.stock+'"':'')+' value="'+(agotado?0:it.cant)+'" '+(agotado?'disabled':'')+
         ' style="width:64px;padding:6px 8px;border:1.5px solid var(--g2,#ddd);border-radius:10px;font-size:14px;font-weight:700;text-align:center;background:'+(agotado?"var(--g1,#f5f5f5)":"var(--blanco,#fff)")+'">'+
     '</div>';
   }).join("");
