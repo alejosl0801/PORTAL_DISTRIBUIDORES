@@ -1481,7 +1481,7 @@ function renderProdCard(p){
 
   // Indicador próximo descuento
   var proxDescHtml="";
-  if(p.descVol&&!USER.sinDescVol&&cantActual>0){
+  if(p.descVol&&(!USER||!USER.sinDescVol)&&cantActual>0){
     var sig=siguienteNivel(p,cantActual);
     if(sig&&sig.falta<=20){
       var ahorroAdicional=sig.pct;
@@ -2316,6 +2316,7 @@ function renderHistorial(){
       '</div>'+
     '</div>';
   var histEl=document.getElementById("hist-lista");
+  if(!histEl)return;
   var pedidosHtml=mp.length?mp.map(function(p){
     var confirmados=(p.estado==="entregado"||p.estado==="finalizado");
     var ptsHtml=p.esBienvenida?
