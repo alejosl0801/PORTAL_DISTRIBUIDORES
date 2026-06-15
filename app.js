@@ -830,7 +830,7 @@ function irTab(t){
   if(t==="recompensas")renderRecompensas();
   var cb=document.getElementById("cart-bar");
   if(cb)cb.style.display="none";
-  document.querySelector("#s-main .content").scrollTo(0,0);
+  var _sc=document.querySelector("#s-main .content");if(_sc)_sc.scrollTo(0,0);
   if(USER&&!USER.esAdmin){
     try{localStorage.setItem("pyro_ultima_tab_"+USER.ruc,t);}catch(e){}
     setTimeout(function(){mostrarTipSeccion(t);},300);
@@ -1222,6 +1222,7 @@ function renderPedidoFrecuente(){
 function renderPromosHome(){
   limpiarContadores();
   var cont=document.getElementById("promos-home");
+  if(!cont)return;
   var activas=promosVigentes();
   if(!activas.length){cont.innerHTML='<div class="sec-titulo">Promociones</div><div class="empty" style="padding:12px 0"><p>No hay promociones disponibles en este momento</p></div>';return;}
   cont.innerHTML="<div class='sec-titulo'>Promociones</div>"+activas.map(function(pr){
@@ -1782,6 +1783,7 @@ function renderCarrito(){
   var prevNotas=(document.getElementById("cart-notas")||{}).value||"";
   var cont=document.getElementById("cart-lista");
   var res=document.getElementById("cart-resumen");
+  if(!cont||!res)return;
   renderBorradores();
   if(!CARRITO.length){
     cont.innerHTML='<div class="cvacio"><div class="ico cvacio-emoji">🛒</div><p style="font-size:17px;font-weight:800;color:var(--g4)">Tu carrito está vacío</p><p style="font-size:13px;color:var(--g3);margin-top:6px;max-width:260px;margin-left:auto;margin-right:auto;line-height:1.5">¡Empieza a armar tu pedido y suma puntos en cada compra! 🏆</p><button class="btn btn-p" style="margin-top:18px" onclick="irTab(\'catalogo\')">Explorar catálogo</button></div>';
