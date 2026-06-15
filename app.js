@@ -950,7 +950,7 @@ function _logrosDefinicion(){
   var total=comp.reduce(function(s,p){return s+(p.total||0);},0);
   var pts=puntosConfirmados();
   var canjes=misPedidos().filter(function(p){return p.esCanje&&!p.esBienvenida;}).length;
-  var meses=new Set(comp.map(function(p){return(p.fechaISO||p.fecha||"").slice(0,7);})).size;
+  var meses=new Set(comp.map(function(p){var d=parseFechaPed(p);return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0");})).size;
   var semanas=new Set(comp.map(function(p){var d=parseFechaPed(p);var w=Math.floor(d/6048e5);return w;})).size;
   var prods=new Set(comp.reduce(function(a,p){return a.concat((p.items||[]).map(function(i){return i.id;}));},[]).filter(Boolean)).size;
   var _excUnid=["SEGPLAST01","MANOPQS"]; // seguros plásticos y manómetros no cuentan por ser accesorios de muy bajo valor unitario
@@ -3410,7 +3410,7 @@ function renderAdmDist(){
   var lista=DISTRIBUIDORES.filter(function(d){return!d.esAdmin&&d.rol!=="impresion";});
   var _dss=document.getElementById("adm-dist-search");
   var q=(_dss?_dss.value||"":"").toLowerCase();
-  if(q)lista=lista.filter(function(d){return norm(d.razon).indexOf(norm(q))!==-1||d.ruc.indexOf(q)!==-1;});
+  if(q)lista=lista.filter(function(d){return norm(d.razon).indexOf(norm(q))!==-1||d.ruc.indexOf(q)!==-1||norm(d.empresa||"").indexOf(norm(q))!==-1||norm(d.encargado||"").indexOf(norm(q))!==-1;});
   var admDistLista=document.getElementById("adm-dist-lista");if(!admDistLista)return;
   admDistLista.innerHTML='<div style="margin-bottom:10px"><button class="btn btn-s btn-sm" onclick="exportarExcelDist()">📥 Exportar Excel</button></div>'+(lista.length?lista.map(function(d){
     var nped=PEDIDOS.filter(function(p){return p.ruc===d.ruc&&!p.esCanje&&p.estado!=="cancelado";}).length;
@@ -3876,14 +3876,15 @@ function importarStock(event){
   reader.onload=function(e){
     var lines=e.target.result.replace(/^﻿/,"").replace(/\r/g,"").split("\n");
     if(lines.length<2){toast("⚠️ Archivo vacío");return;}
-    var header=lines[0].toLowerCase().split(",").map(function(h){return h.trim();});
+    var sep=lines[0].indexOf(";")!==-1?";":",";
+    var header=lines[0].toLowerCase().split(sep).map(function(h){return h.trim();});
     var idIdx=header.indexOf("id");
     var stIdx=header.indexOf("stock");
     if(idIdx<0||stIdx<0){toast("⚠️ El CSV debe tener columnas 'id' y 'stock'");return;}
     var actualizados=0;
     lines.slice(1).forEach(function(line){
       if(!line.trim())return;
-      var cols=line.split(",");
+      var cols=line.split(sep);
       if(!cols[idIdx])return;
       var id=cols[idIdx].trim().replace(/^"|"$/g,"");
       var stock=parseInt(cols[stIdx],10);

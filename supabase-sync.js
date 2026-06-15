@@ -270,11 +270,11 @@ function sbSuscribirPedidos() {
           var arr = JSON.parse(raw);
           var idx = arr.findIndex(function(x) { return String(x.id) === String(p.id); });
           if (idx > -1) { arr[idx] = p; } else { arr.push(p); }
-          arr.sort(function(a, b) { return Number(a.id) - Number(b.id); });
+          arr.sort(function(a, b) { var da=a.fechaISO||"",db=b.fechaISO||"";return da>db?1:da<db?-1:0; });
           localStorage.setItem("pyro_pedidos", JSON.stringify(arr));
           if (typeof PEDIDOS !== "undefined") {
             var mi = PEDIDOS.findIndex(function(x) { return String(x.id) === String(p.id); });
-            if (mi > -1) { PEDIDOS[mi] = p; } else { PEDIDOS.push(p); PEDIDOS.sort(function(a,b){return Number(a.id)-Number(b.id);}); }
+            if (mi > -1) { PEDIDOS[mi] = p; } else { PEDIDOS.push(p); PEDIDOS.sort(function(a,b){var da=a.fechaISO||"",db=b.fechaISO||"";return da>db?1:da<db?-1:0;}); }
           }
           if (typeof chequearPedidosNuevos === "function") chequearPedidosNuevos();
           if (typeof renderAdmin === "function" && window._USER && window._USER.esAdmin) renderAdmin();
