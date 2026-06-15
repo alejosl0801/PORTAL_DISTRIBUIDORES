@@ -2367,7 +2367,7 @@ function cancelarPedido(pid){
       if(p.items){
         p.items.forEach(function(it){
           var prod=PRODUCTOS.find(function(x){return x.id===it.id;});
-          if(prod){prod.stock+=it.cant;prod.ago=false;}
+          if(prod){if(prod.stock!=null)prod.stock+=it.cant;prod.ago=false;}
         });
         guardarStock();
       }
