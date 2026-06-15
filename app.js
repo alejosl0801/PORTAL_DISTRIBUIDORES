@@ -1496,7 +1496,7 @@ function renderProdCard(p){
     :'<div class="prod-add-row">'+
         '<div class="qty-inline">'+
           '<button class="qb-sm" onclick="cambiarCantCatalogo(\''+p.id+'\',-1)" '+(cantActual===0?'style="opacity:.3;pointer-events:none"':'')+'>−</button>'+
-          '<input class="qty-inp" id="qty-cat-'+p.id+'" type="number" min="0" max="'+p.stock+'" value="'+cantActual+'" onchange="setCantCatalogo(\''+p.id+'\',this.value)" onclick="this.select()">'+
+          '<input class="qty-inp" id="qty-cat-'+p.id+'" type="number" min="0"'+(p.stock!=null?' max="'+p.stock+'"':'')+' value="'+cantActual+'" onchange="setCantCatalogo(\''+p.id+'\',this.value)" onclick="this.select()">'+
           '<button class="qb-sm" onclick="cambiarCantCatalogo(\''+p.id+'\',1)">+</button>'+
         '</div>'+
         '<button class="badd'+(cantActual>0?' inc':'')+'" onclick="agregarAlCarrito(\''+p.id+'\')">'+
