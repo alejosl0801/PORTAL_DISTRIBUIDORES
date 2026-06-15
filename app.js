@@ -1263,19 +1263,22 @@ function renderPromosHome(){
 
 var _contadores=[];
 function iniciarContador(fechaVence,elId){
+  var intervalId;
   function actualizar(){
-    var el=document.getElementById(elId);if(!el)return;
+    var el=document.getElementById(elId);
+    if(!el){clearInterval(intervalId);return;}
     var fin=new Date(fechaVence+"T23:59:59");
     var ahora=new Date();
     var diff=fin-ahora;
-    if(diff<=0){el.textContent="¡Terminó!";return;}
+    if(diff<=0){el.textContent="¡Terminó!";clearInterval(intervalId);return;}
     var d=Math.floor(diff/86400000);
     var h=Math.floor((diff%86400000)/3600000);
     var m=Math.floor((diff%3600000)/60000);
     el.textContent="Vence en "+d+"d "+h+"h "+m+"m";
   }
   actualizar();
-  _contadores.push(setInterval(actualizar,60000));
+  intervalId=setInterval(actualizar,60000);
+  _contadores.push(intervalId);
 }
 function limpiarContadores(){
   _contadores.forEach(function(id){clearInterval(id);});
@@ -3738,6 +3741,8 @@ function guardarNuevoDist(){
   ["nd-razon","nd-empresa","nd-encargado","nd-ruc","nd-tel","nd-correo","nd-pass","nd-dir"].forEach(function(x){var el=document.getElementById(x);if(el)el.value="";});
   if(document.getElementById("nd-tipodoc"))document.getElementById("nd-tipodoc").value="ruc";
   if(document.getElementById("nd-sinvol"))document.getElementById("nd-sinvol").checked=false;
+  if(document.getElementById("nd-min"))document.getElementById("nd-min").value="";
+  if(document.getElementById("nd-entrega"))document.getElementById("nd-entrega").checked=false;
 }
 
 // ════════════════════ ADMIN STOCK ════════════════════
@@ -3816,6 +3821,7 @@ function ajustarCosto(id,val){
   costos[id]=n;
   guardarCostos(costos);
   if(p)p.costo=n;
+  backupCambio();
   toast("✅ Costo actualizado");
 }
 
@@ -4205,6 +4211,7 @@ function eliminarRecompensa(idx){
 
 // ════════════════════ NOTIFICACIONES ADMIN ════════════════════
 var _notifInterval=null;
+var _storageListenerAdded=false;
 function iniciarNotificacionesAdmin(){
   if(typeof Notification==="undefined")return;
   Notification.requestPermission();
@@ -4222,11 +4229,14 @@ function iniciarNotificacionesAdmin(){
       new Notification("PyroShield — Pendientes sin procesar",{body:"Tienes "+msg.join(" y ")+" de procesar.",icon:"img/logo.jpg"});
     }
   },30*60*1000);
-  window.addEventListener("storage",function(e){
-    if(e.key==="pyro_pedidos"&&USER&&USER.esAdmin){
-      PEDIDOS=cargarPedidos(); chequearPedidosNuevos();
-    }
-  });
+  if(!_storageListenerAdded){
+    _storageListenerAdded=true;
+    window.addEventListener("storage",function(e){
+      if(e.key==="pyro_pedidos"&&USER&&USER.esAdmin){
+        PEDIDOS=cargarPedidos(); chequearPedidosNuevos();
+      }
+    });
+  }
 }
 
 function chequearPedidosNuevos(){
@@ -5537,10 +5547,8 @@ function confirmarAgregarEstablecimiento(){
   USER.establecimientos=dist.establecimientos;
   guardarDistribuidores();
   document.getElementById("est-modal-ov").remove();
-  // Refrescar sección establecimientos en el perfil
-  var perfilOv=document.getElementById("perfil-ov");
-  if(perfilOv){var est=perfilOv.querySelector("#perfil-est-wrap");if(est)est.outerHTML=_renderEstablecimientosPerfil();}
   toast("✅ Establecimiento guardado");
+  var prev=document.getElementById("perfil-ov");if(prev)prev.remove();
   abrirPerfil();
 }
 
