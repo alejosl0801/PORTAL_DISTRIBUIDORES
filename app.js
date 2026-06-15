@@ -2718,6 +2718,7 @@ function admTab(t,btn){
   ADM_TAB=t;
   document.querySelectorAll(".adm-tab").forEach(function(b){b.classList.remove("active");});
   if(btn)btn.classList.add("active");
+  else{var _ab=document.querySelector(".adm-tab[onclick*=\"'"+t+"'\"]");if(_ab)_ab.classList.add("active");}
   document.querySelectorAll(".adm-panel").forEach(function(p){p.classList.remove("active");});
   var panelEl=document.getElementById("adm-"+t);if(panelEl)panelEl.classList.add("active");
   if(t==="pedidos")renderAdmPedidos();
