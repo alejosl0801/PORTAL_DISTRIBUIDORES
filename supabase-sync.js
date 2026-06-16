@@ -225,11 +225,12 @@ async function sbPullAll(esAdmin) {
     if (distCloud) {
       if (distCloud.extra && distCloud.extra.length) {
         localStorage.setItem("pyro_dist_extra", JSON.stringify(distCloud.extra));
+        changed = true;
       }
       if (distCloud.elim && distCloud.elim.length) {
         localStorage.setItem("pyro_dist_eliminados", JSON.stringify(distCloud.elim));
+        changed = true;
       }
-      changed = true;
     }
 
     // Fusionar rewards (solo admin)
