@@ -3758,6 +3758,13 @@ function guardarNuevoDist(){
   if(enc)nd.encargado=enc;
   if(dir)nd.establecimientos=[{nm:"Local principal",dir:dir,obs:""}];
   DISTRIBUIDORES.push(nd);
+  // Si este documento fue eliminado antes, quitarlo de la lápida: si no, el nuevo
+  // distribuidor desaparecería al recargar (cargarDistribuidoresExtra lo filtraría).
+  try{
+    var elim=JSON.parse(localStorage.getItem("pyro_dist_eliminados")||"[]");
+    var idxElim=elim.indexOf(soloNum);
+    if(idxElim!==-1){elim.splice(idxElim,1);localStorage.setItem("pyro_dist_eliminados",JSON.stringify(elim));}
+  }catch(e){}
   guardarDistribuidores();
   if(btnNd)btnNd.disabled=false;
   cerrarModal("modal-nuevo-dist");
