@@ -192,4 +192,4 @@ gestiona el administrador fuera del repo.
 ## Pendientes conocidos
 
 ### Validación SRI
-No se valida si la clave de acceso retornada por Azur fue aceptada por el SRI. Se guarda `data.claveacceso` pero no se consulta el estado posterior en el SRI. Pendiente: consultar `GET factura/consulta/{claveacceso}` y actualizar `p.azurEstado`.
+`consultarEstadoAzur(pid)` (app.js) consulta `GET factura/consulta/{claveacceso}` vía el proxy `AZUR_API` y guarda el resultado en `p.azurEstado`. Se dispara manualmente con el botón "🔍 Verificar estado SRI" en el detalle de pedido (admin), una vez que la factura ya fue emitida. El parseo de la respuesta es defensivo (acepta varios nombres de campo: `estado`, `estadoSri`, `autorizado`, `creado`) porque el formato exacto de esa respuesta de Azur no está documentado; si el campo real difiere, ajustar `consultarEstadoAzur()`.

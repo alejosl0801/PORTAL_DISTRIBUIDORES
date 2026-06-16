@@ -3019,7 +3019,8 @@ function admVerPedido(pid){
       '<button class="btn btn-s" style="flex:1" onclick="generarNotaEntrega(\''+p.id+'\')">📋 Nota de entrega</button>'+
     '</div>';
     if(p.azurFactura){
-      html+='<div style="margin-top:10px;background:var(--verdec);border:1.5px solid var(--verde);border-radius:10px;padding:10px 12px;font-size:12px;color:var(--verde)">✅ <b>Factura emitida en Azur</b><br><span style="font-size:10px;word-break:break-all;color:var(--g4)">Clave: '+p.azurFactura+'</span></div>';
+      html+='<div style="margin-top:10px;background:var(--verdec);border:1.5px solid var(--verde);border-radius:10px;padding:10px 12px;font-size:12px;color:var(--verde)">✅ <b>Factura emitida en Azur</b><br><span style="font-size:10px;word-break:break-all;color:var(--g4)">Clave: '+p.azurFactura+'</span>'+(p.azurEstado?'<br><b>Estado SRI:</b> '+escHtml(p.azurEstado):'')+'</div>';
+      html+='<button class="btn btn-s btn-full" style="margin-top:8px" onclick="consultarEstadoAzur(\''+p.id+'\')">🔍 Verificar estado SRI</button>';
       html+='<button class="btn btn-s btn-full" style="margin-top:8px" onclick="generarAzur(\''+p.id+'\')">🔄 Re-enviar a Azur</button>';
     } else if(p.estado!=="cancelado"){
       html+='<button class="btn btn-s btn-full" style="margin-top:8px" onclick="generarAzur(\''+p.id+'\')">🧾 Generar factura en Azur</button>';
@@ -3362,6 +3363,22 @@ function generarAzur(pid){
     }
   })
   .catch(function(e){_azurBusy=false;toast("⚠️ Error de conexión con Azur");});
+}
+
+function consultarEstadoAzur(pid){
+  var p=PEDIDOS.find(function(x){return x.id===pid;});
+  if(!p||!p.azurFactura){toast("⚠️ Esta factura aún no ha sido generada");return;}
+  toast("⏳ Consultando estado en el SRI...");
+  fetch(AZUR_API+"factura/consulta/"+encodeURIComponent(p.azurFactura)+"?api_key="+encodeURIComponent(AZUR_TOKEN))
+    .then(function(r){return r.json();})
+    .then(function(data){
+      var estado=data.estado||data.estadoSri||data.estado_sri||(data.autorizado?"AUTORIZADO":null)||(data.creado==="false"?"RECHAZADO":null)||"DESCONOCIDO";
+      p.azurEstado=estado;
+      guardarPedidos();
+      toast("📋 Estado SRI: "+estado);
+      admVerPedido(pid);
+    })
+    .catch(function(e){toast("⚠️ No se pudo consultar el estado SRI");});
 }
 
 function tipoDocLabel(d){
