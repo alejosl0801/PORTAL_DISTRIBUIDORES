@@ -3601,7 +3601,7 @@ function guardarEditarDist(ruc){
   d.sinDescVol=document.getElementById("ed-sinvol").checked;
   if(!d.entrega)d.entrega={};
   d.entrega.habilitada=document.getElementById("ed-entrega").checked;
-  d.entrega.montoMin=parseFloat(document.getElementById("ed-min").value)||30;
+  d.entrega.montoMin=(function(){var v=parseFloat(document.getElementById("ed-min").value);return isNaN(v)?30:v;})();
   var bloqEl=document.getElementById("ed-bloqueado");if(bloqEl)d.bloqueado=bloqEl.checked;
   var bloqRazonEl=document.getElementById("ed-bloqueo-razon");if(bloqRazonEl)d.bloqueoRazon=bloqRazonEl.value||"";
   var saldoEl=document.getElementById("ed-saldo");if(saldoEl)d.saldoPendiente=parseFloat(saldoEl.value)||0;
@@ -3746,7 +3746,7 @@ function guardarNuevoDist(){
   var pw=document.getElementById("nd-pass").value.trim();
   var dir=document.getElementById("nd-dir").value.trim();
   var ent=document.getElementById("nd-entrega").checked;
-  var min=parseFloat(document.getElementById("nd-min").value)||30;
+  var min=(function(){var v=parseFloat(document.getElementById("nd-min").value);return isNaN(v)?30:v;})();
   var sinVol=document.getElementById("nd-sinvol")?document.getElementById("nd-sinvol").checked:false;
   if(!r||!ruc||!pw){toast("⚠️ Completa razón social, documento y contraseña");if(btnNd)btnNd.disabled=false;return;}
   var soloNum=ruc.replace(/[^0-9]/g,"");
