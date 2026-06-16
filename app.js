@@ -2394,6 +2394,7 @@ function editarPedido(pid){
   confirmar("¿Devolver el pedido #"+pid+" al carrito para editarlo?",function(){
     var p=PEDIDOS.find(function(x){return x.id===pid;});
     if(!p||!p.items)return;
+    if(p.estado!=="pendiente"){toast("⚠️ Solo se pueden editar pedidos pendientes");return;}
     p.items.forEach(function(it){
       var prod=PRODUCTOS.find(function(x){return x.id===it.id;});
       if(prod){if(prod.stock!=null)prod.stock+=it.cant;prod.ago=false;}
