@@ -4712,6 +4712,11 @@ window.addEventListener("load",function(){
   // Recordar último RUC: prellenar y enfocar la contraseña
   try{var lastRuc=localStorage.getItem("pyro_last_ruc");if(lastRuc&&lu&&!lu.value){lu.value=lastRuc;if(lp)setTimeout(function(){lp.focus();},100);}}catch(e){}
   if('serviceWorker' in navigator){
+    // Si ya había un SW controlando la página, un controllerchange posterior es una
+    // actualización real y sí debe recargar. En la primera visita (sin controller
+    // previo) NO debe recargar: recargaría la página mientras el usuario está
+    // recién iniciando sesión, devolviéndolo al login sin aviso.
+    var _yaControlada=!!navigator.serviceWorker.controller;
     navigator.serviceWorker.register('./sw.js').then(function(reg){
       // Forzar actualización inmediata si hay nuevo SW esperando
       if(reg.waiting){reg.waiting.postMessage({type:'SKIP_WAITING'});}
@@ -4725,8 +4730,10 @@ window.addEventListener("load",function(){
         });
       });
     }).catch(function(){});
-    // Recargar cuando el SW activo cambia
-    navigator.serviceWorker.addEventListener('controllerchange',function(){window.location.reload();});
+    // Recargar solo si ya había una sesión de SW activa (actualización real)
+    navigator.serviceWorker.addEventListener('controllerchange',function(){
+      if(_yaControlada)window.location.reload();
+    });
   }
   mostrarBotonBiometria();
   // Auto-login si el usuario marcó "Recordarme"
