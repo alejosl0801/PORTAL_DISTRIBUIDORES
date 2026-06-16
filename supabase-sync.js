@@ -250,6 +250,9 @@ async function sbPullAll(esAdmin) {
       if (typeof cargarStock === "function") {
         try { cargarStock(); } catch (e) {}
       }
+      if (typeof cargarDistribuidoresExtra === "function") {
+        try { cargarDistribuidoresExtra(); } catch (e) {}
+      }
       if (typeof renderAdmin === "function" && window._USER && window._USER.esAdmin) {
         try { renderAdmin(); } catch (e) {}
       }
