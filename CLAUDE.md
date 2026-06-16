@@ -113,9 +113,14 @@ Flujo normal: `pendiente → en_proceso → entregado → facturado → finaliza
 
 ## Integración Azur (facturación electrónica)
 
+El frontend NO llama a Azur directamente: hace `fetch` contra un Cloudflare
+Worker (`AZUR_API` en `datos.js`) que actúa de proxy y reenvía la petición
+desde servidor, evitando el bloqueo CORS del navegador.
+
 | Parámetro | Valor |
 |---|---|
-| Base URL | `https://azur.com.ec/plataforma/api/v2/` |
+| `AZUR_API` (proxy) | `https://azur-proxy.alejosl0801.workers.dev/` (en `datos.js`) |
+| Azur real (detrás del proxy) | `https://azur.com.ec/plataforma/api/v2/` |
 | Endpoint | `POST factura/emision` |
 | Token | `AZUR_TOKEN = "API_1851_2064_5fcfa1b47f430"` (en `datos.js`) |
 | `codigoDoc` | `"01"` (factura) |
@@ -185,9 +190,6 @@ gestiona el administrador fuera del repo.
 ---
 
 ## Pendientes conocidos
-
-### CORS para Azur
-`generarAzur()` hace un `fetch()` desde el navegador directamente a `https://azur.com.ec/plataforma/api/v2/factura/emision`. En producción esto falla con error CORS porque el servidor de Azur no incluye el header `Access-Control-Allow-Origin`. **Solución pendiente:** agregar un proxy (endpoint propio o Cloudflare Worker) que reenvíe la petición desde servidor.
 
 ### Validación SRI
 No se valida si la clave de acceso retornada por Azur fue aceptada por el SRI. Se guarda `data.claveacceso` pero no se consulta el estado posterior en el SRI. Pendiente: consultar `GET factura/consulta/{claveacceso}` y actualizar `p.azurEstado`.
