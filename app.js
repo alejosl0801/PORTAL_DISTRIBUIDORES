@@ -2364,7 +2364,7 @@ function cancelarPedido(pid){
     if(p){
       var estadoViejo=p.estado;
       p.estado="cancelado";
-      if(p.items){
+      if(p.items&&estadoViejo!=="cancelado"){
         p.items.forEach(function(it){
           var prod=PRODUCTOS.find(function(x){return x.id===it.id;});
           if(prod){if(prod.stock!=null)prod.stock+=it.cant;prod.ago=false;}
