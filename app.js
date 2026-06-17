@@ -4751,6 +4751,58 @@ function iniciarAutoguardado(){
 }
 
 document.addEventListener("click",function(e){if(e.target.classList.contains("ov"))e.target.classList.remove("open");});
+
+// ════════════════════ ERROR MONITORING ════════════════════
+var _errLog=[];
+function _capturarError(msg,src,linea,col,err){
+  try{
+    var entrada={ts:new Date().toISOString(),msg:String(msg).substring(0,200),src:(src||"").replace(/.*\//,""),linea:linea,col:col,stack:err&&err.stack?String(err.stack).substring(0,400):""};
+    _errLog.push(entrada);
+    if(_errLog.length>50)_errLog=_errLog.slice(-50);
+    // Persistir en localStorage para que el admin pueda verlos
+    try{localStorage.setItem("pyro_errlog",JSON.stringify(_errLog));}catch(e){}
+    // Si es admin, mostrar badge de error
+    if(window._USER&&window._USER.esAdmin)_actualizarBadgeErrores();
+  }catch(e){}
+}
+function _actualizarBadgeErrores(){
+  var badge=document.getElementById("err-monitor-badge");
+  if(!badge)return;
+  var count=_errLog.filter(function(e){return!e.visto;}).length;
+  badge.style.display=count>0?"flex":"none";
+  badge.textContent=count>9?"9+":String(count);
+}
+function _iniciarMonitorErrores(){
+  // Cargar log previo
+  try{var prev=JSON.parse(localStorage.getItem("pyro_errlog")||"[]");if(Array.isArray(prev))_errLog=prev;}catch(e){}
+  window.onerror=function(msg,src,linea,col,err){_capturarError(msg,src,linea,col,err);return false;};
+  window.addEventListener("unhandledrejection",function(e){_capturarError("UnhandledPromise: "+(e.reason&&e.reason.message?e.reason.message:String(e.reason)),"promise",0,0,e.reason instanceof Error?e.reason:null);});
+}
+function verLogErrores(){
+  try{_errLog=JSON.parse(localStorage.getItem("pyro_errlog")||"[]");}catch(e){_errLog=[];}
+  _errLog.forEach(function(e){e.visto=true;});
+  try{localStorage.setItem("pyro_errlog",JSON.stringify(_errLog));}catch(e){}
+  _actualizarBadgeErrores();
+  if(!_errLog.length){toast("✅ Sin errores registrados");return;}
+  var html='<div class="mhandle"></div><h3>🔴 Log de errores ('+_errLog.length+')</h3>'+
+    '<button class="btn btn-s" style="margin-bottom:10px" onclick="limpiarLogErrores()">🗑️ Limpiar log</button>'+
+    _errLog.slice().reverse().map(function(e){
+      return '<div style="background:var(--g1);border-radius:8px;padding:8px 10px;margin-bottom:6px;font-size:11px;font-family:monospace">'+
+        '<div style="color:var(--g3);margin-bottom:2px">'+e.ts.replace('T',' ').substring(0,19)+(e.src?' · '+e.src+':'+e.linea:'')+'</div>'+
+        '<div style="color:var(--rojo);font-weight:700">'+escHtml(e.msg)+'</div>'+
+        (e.stack?'<div style="color:var(--g3);margin-top:2px;white-space:pre-wrap">'+escHtml(e.stack.substring(0,200))+'</div>':'')+'</div>';
+    }).join('')+
+    '<button class="btn btn-s btn-full" style="margin-top:8px" onclick="cerrarModal(\'modal-err-log\')">Cerrar</button>';
+  document.getElementById("modal-err-log-c").innerHTML=html;
+  abrir("modal-err-log");
+}
+function limpiarLogErrores(){
+  _errLog=[];
+  try{localStorage.removeItem("pyro_errlog");}catch(e){}
+  cerrarModal("modal-err-log");
+  toast("✅ Log de errores limpiado");
+}
+
 function verificarIntegridadStorage(){
   var claves=[
     {k:"pyro_pedidos",def:"[]",validator:function(v){return Array.isArray(v);}},
@@ -4775,6 +4827,7 @@ function verificarIntegridadStorage(){
   });
 }
 window.addEventListener("load",function(){
+  _iniciarMonitorErrores();
   verificarIntegridadStorage();
   actualizarBannerOffline();
   window.addEventListener("online",function(){actualizarBannerOffline();reintentarSyncPendientes();});

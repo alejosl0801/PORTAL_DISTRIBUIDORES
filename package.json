@@ -1,0 +1,22 @@
+{
+  "name": "portal_distribuidores",
+  "version": "1.0.0",
+  "description": "",
+  "main": "anim.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "http://local_proxy@127.0.0.1:34223/git/alejosl0801/PORTAL_DISTRIBUIDORES"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "puppeteer": "^25.1.0"
+  }
+}

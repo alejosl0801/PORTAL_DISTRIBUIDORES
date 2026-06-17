@@ -1,0 +1,45 @@
+name: CI — Syntax & Tests
+
+on:
+  push:
+    branches: [ main, "claude/**" ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  syntax-check:
+    runs-on: ubuntu-latest
+    name: Verificar sintaxis JS
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Instalar acorn (parser JS)
+        run: npm install -g acorn
+      - name: Verificar sintaxis app.js
+        run: acorn --ecma2020 --silent app.js && echo "✅ app.js OK"
+      - name: Verificar sintaxis datos.js
+        run: acorn --ecma2020 --silent datos.js && echo "✅ datos.js OK"
+      - name: Verificar sintaxis supabase-sync.js
+        run: acorn --ecma2020 --silent supabase-sync.js && echo "✅ supabase-sync.js OK"
+
+  smoke-test:
+    runs-on: ubuntu-latest
+    name: Smoke test con Puppeteer
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Instalar dependencias
+        run: npm install puppeteer
+      - name: Arrancar servidor
+        run: python3 -m http.server 8765 &
+      - name: Esperar servidor
+        run: sleep 3
+      - name: Ejecutar smoke test
+        run: node smoke-test.js
+        env:
+          PUPPETEER_EXECUTABLE_PATH: ''
+

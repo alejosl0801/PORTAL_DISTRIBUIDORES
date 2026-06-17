@@ -423,6 +423,13 @@
   </div>
 </div>
 
+<button id="err-monitor-badge" onclick="verLogErrores()" style="display:none;position:fixed;bottom:80px;right:16px;z-index:800;background:#e53e3e;color:#fff;border:none;border-radius:50%;width:36px;height:36px;font-size:13px;font-weight:800;cursor:pointer;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,.3)">0</button>
+
+<!-- Modal log de errores -->
+<div class="modal-ov" id="modal-err-log" onclick="if(event.target===this)cerrarModal('modal-err-log')">
+  <div class="modal-box" id="modal-err-log-c"></div>
+</div>
+
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" defer></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="./supabase-sync.js?v=20260614"></script>
