@@ -1,6 +1,6 @@
 // ════════════════════ SUPABASE SYNC — PyroShield ════════════════════
-// Fire-and-forget sync layer. localStorage sigue siendo la fuente de verdad
-// local; Supabase es la fuente de verdad compartida entre dispositivos/usuarios.
+// Supabase ES la fuente de verdad compartida entre dispositivos.
+// localStorage es caché local — siempre se reemplaza con lo de Supabase al login.
 
 var SUPABASE_URL = "https://flxweylyksddssvuqdzq.supabase.co";
 var SUPABASE_KEY = "sb_publishable_1w2FKzNgBgha1YjQ4KGjvg_cpNnh7_9";
@@ -238,39 +238,42 @@ async function sbPullAll(esAdmin) {
 
     var changed = false;
 
-    // Fusionar pedidos: Supabase gana (tiene datos de todos los dispositivos)
-    if (pedCloud && pedCloud.length) {
-      var local = [];
-      try { local = JSON.parse(localStorage.getItem("pyro_pedidos") || "[]"); } catch (e) {}
-      var mapaLocal = {};
-      local.forEach(function(p) { mapaLocal[p.id] = p; });
-      pedCloud.forEach(function(p) { mapaLocal[p.id] = p; });
-      var fusionados = Object.values(mapaLocal);
-      // Mantener orden cronológico por fecha ISO
-      fusionados.sort(function(a,b){var da=a.fechaISO||"",db=b.fechaISO||"";return da>db?1:da<db?-1:0;});
-      localStorage.setItem("pyro_pedidos", JSON.stringify(fusionados));
-      changed = true;
-    }
-
-    // Fusionar stock: Supabase gana
-    if (stCloud && Object.keys(stCloud).length) {
-      var stLocal = {};
-      try { stLocal = JSON.parse(localStorage.getItem("pyro_stock") || "{}"); } catch (e) {}
-      Object.assign(stLocal, stCloud);
-      localStorage.setItem("pyro_stock", JSON.stringify(stLocal));
-      changed = true;
-    }
-
-    // Fusionar distribuidores (solo admin)
-    if (distCloud) {
-      if (distCloud.extra && distCloud.extra.length) {
-        localStorage.setItem("pyro_dist_extra", JSON.stringify(distCloud.extra));
-        changed = true;
+    // Pedidos: Supabase ES la fuente de verdad — reemplaza localStorage completamente.
+    // Si Supabase devuelve array (incluso vacío tras una limpieza), ese array manda.
+    // Solo se conserva localStorage si Supabase no responde (null = error de red).
+    if (pedCloud !== null) {
+      var pedidosFinal = Array.isArray(pedCloud) ? pedCloud : [];
+      // Si Supabase no tiene nada pero localStorage tiene pedidos sin subir
+      // (offline reciente), fusionar para no perder trabajo local pendiente.
+      if (pedidosFinal.length === 0) {
+        var localPed = [];
+        try { localPed = JSON.parse(localStorage.getItem("pyro_pedidos") || "[]"); } catch (e) {}
+        var pendientesSync = localPed.filter(function(p) {
+          // Solo conservar pedidos creados en los últimos 10 minutos (buffer offline)
+          if (!p.fechaISO) return false;
+          return (Date.now() - new Date(p.fechaISO).getTime()) < 10 * 60 * 1000;
+        });
+        pedidosFinal = pendientesSync;
       }
+      pedidosFinal.sort(function(a,b){var da=a.fechaISO||"",db=b.fechaISO||"";return da>db?1:da<db?-1:0;});
+      localStorage.setItem("pyro_pedidos", JSON.stringify(pedidosFinal));
+      changed = true;
+    }
+
+    // Stock: Supabase reemplaza si devuelve datos, si no conserva local
+    if (stCloud && Object.keys(stCloud).length) {
+      localStorage.setItem("pyro_stock", JSON.stringify(stCloud));
+      changed = true;
+    }
+
+    // Distribuidores (solo admin): Supabase reemplaza
+    if (distCloud) {
+      // Extra: reemplazar aunque venga vacío (limpieza real)
+      localStorage.setItem("pyro_dist_extra", JSON.stringify(distCloud.extra || []));
       if (distCloud.elim && distCloud.elim.length) {
         localStorage.setItem("pyro_dist_eliminados", JSON.stringify(distCloud.elim));
-        changed = true;
       }
+      changed = true;
     }
 
     // Fusionar rewards (solo admin)
