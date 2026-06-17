@@ -622,7 +622,7 @@ function mostrarOverlayBienvenida(){
   document.body.appendChild(ov);
 }
 function logout(){
-  USER=null;window._USER=null;CARRITO=[];
+  USER=null;window._USER=null;CARRITO=[];PEDIDOS=[];
   if(_notifInterval){clearInterval(_notifInterval);_notifInterval=null;}
   if(_autoguardadoInterval){clearInterval(_autoguardadoInterval);_autoguardadoInterval=null;}
   if(_nubeInterval){clearInterval(_nubeInterval);_nubeInterval=null;}
@@ -2498,7 +2498,10 @@ function verDetallePed(pid){
   if(p.items)html+=p.items.map(function(it){
     return '<div class="rrow"><span>'+escHtml(it.nm)+' x'+it.cant+'</span><span>'+fmt$(it.pr*it.cant)+'</span></div>';
   }).join("");
-  html+='<div class="rrow tot"><span>TOTAL</span><span>'+fmt$(p.total)+'</span></div>'+
+  html+=(p.subtotal!=null&&p.iva!=null?
+    '<div class="rrow"><span style="color:var(--g3)">Subtotal</span><span>'+fmt$(p.subtotal)+'</span></div>'+
+    '<div class="rrow"><span style="color:var(--g3)">IVA 15%</span><span>'+fmt$(p.iva)+'</span></div>':'')+
+  '<div class="rrow tot"><span>TOTAL</span><span>'+fmt$(p.total)+'</span></div>'+
     '<div style="margin-top:12px;font-size:13px;color:var(--g4)">'+
       '<b>Pago:</b> '+escHtml(p.pago)+'<br><b>Modo:</b> '+(p.modo==="retiro"?"Retiro en local":"Entrega a domicilio")+
     '</div>'+

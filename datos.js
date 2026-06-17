@@ -88,7 +88,7 @@ var PROMOS = [
     fechaVence: "2026-05-23",
     items: [
       {id:"MANH30C001", nm:"Manguera Doble Chaqueta 30M", pv:64.28, pp:57.85, ahorro:6.43},
-      {id:"CABMARITIMO", nm:"Cabezal Marítimo CO2", pv:38.40, pp:34.61, ahorro:3.85}
+      {id:"CABMARITIMO", nm:"Cabezal Marítimo CO2", pv:38.40, pp:34.61, ahorro:3.79}
     ]
   }
 ];
