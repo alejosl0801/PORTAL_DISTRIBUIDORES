@@ -2072,7 +2072,14 @@ function cargarBorrador(i){
   if(!USER||!USER.ruc)return;
   var borradores=_leerBorradores();
   if(!borradores[i])return;
-  function _cargar(){CARRITO=JSON.parse(JSON.stringify(borradores[i].items));guardarCarrito();renderCarrito();actualizarBadge();toast("✏️ Borrador cargado.");}
+  function _cargar(){
+    var items=JSON.parse(JSON.stringify(borradores[i].items));
+    var faltantes=items.filter(function(it){return!PRODUCTOS.find(function(x){return x.id===it.id;});});
+    CARRITO=items.filter(function(it){return!!PRODUCTOS.find(function(x){return x.id===it.id;});});
+    guardarCarrito();renderCarrito();actualizarBadge();
+    if(faltantes.length)toast("⚠️ "+faltantes.length+" producto(s) del borrador ya no están disponibles y fueron omitidos.");
+    else toast("✏️ Borrador cargado.");
+  }
   if(CARRITO.length){confirmar("¿Reemplazar el carrito actual con este borrador?",_cargar);}
   else{_cargar();}
 }
@@ -3863,6 +3870,7 @@ function ajustarCosto(id,val){
   guardarCostos(costos);
   if(p)p.costo=n;
   backupCambio();
+  renderAdmStock();
   toast("✅ Costo actualizado");
 }
 
