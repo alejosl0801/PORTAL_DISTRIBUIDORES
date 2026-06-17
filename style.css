@@ -854,4 +854,61 @@ html.theme-fade,html.theme-fade body,html.theme-fade .content,html.theme-fade #a
 .sb-ok{background:#27ae60}
 .sb-sync{background:#f39c12;animation:sb-pulse .8s infinite alternate}
 .sb-err{background:#e74c3c}
+
+/* ═══════════════════════════════════════════════════════════════
+   FIXES WEBKIT / SAFARI iOS
+   ════════════════════════════════════════════════════════════ */
+
+/* 1. 100vh en Safari iOS incluye la barra de direcciones — usar dvh con fallback */
+body,#app-shell,.screen{min-height:100vh;min-height:100dvh}
+#s-login{min-height:100vh;min-height:100dvh}
+
+/* 2. position:sticky requiere -webkit-sticky en Safari < 13 */
+.topbar{position:-webkit-sticky;position:sticky}
+
+/* 3. Scroll momentum en contenedores con overflow (Safari iOS necesita esto) */
+.content,
+.modal,
+.filtros,.hfiltros,
+.adm-tabs,
+.adm-cont{-webkit-overflow-scrolling:touch}
+
+/* 4. Search bar: font-size 15px dispara zoom automático en Safari (umbral: <16px).
+      Se sube a 16px en móvil y se escala visualmente con transform para mantener diseño. */
+@media (max-width:767px){
+  .search-bar input{font-size:16px}
+  /* Prevenir zoom en cualquier input/select con font-size menor a 16px */
+  input,select,textarea{font-size:max(16px,1em)}
+}
+
+/* 5. GPU acceleration para animaciones y transiciones críticas en hardware bajo */
+.tab-panel,.modal,.splash,.exito-ov,.ov,.tutorial-ov,.img-zoom-ov{
+  -webkit-transform:translateZ(0);transform:translateZ(0);
+  will-change:transform,opacity
+}
+/* Solo activar will-change mientras hay transición activa, para liberar memoria en reposo */
+.tab-panel.active{will-change:auto}
+
+/* 6. Botones táctiles: evitar delay de 300ms en Safari iOS < 13 */
+button,a,[role="button"],.bnav,.btn,.prod-card,.acc-btn{touch-action:manipulation}
+
+/* 7. Scroll lateral del catálogo sin bounce molesto en iOS */
+.filtros,.hfiltros,.adm-tabs{
+  -webkit-overflow-scrolling:touch;
+  overscroll-behavior-x:contain
+}
+
+/* 8. Safe area para dispositivos con notch (iPhone X+) — bottom nav ya lo tiene,
+      pero algunos overlays fijos también necesitan el padding inferior */
+.bottomnav{padding-bottom:max(env(safe-area-inset-bottom),4px)}
+.cart-bar{bottom:calc(56px + max(env(safe-area-inset-bottom),4px))}
+
+/* 9. Select nativo en iOS — evitar que Safari sobre-estilice los selects del admin */
+.form-select{-webkit-appearance:none;appearance:none}
+
+/* 10. Inputs: deshabilitar corrección automática y autocompletado en campos de cantidad */
+.qty-inp,.qty-cart-inp{
+  -webkit-text-size-adjust:none;
+  text-size-adjust:none
+}
 @keyframes sb-pulse{from{opacity:.4}to{opacity:1}}

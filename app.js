@@ -4655,8 +4655,10 @@ function activarSwipeCarrito(){
         el.style.background=dx<-60?"var(--rojoc)":"";
       }
     },{passive:true});
-    el.addEventListener("touchend",function(){
+    el.addEventListener("touchend",function(e){
       el.style.transition="transform .2s ease";
+      // Actualizar curX desde changedTouches si está disponible (más preciso en Safari)
+      if(e.changedTouches&&e.changedTouches[0])curX=e.changedTouches[0].clientX;
       var dx=curX-startX;
       if(dragging&&dx<-80){
         el.style.transform="translateX(-100%)";
@@ -4689,10 +4691,15 @@ function activarSwipe(){
   if(!contentEl)return;
   var tabsOrder=["inicio","catalogo","carrito","historial","recompensas"];
   var sx=0,sy=0;
-  contentEl.addEventListener("touchstart",function(e){sx=e.touches[0].clientX;sy=e.touches[0].clientY;},{passive:true});
+  contentEl.addEventListener("touchstart",function(e){
+    if(e.touches&&e.touches[0]){sx=e.touches[0].clientX;sy=e.touches[0].clientY;}
+  },{passive:true});
   contentEl.addEventListener("touchend",function(e){
-    var dx=e.changedTouches[0].clientX-sx;
-    var dy=e.changedTouches[0].clientY-sy;
+    // Safari iOS puede no incluir changedTouches si el dedo salió del viewport
+    var touch=e.changedTouches&&e.changedTouches[0];
+    if(!touch)return;
+    var dx=touch.clientX-sx;
+    var dy=touch.clientY-sy;
     if(Math.abs(dx)>60&&Math.abs(dy)<50){
       var current=document.querySelector("#s-main .bnav.active");
       if(!current)return;
@@ -4721,7 +4728,9 @@ function activarPullToRefresh(){
   },{passive:true});
   contentEl.addEventListener("touchend",function(e){
     if(!pulling)return;
-    var dy=e.changedTouches[0].clientY-startY;
+    var touch=e.changedTouches&&e.changedTouches[0];
+    if(!touch){indicator.style.display="none";pulling=false;return;}
+    var dy=touch.clientY-startY;
     indicator.style.display="none";
     pulling=false;
     if(dy>threshold){
@@ -4884,7 +4893,71 @@ window.addEventListener("load",function(){
   setTimeout(intentarAutoLogin, 300);
   // Detectar si la sesión actual es PWA instalada y registrar
   setTimeout(registrarInstalacionActual, 1500);
+  // Fix teclado virtual iOS: scroll el input activo dentro del viewport
+  _fixTecladoVirtualiOS();
+  // Fix rendimiento hardware bajo: detectar y activar modo lite
+  _detectarHardwareLento();
 });
+
+// ── Fix teclado virtual iOS ───────────────────────────────────────────────
+// En Safari iOS el teclado virtual empuja el viewport hacia arriba pero NO
+// redimensiona window.innerHeight, lo que tapa el input activo.
+// Solución: escuchar el evento visualViewport.resize y hacer scrollIntoView.
+function _fixTecladoVirtualiOS(){
+  if(typeof window.visualViewport==="undefined")return;
+  var _vvTimer=null;
+  window.visualViewport.addEventListener("resize",function(){
+    clearTimeout(_vvTimer);
+    _vvTimer=setTimeout(function(){
+      var el=document.activeElement;
+      if(!el)return;
+      var tag=el.tagName;
+      if(tag!=="INPUT"&&tag!=="TEXTAREA"&&tag!=="SELECT")return;
+      // Esperar un tick para que el browser termine de posicionar el teclado
+      requestAnimationFrame(function(){
+        try{el.scrollIntoView({block:"center",behavior:"smooth"});}catch(e){
+          try{el.scrollIntoView(false);}catch(e2){}
+        }
+      });
+    },100);
+  });
+}
+
+// ── Detección de hardware lento y modo lite ───────────────────────────────
+// En dispositivos lentos (iPhone 6/7/8 old, Android gama baja) con <2GB RAM
+// o CPU <2 núcleos se activa un modo lite que reduce animaciones y sombras.
+function _detectarHardwareLento(){
+  var lento=false;
+  // navigator.hardwareConcurrency: núcleos lógicos de CPU (undefined en Safari antiguo)
+  if(typeof navigator.hardwareConcurrency!=="undefined"&&navigator.hardwareConcurrency<=2)lento=true;
+  // deviceMemory: GB de RAM (solo Chrome/Android, undefined en Safari)
+  if(typeof navigator.deviceMemory!=="undefined"&&navigator.deviceMemory<2)lento=true;
+  // Medir FPS real con un micro-benchmark de 3 frames
+  if(!lento){
+    var t0=performance.now(),frames=0;
+    var rafCheck=function(){
+      frames++;
+      if(frames<4){requestAnimationFrame(rafCheck);return;}
+      var fps=frames/((performance.now()-t0)/1000);
+      if(fps<30)_activarModoLite();
+    };
+    requestAnimationFrame(rafCheck);
+  }else{
+    _activarModoLite();
+  }
+}
+function _activarModoLite(){
+  // Reducir animaciones CSS sin afectar la funcionalidad
+  try{
+    var st=document.createElement("style");
+    st.id="modo-lite-css";
+    st.textContent=
+      "*{animation-duration:.01ms!important;transition-duration:.1ms!important}"+
+      ".tab-panel{will-change:auto!important}"+
+      "[class*='fade'],[class*='slide']{animation:none!important;opacity:1!important;transform:none!important}";
+    document.head.appendChild(st);
+  }catch(e){}
+}
 
 // ════════ FEATURE 11/12/13/14/25/82/83/84/87 — Dashboard Admin ════════
 
