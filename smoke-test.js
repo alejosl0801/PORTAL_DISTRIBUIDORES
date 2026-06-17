@@ -52,10 +52,22 @@ const puppeteer = require('puppeteer');
 
   const failed = Object.entries(checks).filter(([k, v]) => !v);
 
-  console.log('Smoke test results:');
+  console.log('=== Smoke checks ===');
   Object.entries(checks).forEach(([k, v]) => {
     console.log((v ? '✅' : '❌') + ' ' + k);
   });
+
+  // Ejecutar suite completa de tests unitarios
+  await page.addScriptTag({ url: 'http://localhost:8765/tests.js' });
+  await new Promise(r => setTimeout(r, 400));
+  const unitResult = await page.evaluate(() => {
+    if (typeof runTests !== 'function') return { passed: 0, failed: 1, failures: ['runTests no disponible'] };
+    var r = runTests();
+    return { passed: r.passed, failed: r.failed, failures: r.results.filter(x => !x.ok).map(x => x.name) };
+  });
+  console.log('\n=== Unit tests ===');
+  console.log('Passed: ' + unitResult.passed + ' / Failed: ' + unitResult.failed);
+  if (unitResult.failures.length) unitResult.failures.forEach(f => console.log('  ❌ ' + f));
 
   if (errors.length) {
     console.log('\nPage errors:', errors);
@@ -63,9 +75,12 @@ const puppeteer = require('puppeteer');
 
   await browser.close();
 
-  if (failed.length > 0 || errors.length > 0) {
-    console.error('\n❌ FAILED: ' + failed.map(([k]) => k).join(', '));
+  const totalFailed = failed.length + unitResult.failed + errors.length;
+  if (totalFailed > 0) {
+    if (failed.length) console.error('\n❌ Smoke FAILED: ' + failed.map(([k]) => k).join(', '));
+    if (unitResult.failed) console.error('❌ Unit tests FAILED: ' + unitResult.failures.join(', '));
+    if (errors.length) console.error('❌ Page errors: ' + errors.join('; '));
     process.exit(1);
   }
-  console.log('\n✅ All checks passed');
+  console.log('\n✅ Todo OK — ' + Object.keys(checks).length + ' smoke checks + ' + unitResult.passed + ' unit tests');
 })();
