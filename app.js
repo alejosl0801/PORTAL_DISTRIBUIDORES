@@ -4918,15 +4918,18 @@ async function _ejecutarResetProduccion() {
   // Borra una tabla Supabase via REST directo (sin SDK — siempre funciona)
   async function _sbDel(table, col) {
     var url = "https://flxweylyksddssvuqdzq.supabase.co/rest/v1/" + table + "?" + col + "=not.is.null";
-    await fetch(url, {
+    var r = await fetch(url, {
       method: "DELETE",
       headers: {
         "apikey": "sb_publishable_1w2FKzNgBgha1YjQ4KGjvg_cpNnh7_9",
         "Authorization": "Bearer sb_publishable_1w2FKzNgBgha1YjQ4KGjvg_cpNnh7_9",
         "Content-Type": "application/json",
-        "Prefer": "return=minimal"
+        "Prefer": "return=representation"
       }
     });
+    var txt = await r.text();
+    step(table + ": HTTP " + r.status + " → " + txt.substring(0,80));
+    if (!r.ok) throw new Error(table + " delete failed: " + r.status + " " + txt);
   }
 
   try {
@@ -4955,12 +4958,12 @@ async function _ejecutarResetProduccion() {
     await fetch(GAS_URL + "?accion=limpiarDatos&token=" + encodeURIComponent(GAS_TOKEN));
 
     msg.textContent = "✅ Listo. Todos los datos de prueba fueron borrados.";
-    step("Redirigiendo en 3 segundos…");
-    setTimeout(function(){ window.location.href = window.location.pathname; }, 3000);
+    step("Redirigiendo en 8 segundos…");
+    setTimeout(function(){ window.location.href = window.location.pathname; }, 8000);
   } catch(e) {
-    msg.textContent = "⚠️ Reset parcial completado";
-    step("Error: " + e.message + " — Redirigiendo…");
-    setTimeout(function(){ window.location.href = window.location.pathname; }, 4000);
+    msg.textContent = "❌ Error en reset";
+    step("ERROR: " + e.message);
+    setTimeout(function(){ window.location.href = window.location.pathname; }, 10000);
   }
 }
 
