@@ -4917,7 +4917,7 @@ async function _ejecutarResetProduccion() {
 
   // Borra una tabla Supabase via REST directo (sin SDK — siempre funciona)
   async function _sbDel(table, col) {
-    var url = "https://flxweylyksddssvuqdzq.supabase.co/rest/v1/" + table + "?" + col + "=neq.__none__";
+    var url = "https://flxweylyksddssvuqdzq.supabase.co/rest/v1/" + table + "?" + col + "=not.is.null";
     await fetch(url, {
       method: "DELETE",
       headers: {
