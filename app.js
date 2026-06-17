@@ -4906,7 +4906,56 @@ function verificarIntegridadStorage(){
     }
   });
 }
+// ════════ RESET DE PRODUCCIÓN ════════
+// Visita ?reset=PYRO2026 una sola vez para borrar todos los datos de prueba.
+// Limpia: localStorage, Supabase (pedidos/stock/distribuidores), Google Sheets.
+async function _ejecutarResetProduccion() {
+  document.body.innerHTML = '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;background:#0a0a1a;color:#fff;gap:16px"><div style="font-size:2rem">🧹</div><div id="_rst_msg" style="font-size:1.1rem">Limpiando datos de prueba…</div><div id="_rst_log" style="font-size:.85rem;color:#aaa;max-width:400px;text-align:center"></div></div>';
+  var msg = document.getElementById("_rst_msg");
+  var log = document.getElementById("_rst_log");
+  function step(t) { log.textContent = t; }
+
+  try {
+    // 1. localStorage
+    step("Limpiando localStorage…");
+    Object.keys(localStorage).filter(function(k){ return k.startsWith("pyro_"); }).forEach(function(k){ localStorage.removeItem(k); });
+
+    // 2. Supabase
+    step("Limpiando Supabase…");
+    if (typeof sbInit === "function") sbInit();
+    // Esperar a que _sb esté listo (hasta 3s)
+    for (var i = 0; i < 30 && !window._sbReady; i++) {
+      await new Promise(function(r){ setTimeout(r,100); });
+    }
+    if (window._sbReady && window._sb) {
+      await window._sb.from("pedidos").delete().neq("id", "__none__");
+      await window._sb.from("stock").delete().neq("id", "__none__");
+      await window._sb.from("distribuidores_extra").delete().neq("ruc", "__none__");
+      await window._sb.from("puntos_log").delete().neq("ruc", "__none__");
+      await window._sb.from("app_config").delete().in("key", ["dist_eliminados", "rewards"]);
+    } else {
+      step("⚠️ Supabase no disponible — solo se limpió localStorage y Sheets");
+    }
+
+    // 3. Google Sheets
+    step("Limpiando Google Sheets…");
+    await fetch(GAS_URL + "?accion=limpiarDatos&token=" + encodeURIComponent(GAS_TOKEN));
+
+    msg.textContent = "✅ Listo. Todos los datos de prueba fueron borrados.";
+    step("Redirigiendo en 3 segundos…");
+    setTimeout(function(){ window.location.href = window.location.pathname; }, 3000);
+  } catch(e) {
+    msg.textContent = "⚠️ Reset parcial completado";
+    step("Error: " + e.message + " — Redirigiendo…");
+    setTimeout(function(){ window.location.href = window.location.pathname; }, 4000);
+  }
+}
+
 window.addEventListener("load",function(){
+  // Reset de producción: visitar ?reset=PYRO2026 limpia todo automáticamente
+  if (new URLSearchParams(window.location.search).get("reset") === "PYRO2026") {
+    _ejecutarResetProduccion(); return;
+  }
   _iniciarMonitorErrores();
   verificarIntegridadStorage();
   actualizarBannerOffline();

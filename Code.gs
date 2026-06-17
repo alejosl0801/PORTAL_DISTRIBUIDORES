@@ -76,6 +76,9 @@ function doGet(e) {
   if (params.accion === "obtenerTutoriales") {
     return _json(obtenerTutorialesCompletados(params));
   }
+  if (params.accion === "limpiarDatos") {
+    return _json(LIMPIAR_DATOS_PRUEBA());
+  }
   return _json({ ok: false, error: "Acción no reconocida" });
 }
 
@@ -354,4 +357,5 @@ function LIMPIAR_DATOS_PRUEBA() {
   });
 
   Logger.log("🎉 Listo. El Sheet está limpio para producción.");
+  return { ok: true, msg: "Sheets limpiadas correctamente" };
 }
