@@ -4915,27 +4915,40 @@ async function _ejecutarResetProduccion() {
   var log = document.getElementById("_rst_log");
   function step(t) { log.textContent = t; }
 
+  // Borra una tabla Supabase via REST directo (sin SDK — siempre funciona)
+  async function _sbDel(table, col) {
+    var url = "https://flxweylyksddssvuqdzq.supabase.co/rest/v1/" + table + "?" + col + "=neq.__none__";
+    await fetch(url, {
+      method: "DELETE",
+      headers: {
+        "apikey": "sb_publishable_1w2FKzNgBgha1YjQ4KGjvg_cpNnh7_9",
+        "Authorization": "Bearer sb_publishable_1w2FKzNgBgha1YjQ4KGjvg_cpNnh7_9",
+        "Content-Type": "application/json",
+        "Prefer": "return=minimal"
+      }
+    });
+  }
+
   try {
     // 1. localStorage
     step("Limpiando localStorage…");
     Object.keys(localStorage).filter(function(k){ return k.startsWith("pyro_"); }).forEach(function(k){ localStorage.removeItem(k); });
 
-    // 2. Supabase
+    // 2. Supabase via REST directo (no depende del SDK)
     step("Limpiando Supabase…");
-    if (typeof sbInit === "function") sbInit();
-    // Esperar a que _sb esté listo (hasta 3s)
-    for (var i = 0; i < 30 && !window._sbReady; i++) {
-      await new Promise(function(r){ setTimeout(r,100); });
-    }
-    if (window._sbReady && window._sb) {
-      await window._sb.from("pedidos").delete().neq("id", "__none__");
-      await window._sb.from("stock").delete().neq("id", "__none__");
-      await window._sb.from("distribuidores_extra").delete().neq("ruc", "__none__");
-      await window._sb.from("puntos_log").delete().neq("ruc", "__none__");
-      await window._sb.from("app_config").delete().in("key", ["dist_eliminados", "rewards"]);
-    } else {
-      step("⚠️ Supabase no disponible — solo se limpió localStorage y Sheets");
-    }
+    await _sbDel("pedidos", "id");
+    await _sbDel("stock", "id");
+    await _sbDel("distribuidores_extra", "ruc");
+    await _sbDel("puntos_log", "ruc");
+    // app_config: borrar solo las claves conocidas
+    await fetch("https://flxweylyksddssvuqdzq.supabase.co/rest/v1/app_config?key=in.(dist_eliminados,rewards)", {
+      method: "DELETE",
+      headers: {
+        "apikey": "sb_publishable_1w2FKzNgBgha1YjQ4KGjvg_cpNnh7_9",
+        "Authorization": "Bearer sb_publishable_1w2FKzNgBgha1YjQ4KGjvg_cpNnh7_9",
+        "Prefer": "return=minimal"
+      }
+    });
 
     // 3. Google Sheets
     step("Limpiando Google Sheets…");
