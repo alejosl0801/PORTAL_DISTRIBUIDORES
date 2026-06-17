@@ -326,3 +326,32 @@ function _json(obj) {
     .createTextOutput(JSON.stringify(obj))
     .setMimeType(ContentService.MimeType.JSON);
 }
+
+// ════════════════════════════════════════════════════════════════
+// LIMPIEZA ÚNICA — Ejecutar UNA VEZ desde el editor de Apps Script
+// para borrar todos los datos de prueba antes del lanzamiento.
+// Después de ejecutar, ELIMINAR o comentar esta función.
+// ════════════════════════════════════════════════════════════════
+function LIMPIAR_DATOS_PRUEBA() {
+  var ss = SpreadsheetApp.openById(SHEET_ID);
+  var hojas = [
+    { nombre: HOJA_PEDIDOS,    encabezados: ENCABEZADOS_PEDIDOS },
+    { nombre: HOJA_BACKUP,     encabezados: ["fecha","pedidos_json","stock_json","meta_json"] },
+    { nombre: HOJA_STOCK,      encabezados: ["id_producto","stock","ago","fecha_actualizacion"] },
+    { nombre: HOJA_TUTORIALES, encabezados: ["ruc","tab","fecha"] }
+  ];
+
+  hojas.forEach(function(h) {
+    var hoja = ss.getSheetByName(h.nombre);
+    if (!hoja) { Logger.log("No existe: " + h.nombre); return; }
+    var ultima = hoja.getLastRow();
+    if (ultima > 1) {
+      hoja.deleteRows(2, ultima - 1);
+      Logger.log("✅ Limpiada: " + h.nombre + " (" + (ultima - 1) + " filas borradas)");
+    } else {
+      Logger.log("ℹ️  Ya estaba vacía: " + h.nombre);
+    }
+  });
+
+  Logger.log("🎉 Listo. El Sheet está limpio para producción.");
+}
