@@ -4355,6 +4355,16 @@ function guardarSyncPendientes(lista){
 }
 
 function sincronizarConSheets(ped, silencioso){
+  // Validar y sanitizar campos antes de enviar a GAS
+  // GAS tiene límite ~50,000 chars por celda
+  var MAX_CELL=45000;
+  var itemsStr=JSON.stringify(ped.items||[]);
+  var pedJson=JSON.stringify(ped);
+  // Truncar si excede límite (nunca debería, pero previene error 400 en GAS)
+  if(itemsStr.length>MAX_CELL)itemsStr=itemsStr.slice(0,MAX_CELL);
+  if(pedJson.length>MAX_CELL)pedJson=pedJson.slice(0,MAX_CELL);
+  // Validar campos críticos
+  if(!ped.id||!ped.ruc){_encolar();return;}
   var payload={
     accion:"guardarPedidoPyro",
     token:GAS_TOKEN,
@@ -4362,10 +4372,10 @@ function sincronizarConSheets(ped, silencioso){
     fecha:ped.fechaISO,
     ruc_dist:ped.ruc,
     nombre_dist:ped.razon,
-    items_json:JSON.stringify(ped.items||[]),
+    items_json:itemsStr,
     total:ped.total,
     estado:ped.estado,
-    pedido_json:JSON.stringify(ped)
+    pedido_json:pedJson
   };
   // En caso de fallo, guarda una copia con el estado actual (reemplaza la anterior)
   function _encolar(){
@@ -4385,6 +4395,14 @@ function sincronizarConSheets(ped, silencioso){
       pend=pend.filter(function(x){return x.id!==ped.id;});
       guardarSyncPendientes(pend);
     } else {
+      if(d&&!d.ok&&d.error){
+        console.warn("[GAS] error:",d.error);
+        // Error de configuración (token/autorización): no reintentar
+        if(typeof d.error==="string"&&/(token|autorizado)/i.test(d.error)){
+          if(USER&&USER.esAdmin)toast("⚠️ GAS: error de configuración — "+d.error);
+          return;
+        }
+      }
       _encolar();
     }
   }).catch(function(){
@@ -4456,7 +4474,17 @@ function podarPedidosAdmin(){
   }
   return false;
 }
-function guardarPedidos(){_logrosCache=null;checkStorageQuota();try{localStorage.setItem("pyro_pedidos",JSON.stringify(PEDIDOS));backupCambio();}catch(e){avisarStorage();}if(typeof sbPushPedidos==="function")sbPushPedidos();}
+function guardarPedidos(){
+  _logrosCache=null;
+  checkStorageQuota();
+  try{
+    localStorage.setItem("pyro_pedidos",JSON.stringify(PEDIDOS));
+    backupCambio();
+  }catch(e){
+    _recuperarStorage("pyro_pedidos", JSON.stringify(PEDIDOS));
+  }
+  if(typeof sbPushPedidos==="function")sbPushPedidos();
+}
 function guardarStock(){var st={};PRODUCTOS.forEach(function(p){st[p.id]={stock:p.stock,ago:p.ago};});try{localStorage.setItem("pyro_stock",JSON.stringify(st));backupCambio();}catch(e){}if(typeof sbPushStock==="function")sbPushStock();}
 function cargarStock(){try{var st=JSON.parse(localStorage.getItem("pyro_stock")||"{}");PRODUCTOS.forEach(function(p){if(st[p.id]!=null){p.stock=st[p.id].stock;p.ago=st[p.id].ago;}});}catch(e){}}
 function guardarDistribuidores(){
@@ -4495,7 +4523,50 @@ function cargarDistribuidoresExtra(){
   }catch(e){}
 }
 var _storageAvisado=false;
+var _storageBannerShown=false;
+function _recuperarStorage(key, value){
+  // 1. Intentar liberar espacio eliminando claves no críticas
+  var nonCritical=[];
+  try{for(var k in localStorage){if(/^pyro_busquedas_|^pyro_tipsec_|^pyro_tut_pts_|^pyro_logro_/.test(k)||k==="pyro_log_accesos")nonCritical.push(k);}}catch(e){}
+  nonCritical.forEach(function(k){try{localStorage.removeItem(k);}catch(e){}});
+  // 2. Reintentar
+  try{
+    localStorage.setItem(key, value);
+    return; // éxito tras liberar espacio
+  }catch(e2){}
+  // 3. Si sigue fallando: mostrar modal con los datos para que el usuario los copie
+  var safeVal=value;
+  try{
+    var existing=document.getElementById("modal-storage-recovery");
+    if(existing)existing.parentNode.removeChild(existing);
+    var div=document.createElement("div");
+    div.id="modal-storage-recovery";
+    div.style.cssText="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.85);z-index:99999;display:flex;align-items:center;justify-content:center;padding:16px";
+    div.innerHTML='<div style="background:#fff;color:#000;border-radius:12px;padding:20px;max-width:520px;width:100%;max-height:90vh;overflow:auto">'+
+      '<h3 style="margin:0 0 10px;color:#c0392b">⚠️ Error al guardar — copia este texto</h3>'+
+      '<p style="font-size:13px;margin:0 0 10px">El almacenamiento local está lleno. Tus datos <b>NO se han perdido</b>. Copia el texto a continuación y envíalo al administrador.</p>'+
+      '<textarea id="storage-recovery-txt" style="width:100%;height:180px;font-size:11px;font-family:monospace;border:1px solid #ccc;border-radius:6px;padding:8px" readonly>'+safeVal.replace(/</g,"&lt;")+'</textarea>'+
+      '<div style="margin-top:10px;display:flex;gap:8px">'+
+      '<button onclick="(function(){var t=document.getElementById(\'storage-recovery-txt\');t.select();document.execCommand(\'copy\');alert(\'Copiado.\');})()" style="padding:8px 16px;background:#e74c3c;color:#fff;border:none;border-radius:6px;cursor:pointer">Copiar</button>'+
+      '<button onclick="document.getElementById(\'modal-storage-recovery\').remove()" style="padding:8px 16px;background:#666;color:#fff;border:none;border-radius:6px;cursor:pointer">Cerrar</button>'+
+      '</div></div>';
+    document.body.appendChild(div);
+  }catch(e3){}
+}
 function avisarStorage(){
+  // Detectar modo privado / localStorage completamente no disponible
+  var lsAvailable=true;
+  try{localStorage.setItem("_pyro_test","1");localStorage.removeItem("_pyro_test");}catch(e){lsAvailable=false;}
+  if(!lsAvailable&&!_storageBannerShown){
+    _storageBannerShown=true;
+    try{
+      var banner=document.createElement("div");
+      banner.style.cssText="position:fixed;top:0;left:0;right:0;background:#c0392b;color:#fff;text-align:center;padding:10px 16px;font-size:14px;z-index:99998";
+      banner.innerHTML="⚠️ <b>Modo privado detectado:</b> los datos no se guardarán entre sesiones. Usa una ventana normal para continuar.";
+      document.body.insertBefore(banner,document.body.firstChild);
+    }catch(e){}
+    return;
+  }
   if(_storageAvisado)return;
   _storageAvisado=true;
   toast("⚠️ No se pudo guardar localmente. Revisa el espacio o modo privado.");

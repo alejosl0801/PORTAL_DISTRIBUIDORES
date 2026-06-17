@@ -7,6 +7,42 @@ var SUPABASE_KEY = "sb_publishable_1w2FKzNgBgha1YjQ4KGjvg_cpNnh7_9";
 var _sb = null;
 var _sbReady = false;
 var _sbSyncInProgress = false;
+var _sbFailCount = 0;
+var _sbCircuitOpen = false;
+var _sbCircuitTimer = null;
+var _sbRetryTimer = null;
+
+function _sbOnSuccess() {
+  _sbFailCount = 0;
+  _sbCircuitOpen = false;
+  if (_sbCircuitTimer) { clearTimeout(_sbCircuitTimer); _sbCircuitTimer = null; }
+}
+
+function _sbOnFailure(label) {
+  _sbFailCount++;
+  if (_sbCircuitTimer) clearTimeout(_sbCircuitTimer);
+  if (_sbRetryTimer) clearTimeout(_sbRetryTimer);
+  if (_sbFailCount >= 3) {
+    _sbCircuitOpen = true;
+    _sbSetStatus("err");
+    console.warn("[Supabase] circuit open after", _sbFailCount, "failures — pausing 5 min");
+    _sbCircuitTimer = setTimeout(function() {
+      _sbCircuitOpen = false;
+      _sbFailCount = 0;
+      _sbCircuitTimer = null;
+      console.warn("[Supabase] circuit reset — will retry on next push");
+    }, 5 * 60 * 1000);
+  } else {
+    // Exponential backoff: 5s, 10s, 20s... max 120s
+    var delay = Math.min(5000 * Math.pow(2, _sbFailCount - 1), 120000);
+    console.warn("[Supabase]", label, "retry in", delay/1000, "s");
+    _sbRetryTimer = setTimeout(function() {
+      _sbRetryTimer = null;
+      if (label === "pushPedidos") sbPushPedidos();
+      else if (label === "pushStock") sbPushStock();
+    }, delay);
+  }
+}
 
 function sbInit() {
   try {
@@ -40,7 +76,7 @@ async function _sbUpsert(table, rows, conflict) {
 
 // ════════════════════ PEDIDOS ════════════════════
 async function sbPushPedidos() {
-  if (!_sbReady) return;
+  if (!_sbReady || _sbCircuitOpen) return;
   try {
     var raw = localStorage.getItem("pyro_pedidos");
     if (!raw) return;
@@ -51,10 +87,12 @@ async function sbPushPedidos() {
     });
     _sbSetStatus("sync");
     await _sbUpsert("pedidos", rows, "id");
+    _sbOnSuccess();
     _sbSetStatus("ok");
   } catch (e) {
     console.warn("[Supabase] pushPedidos:", e);
     _sbSetStatus("err");
+    _sbOnFailure("pushPedidos");
   }
 }
 
@@ -72,7 +110,7 @@ async function sbPullPedidos() {
 
 // ════════════════════ STOCK ════════════════════
 async function sbPushStock() {
-  if (!_sbReady) return;
+  if (!_sbReady || _sbCircuitOpen) return;
   try {
     var raw = localStorage.getItem("pyro_stock");
     if (!raw) return;
@@ -81,8 +119,10 @@ async function sbPushStock() {
       return { id: id, stock: st[id].stock, ago: st[id].ago };
     });
     await _sbUpsert("stock", rows, "id");
+    _sbOnSuccess();
   } catch (e) {
     console.warn("[Supabase] pushStock:", e);
+    _sbOnFailure("pushStock");
   }
 }
 
