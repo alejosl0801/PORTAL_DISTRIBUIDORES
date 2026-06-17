@@ -1,3 +1,10 @@
+// ── Polyfills para Safari/Android antiguos ────────────────────────────────
+if(!String.prototype.padStart){String.prototype.padStart=function(len,fill){var s=String(this);fill=fill==null?" ":String(fill);while(s.length<len)s=fill+s;return s.slice(-Math.max(len,s.length));};}
+if(!Array.prototype.flat){Array.prototype.flat=function(){return this.reduce(function(a,b){return a.concat(Array.isArray(b)?b.flat():b);},[]);};}
+if(!Object.entries){Object.entries=function(o){return Object.keys(o).map(function(k){return[k,o[k]];});};}
+if(!Object.values){Object.values=function(o){return Object.keys(o).map(function(k){return o[k];});};}
+// ─────────────────────────────────────────────────────────────────────────
+
 // ════════════════════ PRODUCTOS ════════════════════
 var CATS = {
   extintores:{nombre:"Extintores",ico:"🧯",subs:["PQS","CO2","H2O"]},
@@ -2163,6 +2170,8 @@ function confirmarPedido(){
   if(stockError.length){if(btnConf)btnConf.disabled=false;toast("⚠️ Stock insuficiente: "+stockError.join(", "));return;}
   if(!items.length){if(btnConf)btnConf.disabled=false;toast("⚠️ No hay productos válidos en el carrito");return;}
   var iva=parseFloat((subtotal*IVA).toFixed(2)), total=parseFloat((subtotal+iva).toFixed(2));
+  // Aserción de negocio: total debe ser subtotal + IVA dentro de 1 centavo
+  if(Math.abs(total-subtotal-iva)>0.02){console.error("[Negocio] total inconsistente: subtotal="+subtotal+" iva="+iva+" total="+total);total=parseFloat((subtotal+iva).toFixed(2));}
   var pid="P"+Date.now()+Math.floor(Math.random()*9000+1000);
   var now=new Date();
   var entregaInfo={};
