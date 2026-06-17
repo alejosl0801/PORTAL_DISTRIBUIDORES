@@ -3048,7 +3048,7 @@ function admVerPedido(pid){
   abrir("modal-pedido-det");
 }
 
-function parseFechaPed(p){try{if(p.fechaISO)return new Date(p.fechaISO);var parts=(p.fecha||"").split("/");if(parts.length===3)return new Date(parseInt(parts[2],10),parseInt(parts[1],10)-1,parseInt(parts[0],10));return new Date(p.fecha||0);}catch(e){return new Date(0);}}
+function parseFechaPed(p){try{if(p.fechaISO)return new Date(p.fechaISO);var parts=(p.fecha||"").split("/");if(parts.length===3){var y=parseInt(parts[2],10),m=parseInt(parts[1],10)-1,d=parseInt(parts[0],10);if(!isNaN(y)&&!isNaN(m)&&!isNaN(d))return new Date(y,m,d);}var t=new Date(p.fecha||"");return isNaN(t.getTime())?new Date():t;}catch(e){return new Date();}}
 
 function renderResumenDist(ruc){
   var peds=PEDIDOS.filter(function(p){return p.ruc===ruc&&!p.esCanje&&p.estado!=="cancelado";});

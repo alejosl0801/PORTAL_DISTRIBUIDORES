@@ -133,15 +133,20 @@ function recibirBackupPyro(datos) {
 
   // ── Backup completo de pedidos en PEDIDOS_PYRO ──
   var hojaPed = obtenerHoja(HOJA_PEDIDOS, ENCABEZADOS_PEDIDOS);
-  var pedidos = datos.pedidos || [];
+  var pedidos = (datos.pedidos || []).slice(0, 500); // límite de seguridad
+  // Leer IDs existentes una sola vez (O(n) en vez de O(n²))
+  var ultimaInicial = hojaPed.getLastRow();
+  var idsExistentes = ultimaInicial > 1
+    ? hojaPed.getRange(2, 1, ultimaInicial - 1, 1).getValues().flat()
+    : [];
+  var idSet = {};
+  idsExistentes.forEach(function(id, i) { if (id) idSet[String(id)] = i + 2; });
   pedidos.forEach(function(p) {
-    var ultima = hojaPed.getLastRow();
-    var ids = ultima > 1
-      ? hojaPed.getRange(2, 1, ultima - 1, 1).getValues().flat()
-      : [];
-    if (ids.indexOf(p.id) === -1) {
+    if (!p.id) return; // Saltar pedidos sin ID
+    var idStr = String(p.id);
+    if (!(idStr in idSet)) {
       hojaPed.appendRow([
-        p.id || "",
+        idStr,
         p.fecha || "",
         p.ruc || "",
         p.razon || "",
@@ -151,10 +156,11 @@ function recibirBackupPyro(datos) {
         new Date(),
         JSON.stringify(p)
       ]);
+      idSet[idStr] = hojaPed.getLastRow(); // actualizar mapa local
     } else {
-      var idx = ids.indexOf(p.id);
-      hojaPed.getRange(idx + 2, 7).setValue(p.estado || "");
-      hojaPed.getRange(idx + 2, 9).setValue(JSON.stringify(p));
+      var fila = idSet[idStr];
+      hojaPed.getRange(fila, 7).setValue(p.estado || "");
+      hojaPed.getRange(fila, 9).setValue(JSON.stringify(p));
     }
   });
 

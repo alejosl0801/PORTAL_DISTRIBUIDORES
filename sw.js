@@ -1,4 +1,4 @@
-var CACHE_NAME = 'pyro-v9';
+var CACHE_NAME = 'pyro-v10';
 var CACHE_FILES = [
   './',
   './index.html',
