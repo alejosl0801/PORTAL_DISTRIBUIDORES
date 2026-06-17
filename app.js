@@ -2190,10 +2190,26 @@ function confirmarPedido(){
     guardarColaOffline(colaOff);
   }
   registrarLogPuntos(USER.ruc,"pendiente",ptsTotal,"Pedido #"+pid);
+  // Re-leer stock desde localStorage en el momento del commit para detectar cambios
+  // de otra pestaña o dispositivo que haya modificado el stock entre la validación y el commit.
+  cargarStock();
+  var stockRaceError=[];
   items.forEach(function(it){
     var p=PRODUCTOS.find(function(x){return x.id===it.id;});
-    if(p&&p.stock!=null){p.stock=Math.max(0,p.stock-it.cant);if(p.stock===0)p.ago=true;}
+    if(!p)return;
+    if(p.stock!=null&&it.cant>p.stock){stockRaceError.push(p.nm+" (disponible: "+p.stock+")");return;}
+    if(p.stock!=null){p.stock=Math.max(0,p.stock-it.cant);if(p.stock===0)p.ago=true;}
   });
+  if(stockRaceError.length){
+    // Revertir: sacar el pedido que ya fue pusheado y restaurar estado
+    PEDIDOS=PEDIDOS.filter(function(x){return x.id!==pid;});
+    guardarPedidos();
+    CARRITO=items.map(function(it){return{id:it.id,cant:it.cant};});
+    guardarCarrito();actualizarBadge();
+    if(btnConf)btnConf.disabled=false;
+    toast("⚠️ Stock cambió mientras confirmabas: "+stockRaceError.join(", "));
+    return;
+  }
   guardarStock();
   CARRITO=[];
   guardarCarrito();
@@ -3360,36 +3376,42 @@ function generarAzur(pid){
   var payload={api_key:AZUR_TOKEN,codigoDoc:"01",emisor:{manejo_interno_secuencia:"SI",fecha_emision:fechaAzur},comprador:{tipo_identificacion:tipoIdent,identificacion:identAzur,razon_social:dist.razon||p.razon,direccion:(dist.establecimientos&&dist.establecimientos[0]&&dist.establecimientos[0].dir)?dist.establecimientos[0].dir:"S/N",telefono:dist.tel||null,celular:null,correo:dist.correo||null},items:itemsAzur,pagos:[{tipo:codigoPago,total:parseFloat((p.total||0).toFixed(2))}],informacion_adicional:[{nombre:"Pedido Portal",detalle:"#"+p.id},{nombre:"Forma de Pago",detalle:p.pago}]};
   _azurBusy=true;
   toast("⏳ Enviando a Azur...");
-  fetch(AZUR_API+"factura/emision",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)})
+  var _azurCtrl=typeof AbortController!=="undefined"?new AbortController():null;
+  var _azurTimer=_azurCtrl?setTimeout(function(){_azurCtrl.abort();},30000):null;
+  fetch(AZUR_API+"factura/emision",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload),signal:_azurCtrl?_azurCtrl.signal:undefined})
   .then(function(r){return r.json();})
   .then(function(data){
+    if(_azurTimer)clearTimeout(_azurTimer);
     _azurBusy=false;
     if(data.creado==="true"||data.creado===true){
-      p.azurFactura=data.claveacceso; p.azurEstado="enviado";
+      p.azurFactura=data.claveacceso||data.clave_acceso||data.claveAcceso; p.azurEstado="enviado";
       guardarPedidos(); toastGold("🧾 Factura enviada a Azur ✅"); admVerPedido(pid);
     } else {
-      var errArr=Array.isArray(data.errors)?data.errors:(data.errors?[String(data.errors)]:["Error desconocido"]);
+      var errArr=Array.isArray(data.errors)?data.errors:(data.errors?[String(data.errors)]:(data.mensaje?[data.mensaje]:["Error desconocido"]));
       var errores=errArr.join(" · ");
       toast("⚠️ Azur: "+errores.substring(0,90));
     }
   })
-  .catch(function(e){_azurBusy=false;toast("⚠️ Error de conexión con Azur");});
+  .catch(function(e){if(_azurTimer)clearTimeout(_azurTimer);_azurBusy=false;toast(e&&e.name==="AbortError"?"⚠️ Azur no respondió en 30 s. Intenta de nuevo.":"⚠️ Error de conexión con Azur");});
 }
 
 function consultarEstadoAzur(pid){
   var p=PEDIDOS.find(function(x){return x.id===pid;});
   if(!p||!p.azurFactura){toast("⚠️ Esta factura aún no ha sido generada");return;}
   toast("⏳ Consultando estado en el SRI...");
-  fetch(AZUR_API+"factura/consulta/"+encodeURIComponent(p.azurFactura)+"?api_key="+encodeURIComponent(AZUR_TOKEN))
+  var _sriCtrl=typeof AbortController!=="undefined"?new AbortController():null;
+  var _sriTimer=_sriCtrl?setTimeout(function(){_sriCtrl.abort();},20000):null;
+  fetch(AZUR_API+"factura/consulta/"+encodeURIComponent(p.azurFactura)+"?api_key="+encodeURIComponent(AZUR_TOKEN),{signal:_sriCtrl?_sriCtrl.signal:undefined})
     .then(function(r){return r.json();})
     .then(function(data){
-      var estado=data.estado||data.estadoSri||data.estado_sri||(data.autorizado?"AUTORIZADO":null)||(data.creado==="false"?"RECHAZADO":null)||"DESCONOCIDO";
+      if(_sriTimer)clearTimeout(_sriTimer);
+      var estado=data.estado||data.estadoSri||data.estado_sri||data.estadoComprobante||(data.autorizado?"AUTORIZADO":null)||(data.creado==="false"?"RECHAZADO":null)||"DESCONOCIDO";
       p.azurEstado=estado;
       guardarPedidos();
       toast("📋 Estado SRI: "+estado);
       admVerPedido(pid);
     })
-    .catch(function(e){toast("⚠️ No se pudo consultar el estado SRI");});
+    .catch(function(e){if(_sriTimer)clearTimeout(_sriTimer);toast(e&&e.name==="AbortError"?"⚠️ El SRI no respondió en 20 s.":"⚠️ No se pudo consultar el estado SRI");});
 }
 
 function tipoDocLabel(d){
@@ -4720,7 +4742,31 @@ function iniciarAutoguardado(){
 }
 
 document.addEventListener("click",function(e){if(e.target.classList.contains("ov"))e.target.classList.remove("open");});
+function verificarIntegridadStorage(){
+  var claves=[
+    {k:"pyro_pedidos",def:"[]",validator:function(v){return Array.isArray(v);}},
+    {k:"pyro_stock",def:"{}",validator:function(v){return v&&typeof v==="object"&&!Array.isArray(v);}},
+    {k:"pyro_dist_extra",def:"[]",validator:function(v){return Array.isArray(v);}},
+    {k:"pyro_dist_eliminados",def:"[]",validator:function(v){return Array.isArray(v);}},
+    {k:"pyro_rewards",def:"[]",validator:function(v){return Array.isArray(v);}}
+  ];
+  claves.forEach(function(c){
+    try{
+      var raw=localStorage.getItem(c.k);
+      if(raw===null)return; // no existe aún, OK
+      var parsed=JSON.parse(raw);
+      if(!c.validator(parsed)){
+        console.warn("[Storage] Dato corrupto en "+c.k+", restaurando...");
+        localStorage.setItem(c.k,c.def);
+      }
+    }catch(e){
+      console.warn("[Storage] JSON inválido en "+c.k+", restaurando...");
+      try{localStorage.setItem(c.k,c.def);}catch(e2){}
+    }
+  });
+}
 window.addEventListener("load",function(){
+  verificarIntegridadStorage();
   actualizarBannerOffline();
   window.addEventListener("online",function(){actualizarBannerOffline();reintentarSyncPendientes();});
   window.addEventListener("offline",function(){actualizarBannerOffline();});
