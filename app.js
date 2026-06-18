@@ -446,6 +446,32 @@ function hacerLogin(){
   var pw=document.getElementById("login-pass").value.trim();
   var err=document.getElementById("login-err");
   err.style.display="none";
+  // Traer distribuidores actualizados de Supabase antes de validar (sincroniza contraseñas)
+  if(typeof sbPullDistribuidores==="function"){
+    var btnLogin=document.getElementById("login-btn");
+    if(btnLogin){btnLogin.disabled=true;btnLogin.textContent="Verificando…";}
+    sbPullDistribuidores().then(function(res){
+      if(res&&res.extra&&res.extra.length){
+        var localExtra=[];try{localExtra=JSON.parse(localStorage.getItem("pyro_dist_extra")||"[]");}catch(e){}
+        var porRuc={};localExtra.forEach(function(d){porRuc[d.ruc]=d;});
+        res.extra.forEach(function(d){porRuc[d.ruc]=d;});
+        var merged=Object.values(porRuc);
+        try{localStorage.setItem("pyro_dist_extra",JSON.stringify(merged));}catch(e){}
+        cargarDistribuidoresExtra();
+      }
+      if(btnLogin){btnLogin.disabled=false;btnLogin.textContent="Ingresar";}
+      _hacerLoginCore(u,pw);
+    }).catch(function(){
+      if(btnLogin){btnLogin.disabled=false;btnLogin.textContent="Ingresar";}
+      _hacerLoginCore(u,pw);
+    });
+    return;
+  }
+  _hacerLoginCore(u,pw);
+}
+function _hacerLoginCore(u,pw){
+  var err=document.getElementById("login-err");
+  err.style.display="none";
   // Modo mantenimiento: bloquear a no-admin ANTES de loginConCredenciales,
   // porque esa función ya navega a s-main (dejaría USER=null en pantalla rota).
   if(typeof MODO_MANTENIMIENTO!=="undefined"&&MODO_MANTENIMIENTO){
