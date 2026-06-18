@@ -450,7 +450,15 @@ function hacerLogin(){
   if(typeof sbPullDistribuidores==="function"){
     var btnLogin=document.getElementById("login-btn");
     if(btnLogin){btnLogin.disabled=true;btnLogin.textContent="Verificando…";}
+    var _loginDone=false;
+    var _loginFallback=setTimeout(function(){
+      if(_loginDone)return;
+      _loginDone=true;
+      if(btnLogin){btnLogin.disabled=false;btnLogin.textContent="Ingresar";}
+      _hacerLoginCore(u,pw);
+    },5000);
     sbPullDistribuidores().then(function(res){
+      if(_loginDone)return;_loginDone=true;clearTimeout(_loginFallback);
       if(res&&res.extra&&res.extra.length){
         var localExtra=[];try{localExtra=JSON.parse(localStorage.getItem("pyro_dist_extra")||"[]");}catch(e){}
         var porRuc={};localExtra.forEach(function(d){porRuc[d.ruc]=d;});
@@ -462,6 +470,7 @@ function hacerLogin(){
       if(btnLogin){btnLogin.disabled=false;btnLogin.textContent="Ingresar";}
       _hacerLoginCore(u,pw);
     }).catch(function(){
+      if(_loginDone)return;_loginDone=true;clearTimeout(_loginFallback);
       if(btnLogin){btnLogin.disabled=false;btnLogin.textContent="Ingresar";}
       _hacerLoginCore(u,pw);
     });
@@ -4552,7 +4561,7 @@ function guardarPedidos(){
   }
   if(typeof sbPushPedidos==="function")sbPushPedidos();
 }
-function guardarStock(){var st={};PRODUCTOS.forEach(function(p){st[p.id]={stock:p.stock,ago:p.ago};});try{localStorage.setItem("pyro_stock",JSON.stringify(st));backupCambio();}catch(e){}if(typeof sbPushStock==="function")sbPushStock();}
+function guardarStock(){var st={};PRODUCTOS.forEach(function(p){st[p.id]={stock:p.stock,ago:p.ago};});try{localStorage.setItem("pyro_stock",JSON.stringify(st));backupCambio();}catch(e){avisarStorage();}if(typeof sbPushStock==="function")sbPushStock();}
 function cargarStock(){try{var st=JSON.parse(localStorage.getItem("pyro_stock")||"{}");PRODUCTOS.forEach(function(p){if(st[p.id]!=null){p.stock=st[p.id].stock;p.ago=st[p.id].ago;}});}catch(e){}}
 function guardarDistribuidores(){
   try{
