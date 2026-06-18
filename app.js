@@ -5740,8 +5740,10 @@ function mostrarOverlayInstalacion(tipo){
 function renderBannerInstalacion(){
   var el=document.getElementById("banner-instalacion");
   if(!el||!USER||USER.esAdmin)return;
-  var tieneMobile=!!localStorage.getItem(_keyInstMobile(USER.ruc));
-  var tieneDesktop=!!localStorage.getItem(_keyInstDesktop(USER.ruc));
+  var tieneMobile=!!localStorage.getItem(_keyInstMobile(USER.ruc))||PEDIDOS.some(function(p){return p.esInstalacion&&p.ruc===USER.ruc&&p.instTipo==="mobile";});
+  var tieneDesktop=!!localStorage.getItem(_keyInstDesktop(USER.ruc))||PEDIDOS.some(function(p){return p.esInstalacion&&p.ruc===USER.ruc&&p.instTipo==="desktop";});
+  if(tieneMobile){try{localStorage.setItem(_keyInstMobile(USER.ruc),"1");}catch(e){}}
+  if(tieneDesktop){try{localStorage.setItem(_keyInstDesktop(USER.ruc),"1");}catch(e){}}
   var esMobile=_esMobile();
   // Si ya tiene ambas instalaciones, ocultar
   if(tieneMobile&&tieneDesktop){el.style.display="none";return;}
