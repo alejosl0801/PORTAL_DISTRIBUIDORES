@@ -2878,13 +2878,12 @@ function getCostoProducto(id){
 }
 
 // Costo real total de una lista de canjes, buscando la recompensa por nombre en REWARDS.
-// Si no se encuentra el costoReal, usa el promedio de costos reales conocidos.
+// Tutoriales, instalaciones y bienvenidas no tienen costo real → $0.
 function costoCanjesEntregados(lista){
-  var conocidos=REWARDS.filter(function(r){return r.costoReal!=null;});
-  var prom=conocidos.length?conocidos.reduce(function(s,r){return s+r.costoReal;},0)/conocidos.length:0;
   return lista.reduce(function(s,p){
+    if(p.esInstalacion||p.esBienvenida||p.esTutorial||(p.canjeNm&&p.canjeNm.indexOf("tutorial")!==-1)||( p.canjeNm&&p.canjeNm.indexOf("Tutorial")!==-1))return s;
     var rw=REWARDS.find(function(r){return r.nm===p.canjeNm;});
-    var c=(rw&&rw.costoReal!=null)?rw.costoReal:prom;
+    var c=(rw&&rw.costoReal!=null)?rw.costoReal:0;
     return s+c;
   },0);
 }
