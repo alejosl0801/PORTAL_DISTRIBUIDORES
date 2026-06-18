@@ -2889,6 +2889,7 @@ function costoCanjesEntregados(lista){
 }
 
 function renderAdmCanjes(){
+  var panelPed=document.getElementById("adm-pedidos");if(panelPed)panelPed.classList.add("active");
   var lista=PEDIDOS.filter(function(p){return p.esCanje&&!p.esBienvenida&&!p.esInstalacion;}).slice().reverse();
   var el=document.getElementById("adm-ped-lista");if(!el)return;
   var filtros=[
