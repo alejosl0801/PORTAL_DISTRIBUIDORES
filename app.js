@@ -2765,6 +2765,7 @@ function admTab(t,btn){
   if(t==="dashboard")renderAdmDashboard();
   if(t==="distribuidores")renderAdmDist();
   if(t==="stock")renderAdmStock();
+  if(t==="canjes")renderAdmCanjes();
   if(t==="recompensas")renderAdmRecompensas();
   if(t==="log")renderAdmLog();
   if(t==="mapa")renderAdmMapa();
@@ -2885,6 +2886,47 @@ function costoCanjesEntregados(lista){
     var c=(rw&&rw.costoReal!=null)?rw.costoReal:0;
     return s+c;
   },0);
+}
+
+function renderAdmCanjes(){
+  var lista=PEDIDOS.filter(function(p){return p.esCanje&&!p.esBienvenida&&!p.esInstalacion;}).slice().reverse();
+  var el=document.getElementById("adm-ped-lista");if(!el)return;
+  var filtros=[
+    {f:"todos",l:"Todos"},
+    {f:"pendiente",l:"⏳ Pendientes"},
+    {f:"finalizado",l:"✔️ Entregados"}
+  ];
+  var filtroAct=window._canjesFiltro||"todos";
+  var filtrosHtml='<div class="hfiltros" style="margin-bottom:10px">'+filtros.map(function(o){
+    return '<button class="fbtn'+(filtroAct===o.f?" active":"")+'" onclick="window._canjesFiltro=\''+o.f+'\';renderAdmCanjes()">'+o.l+'</button>';
+  }).join("")+'</div>';
+  var visible=lista.filter(function(p){
+    if(filtroAct==="pendiente")return p.estado==="pendiente";
+    if(filtroAct==="finalizado")return p.estado==="finalizado"||p.estado==="entregado";
+    return true;
+  });
+  el.innerHTML=filtrosHtml+(visible.length?visible.map(function(p){
+    var entregado=p.estado==="finalizado"||p.estado==="entregado";
+    return '<div class="card"><div class="card-b">'+
+      '<div style="display:flex;justify-content:space-between;align-items:center">'+
+        '<div><div style="font-weight:700">🏆 '+escHtml(p.canjeNm||"Canje")+'</div>'+
+        '<div style="font-size:12px;color:var(--g3)">'+escHtml(p.razon)+' · '+escHtml(p.fecha)+'</div></div>'+
+        '<span class="est-chip '+(entregado?"est-fin":"est-pend")+'">'+(entregado?"✔️ Entregado":"⏳ Pendiente")+'</span>'+
+      '</div>'+
+      (!entregado?'<button class="btn btn-p btn-full" style="margin-top:10px" onclick="entregarCanje(\''+p.id+'\')">✔️ Marcar como entregado</button>':'')+
+    '</div></div>';
+  }).join(""):'<div class="empty"><div class="ico">🏆</div><p>No hay canjes en esta categoría.</p></div>');
+}
+
+function entregarCanje(pid){
+  var p=PEDIDOS.find(function(x){return x.id===pid;});
+  if(!p)return;
+  p.estado="finalizado";
+  guardarPedidos();
+  sincronizarConSheets(p,true);
+  toast("✅ Canje marcado como entregado");
+  renderAdmCanjes();
+  renderAdmDashboard();
 }
 
 function renderAdmDashboard(){
