@@ -165,7 +165,7 @@ function validarCantMinMsg(p,cant){
 
 // Descuento por volumen — respeta flag sinDescVol del distribuidor
 function precioConVolumen(p, cant){
-  var pv=p.pv||1;
+  var pv=(p.pv&&p.pv>0)?p.pv:(p.pb||p.costo||1);
   var precioBase=precioCliente(p);
   var descBase=(pv-precioBase)/pv*100;
   var dvPct=0;
@@ -1000,7 +1000,7 @@ function _logrosDefinicion(){
   var pts=puntosConfirmados();
   var canjes=misPedidos().filter(function(p){return p.esCanje&&!p.esBienvenida;}).length;
   var meses=new Set(comp.map(function(p){var d=parseFechaPed(p);return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0");})).size;
-  var semanas=new Set(comp.map(function(p){var d=parseFechaPed(p);var w=Math.floor(d/6048e5);return w;})).size;
+  var semanas=new Set(comp.map(function(p){var d=parseFechaPed(p);var w=Math.floor((d.getTime()-4*86400000)/6048e5);return w;})).size;
   var prods=new Set(comp.reduce(function(a,p){return a.concat((p.items||[]).map(function(i){return i.id;}));},[]).filter(Boolean)).size;
   var _excUnid=["SEGPLAST01","MANOPQS"]; // seguros plásticos y manómetros no cuentan por ser accesorios de muy bajo valor unitario
   var items=comp.reduce(function(s,p){return s+(p.items||[]).reduce(function(ss,i){return _excUnid.indexOf(i.id)!==-1?ss:ss+i.cant;},0);},0);
@@ -5082,7 +5082,7 @@ window.addEventListener("load",function(){
     // previo) NO debe recargar: recargaría la página mientras el usuario está
     // recién iniciando sesión, devolviéndolo al login sin aviso.
     var _yaControlada=!!navigator.serviceWorker.controller;
-    navigator.serviceWorker.register('./sw.js').then(function(reg){
+    navigator.serviceWorker.register('./sw.js?v=12').then(function(reg){
       // Forzar actualización inmediata si hay nuevo SW esperando
       if(reg.waiting){reg.waiting.postMessage({type:'SKIP_WAITING'});}
       reg.addEventListener('updatefound',function(){
