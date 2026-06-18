@@ -3929,10 +3929,6 @@ function renderAdmStock(){
     });
   });
   cont.innerHTML=topHtml+html;
-  // Notificación de productos bajo umbral
-  if(bajosUmbral.length&&typeof Notification!=="undefined"&&Notification.permission==="granted"){
-    new Notification("PyroShield — Stock bajo umbral",{body:bajosUmbral.length+" productos bajo umbral: "+bajosUmbral.slice(0,3).join(", ")+(bajosUmbral.length>3?"…":""),icon:"img/logo.jpg"});
-  }
 }
 
 function ajustarCosto(id,val){
