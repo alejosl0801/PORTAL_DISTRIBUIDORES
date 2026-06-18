@@ -2530,13 +2530,14 @@ function verDetallePed(pid){
       '<div style="font-size:12px;color:var(--g3)">'+p.fecha+'</div>'+
       '<span class="est-chip '+estadoClass(p.estado)+'">'+estadoLabel(p.estado)+'</span>'+
     '</div>';
+  var esFabiola=USER&&USER.rol==="impresion";
   if(p.items)html+=p.items.map(function(it){
-    return '<div class="rrow"><span>'+escHtml(it.nm)+' x'+it.cant+'</span><span>'+fmt$(it.pr*it.cant)+'</span></div>';
+    return '<div class="rrow"><span>'+escHtml(it.nm)+' x'+it.cant+'</span>'+(esFabiola?'':'<span>'+fmt$(it.pr*it.cant)+'</span>')+'</div>';
   }).join("");
-  html+=(p.subtotal!=null&&p.iva!=null?
+  html+=(!esFabiola?(p.subtotal!=null&&p.iva!=null?
     '<div class="rrow"><span style="color:var(--g3)">Subtotal</span><span>'+fmt$(p.subtotal)+'</span></div>'+
     '<div class="rrow"><span style="color:var(--g3)">IVA 15%</span><span>'+fmt$(p.iva)+'</span></div>':'')+
-  '<div class="rrow tot"><span>TOTAL</span><span>'+fmt$(p.total)+'</span></div>'+
+  '<div class="rrow tot"><span>TOTAL</span><span>'+fmt$(p.total)+'</span></div>':'')+
     '<div style="margin-top:12px;font-size:13px;color:var(--g4)">'+
       '<b>Pago:</b> '+escHtml(p.pago)+'<br><b>Modo:</b> '+(p.modo==="retiro"?"Retiro en local":"Entrega a domicilio")+
     '</div>'+
@@ -2559,7 +2560,7 @@ function verDetallePed(pid){
     (p.calificacion?'<div style="margin-top:8px;font-size:13px">Calificación: '+"⭐".repeat(Math.max(0,Math.min(5,p.calificacion.estrellas||0)))+'<br><i>'+escHtml(p.calificacion.comentario||"")+'</i></div>':'')+
     (!p.esCanje?renderTrackingPedido(p.estado):'')+
     ((!p.esCanje&&p.items&&p.items.length)?
-      '<button class="btn btn-p btn-full" style="margin-top:16px" onclick="generarProforma(\''+p.id+'\')">📄 Descargar Proforma PDF</button>'+
+      (!(USER&&USER.rol==="impresion")?'<button class="btn btn-p btn-full" style="margin-top:16px" onclick="generarProforma(\''+p.id+'\')">📄 Descargar Proforma PDF</button>':'')+
       (USER&&USER.rol==="impresion"?'<button class="btn btn-s btn-full" style="margin-top:8px" onclick="generarNotaEntrega(\''+p.id+'\')">📋 Nota de entrega</button>':'')+
       (p.azurFactura
         ?'<button class="btn btn-p btn-full" style="margin-top:8px;background:var(--verde)" onclick="descargarFacturaPDF(\''+p.id+'\')">🧾 Descargar Factura PDF</button>'
@@ -2835,10 +2836,8 @@ function renderRolImpresion(){
         '<div style="font-size:12px;color:var(--g3)">'+escHtml(p.razon)+' · '+escHtml(p.fecha)+'</div></div>'+
         '<span class="est-chip '+estadoClass(p.estado)+'">'+estadoLabelAdmin(p.estado)+'</span>'+
       '</div>'+
-      '<div style="font-size:18px;font-weight:800;font-family:\'Barlow Condensed\',sans-serif;margin-top:6px">'+fmt$(p.total)+'</div>'+
       '<div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">'+
-        '<button class="btn btn-s btn-sm" style="flex:1" onclick="generarProforma(\''+p.id+'\')">📄 Proforma</button>'+
-        '<button class="btn btn-s btn-sm" style="flex:1" onclick="generarNotaEntrega(\''+p.id+'\')">📋 Nota de entrega</button>'+
+        '<button class="btn btn-s btn-sm btn-full" onclick="generarNotaEntrega(\''+p.id+'\')">📋 Nota de entrega</button>'+
       '</div>'+
     '</div></div>';
   }).join(""):'<div class="empty"><div class="ico">📦</div><p>No hay pedidos en esta categoría.</p></div>');
