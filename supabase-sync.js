@@ -3,7 +3,7 @@
 // localStorage es caché local — siempre se reemplaza con lo de Supabase al login.
 
 var SUPABASE_URL = "https://flxweylyksddssvuqdzq.supabase.co";
-var SUPABASE_KEY = "sb_publishable_1w2FKzNgBgha1YjQ4KGjvg_cpNnh7_9";
+var SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZseHdleWx5a3NkZHNzdnVxZHpxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE0NTg0NDMsImV4cCI6MjA5NzAzNDQ0M30.hJRfemrsIaOKKl5HWJCSI6myxrqzOl6zuhIcSZHIFwE";
 var _sb = null;
 var _sbReady = false;
 var _sbSyncInProgress = false;

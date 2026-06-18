@@ -4921,8 +4921,8 @@ async function _ejecutarResetProduccion() {
     var r = await fetch(url, {
       method: "DELETE",
       headers: {
-        "apikey": "sb_publishable_1w2FKzNgBgha1YjQ4KGjvg_cpNnh7_9",
-        "Authorization": "Bearer sb_publishable_1w2FKzNgBgha1YjQ4KGjvg_cpNnh7_9",
+        "apikey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZseHdleWx5a3NkZHNzdnVxZHpxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE0NTg0NDMsImV4cCI6MjA5NzAzNDQ0M30.hJRfemrsIaOKKl5HWJCSI6myxrqzOl6zuhIcSZHIFwE",
+        "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZseHdleWx5a3NkZHNzdnVxZHpxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE0NTg0NDMsImV4cCI6MjA5NzAzNDQ0M30.hJRfemrsIaOKKl5HWJCSI6myxrqzOl6zuhIcSZHIFwE",
         "Content-Type": "application/json",
         "Prefer": "return=representation"
       }
@@ -4947,8 +4947,8 @@ async function _ejecutarResetProduccion() {
     await fetch("https://flxweylyksddssvuqdzq.supabase.co/rest/v1/app_config?key=in.(dist_eliminados,rewards)", {
       method: "DELETE",
       headers: {
-        "apikey": "sb_publishable_1w2FKzNgBgha1YjQ4KGjvg_cpNnh7_9",
-        "Authorization": "Bearer sb_publishable_1w2FKzNgBgha1YjQ4KGjvg_cpNnh7_9",
+        "apikey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZseHdleWx5a3NkZHNzdnVxZHpxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE0NTg0NDMsImV4cCI6MjA5NzAzNDQ0M30.hJRfemrsIaOKKl5HWJCSI6myxrqzOl6zuhIcSZHIFwE",
+        "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZseHdleWx5a3NkZHNzdnVxZHpxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE0NTg0NDMsImV4cCI6MjA5NzAzNDQ0M30.hJRfemrsIaOKKl5HWJCSI6myxrqzOl6zuhIcSZHIFwE",
         "Prefer": "return=minimal"
       }
     });
