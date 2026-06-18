@@ -2924,6 +2924,7 @@ function entregarCanje(pid){
   p.estado="finalizado";
   guardarPedidos();
   sincronizarConSheets(p,true);
+  if(typeof sbPushPedido==="function")sbPushPedido(p);
   toast("✅ Canje marcado como entregado");
   renderAdmCanjes();
   renderAdmDashboard();
