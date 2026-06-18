@@ -856,6 +856,9 @@ function setTopbarPts(val){
     if(box){box.classList.remove("pulse");void box.offsetWidth;box.classList.add("pulse");}
   }
   el.setAttribute("data-prev",val);
+  // Mantener sincronizado el card del dashboard
+  var heroEl=document.getElementById("hero-pts");
+  if(heroEl)heroEl.textContent=fmtPts(val);
 }
 
 // Overlay de éxito grande con animación (feedback al confirmar pedido)
