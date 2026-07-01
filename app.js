@@ -4912,13 +4912,17 @@ document.addEventListener("click",function(e){if(e.target.classList.contains("ov
 var _errLog=[];
 function _capturarError(msg,src,linea,col,err){
   try{
-    var entrada={ts:new Date().toISOString(),msg:String(msg).substring(0,200),src:(src||"").replace(/.*\//,""),linea:linea,col:col,stack:err&&err.stack?String(err.stack).substring(0,400):""};
+    var entrada={ts:new Date().toISOString(),msg:String(msg).substring(0,200),src:(src||"").replace(/.*\//,""),linea:linea,col:col,stack:err&&err.stack?String(err.stack).substring(0,400):"",ruc:(window._USER&&window._USER.ruc)||"desconocido",razon:(window._USER&&window._USER.razon)||"desconocido"};
     _errLog.push(entrada);
     if(_errLog.length>50)_errLog=_errLog.slice(-50);
-    // Persistir en localStorage para que el admin pueda verlos
     try{localStorage.setItem("pyro_errlog",JSON.stringify(_errLog));}catch(e){}
-    // Si es admin, mostrar badge de error
     if(window._USER&&window._USER.esAdmin)_actualizarBadgeErrores();
+    // Reportar al servidor (GAS) para notificación por email
+    try{
+      if(GAS_URL){
+        fetch(GAS_URL,{method:"POST",body:JSON.stringify({token:GAS_TOKEN,accion:"reportarError",error:entrada})});
+      }
+    }catch(e2){}
   }catch(e){}
 }
 function _actualizarBadgeErrores(){

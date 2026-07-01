@@ -46,6 +46,8 @@ function doPost(e) {
         resultado = marcarTutorialCompletado(datos); break;
       case "reiniciarTutoriales":
         resultado = reiniciarTutorialesRuc(datos); break;
+      case "reportarError":
+        resultado = recibirErrorCliente(datos); break;
       default:
         resultado = { ok: false, error: "Acción no reconocida: " + datos.accion };
     }
@@ -328,6 +330,41 @@ function _json(obj) {
   return ContentService
     .createTextOutput(JSON.stringify(obj))
     .setMimeType(ContentService.MimeType.JSON);
+}
+
+// ════════════════════════════════════════════════════════════════
+// recibirErrorCliente — guarda error en ERRORES_LOG y notifica por email
+// ════════════════════════════════════════════════════════════════
+function recibirErrorCliente(datos) {
+  var e = datos.error || {};
+  var hoja = obtenerHoja("ERRORES_LOG", ["timestamp","ruc","distribuidor","mensaje","archivo","linea","stack"]);
+  hoja.appendRow([
+    e.ts || new Date().toISOString(),
+    e.ruc || "",
+    e.razon || "",
+    e.msg || "",
+    e.src || "",
+    e.linea || "",
+    e.stack || ""
+  ]);
+
+  // Email de alerta
+  var asunto = "🚨 PyroShield — Error en portal: " + (e.razon || e.ruc || "desconocido");
+  var cuerpo = "Se registró un error en el portal PyroShield.\n\n"
+    + "Distribuidor: " + (e.razon || "—") + "\n"
+    + "RUC: " + (e.ruc || "—") + "\n"
+    + "Hora: " + (e.ts || "—") + "\n"
+    + "Error: " + (e.msg || "—") + "\n"
+    + "Archivo: " + (e.src || "—") + " línea " + (e.linea || "—") + "\n"
+    + (e.stack ? "\nStack:\n" + e.stack : "");
+
+  try {
+    MailApp.sendEmail("alejosl0801@gmail.com", asunto, cuerpo);
+  } catch(mailErr) {
+    Logger.log("Email no enviado: " + mailErr);
+  }
+
+  return { ok: true };
 }
 
 // ════════════════════════════════════════════════════════════════
