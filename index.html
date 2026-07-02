@@ -12,6 +12,22 @@
 <link rel="manifest" href="manifest.json">
 <link rel="icon" type="image/jpeg" href="./img/logo.jpg">
 <meta name="theme-color" content="#C0392B">
+<script>
+/* Arranque: forzar chequeo de actualización del Service Worker en cada carga.
+   Este script va inline en index.html (que se sirve fresco de la red), así que
+   corre aunque el app.js cacheado sea viejo — rompe el circulo vicioso de
+   "codigo viejo no baja codigo nuevo". Si hay SW nuevo, se instala y la app
+   se recarga sola (ver logica en app.js). */
+(function(){
+  if('serviceWorker' in navigator){
+    try{
+      navigator.serviceWorker.getRegistrations().then(function(rs){
+        rs.forEach(function(r){ try{ r.update(); }catch(e){} });
+      }).catch(function(){});
+    }catch(e){}
+  }
+})();
+</script>
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -433,9 +449,9 @@
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" defer></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-<script src="./supabase-sync.js?v=20260702b"></script>
+<script src="./supabase-sync.js?v=20260702c"></script>
 <script src="./datos.js?v=20260709"></script>
-<script src="./app.js?v=20260702b"></script>
+<script src="./app.js?v=20260702c"></script>
 <!-- Suite de tests — ejecutar runTests() desde la consola del navegador -->
 <script src="./tests.js?v=20260710"></script>
 <script src="./anim.js?v=20260710"></script>

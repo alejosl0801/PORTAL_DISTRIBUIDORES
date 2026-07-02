@@ -5129,22 +5129,30 @@ window.addEventListener("load",function(){
     // previo) NO debe recargar: recargaría la página mientras el usuario está
     // recién iniciando sesión, devolviéndolo al login sin aviso.
     var _yaControlada=!!navigator.serviceWorker.controller;
-    navigator.serviceWorker.register('./sw.js?v=12').then(function(reg){
-      // Forzar actualización inmediata si hay nuevo SW esperando
+    var _recargando=false;
+    navigator.serviceWorker.register('./sw.js?v=13').then(function(reg){
+      // Chequeo inmediato de actualización
+      try{reg.update();}catch(e){}
+      // Si ya hay un SW nuevo esperando, activarlo
       if(reg.waiting){reg.waiting.postMessage({type:'SKIP_WAITING'});}
       reg.addEventListener('updatefound',function(){
         var newSW=reg.installing;
+        if(!newSW)return;
         newSW.addEventListener('statechange',function(){
+          // Nuevo SW instalado y ya había uno controlando => activar el nuevo.
+          // El reload real lo dispara 'controllerchange' (una sola vez).
           if(newSW.state==='installed'&&navigator.serviceWorker.controller){
             newSW.postMessage({type:'SKIP_WAITING'});
-            window.location.reload();
           }
         });
       });
+      // Mientras la app esté abierta, revisar código nuevo cada 60s.
+      // Así una app instalada (PWA) se auto-actualiza sin cerrarla.
+      setInterval(function(){try{reg.update();}catch(e){}},60000);
     }).catch(function(){});
-    // Recargar solo si ya había una sesión de SW activa (actualización real)
+    // Cuando el SW nuevo toma control => recargar una sola vez para cargar el código nuevo.
     navigator.serviceWorker.addEventListener('controllerchange',function(){
-      if(_yaControlada)window.location.reload();
+      if(_yaControlada&&!_recargando){_recargando=true;window.location.reload();}
     });
   }
   mostrarBotonBiometria();
