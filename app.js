@@ -333,11 +333,11 @@ function loginConCredenciales(ruc,pw){
     logAccesos.unshift(_acc);
     if(logAccesos.length>50)logAccesos=logAccesos.slice(0,50);
     localStorage.setItem("pyro_log_accesos",JSON.stringify(logAccesos));
-    // Enviar el acceso a la nube (Sheets) para que el admin vea, desde
-    // cualquier dispositivo, quien y cuando inicio sesion. Sin esto el
-    // registro solo mostraba los logins del propio equipo del admin.
-    if(GAS_URL&&!d.esAdmin){
-      try{fetch(GAS_URL,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({token:GAS_TOKEN,accion:"registrarAcceso",acceso:_acc})});}catch(e){}
+    // Enviar el acceso a la nube para que el admin vea, desde cualquier
+    // dispositivo, quien y cuando inicio sesion. Via Supabase (ya esta vivo,
+    // no requiere redesplegar el Apps Script). Solo clientes, no el admin.
+    if(!d.esAdmin&&typeof sbPushAcceso==="function"){
+      try{sbPushAcceso(_acc);}catch(e){}
     }
   }catch(e){}
   setTimeout(reintentarSyncPendientes,2000);
@@ -5412,12 +5412,18 @@ function renderAdmLog(){
   // Mostrar de inmediato lo local; luego traer los accesos globales de la nube.
   var local=[];try{local=JSON.parse(localStorage.getItem("pyro_log_accesos")||"[]");}catch(e){}
   _renderAdmLogTabla(local);
-  if(GAS_URL){
-    fetch(GAS_URL+"?accion=obtenerAccesos&token="+encodeURIComponent(GAS_TOKEN))
-      .then(function(r){return r.json();})
-      .then(function(data){
-        if(data&&data.ok&&Array.isArray(data.accesos)&&data.accesos.length)_renderAdmLogTabla(data.accesos);
-      }).catch(function(){});
+  // Traer accesos globales desde Supabase (todos los dispositivos).
+  if(typeof sbPullAccesos==="function"){
+    sbPullAccesos().then(function(accesos){
+      if(Array.isArray(accesos)&&accesos.length){
+        // Fusionar con los locales del admin y ordenar por fecha+hora desc.
+        var todos=accesos.concat(local);
+        var vistos={};var unicos=[];
+        todos.forEach(function(a){var k=(a.ruc||"")+"|"+(a.fecha||"")+"|"+(a.hora||"");if(!vistos[k]){vistos[k]=true;unicos.push(a);}});
+        unicos.sort(function(a,b){var x=(a.fecha||"")+(a.hora||""),y=(b.fecha||"")+(b.hora||"");return x>y?-1:x<y?1:0;});
+        _renderAdmLogTabla(unicos);
+      }
+    }).catch(function(){});
   }
 }
 

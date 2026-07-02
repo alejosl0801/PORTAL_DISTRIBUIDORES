@@ -271,6 +271,34 @@ async function sbPushLogPuntos(ruc, entrada) {
   }
 }
 
+// ════════════════════ REGISTRO DE ACCESOS ════════════════════
+// Guarda el login en app_config (key="accesos_log") como array. Asi el admin
+// ve, desde cualquier dispositivo, quien y cuando inicio sesion — SIN depender
+// de redesplegar el Apps Script.
+async function sbPushAcceso(acceso) {
+  if (!_sbReady || !acceso) return;
+  try {
+    var res = await _sb.from("app_config").select("value").eq("key", "accesos_log").maybeSingle();
+    var arr = (res && res.data && Array.isArray(res.data.value)) ? res.data.value : [];
+    arr.unshift(acceso);
+    if (arr.length > 500) arr = arr.slice(0, 500);
+    await _sb.from("app_config").upsert({ key: "accesos_log", value: arr }, { onConflict: "key" });
+  } catch (e) {
+    console.warn("[Supabase] pushAcceso:", e);
+  }
+}
+async function sbPullAccesos() {
+  if (!_sbReady) return null;
+  try {
+    var res = await _sb.from("app_config").select("value").eq("key", "accesos_log").maybeSingle();
+    if (res.error || !res.data) return null;
+    return Array.isArray(res.data.value) ? res.data.value : [];
+  } catch (e) {
+    console.warn("[Supabase] pullAccesos:", e);
+    return null;
+  }
+}
+
 // ════════════════════ PULL COMPLETO AL LOGIN ════════════════════
 // Se llama después del login exitoso: descarga datos de Supabase y
 // los funde con lo que ya está en localStorage (Supabase gana en conflicto).
