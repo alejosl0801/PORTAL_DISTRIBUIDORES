@@ -48,6 +48,8 @@ function doPost(e) {
         resultado = reiniciarTutorialesRuc(datos); break;
       case "reportarError":
         resultado = recibirErrorCliente(datos); break;
+      case "registrarAcceso":
+        resultado = registrarAcceso(datos); break;
       default:
         resultado = { ok: false, error: "Acción no reconocida: " + datos.accion };
     }
@@ -80,6 +82,9 @@ function doGet(e) {
   }
   if (params.accion === "limpiarDatos") {
     return _json(LIMPIAR_DATOS_PRUEBA());
+  }
+  if (params.accion === "obtenerAccesos") {
+    return _json(obtenerAccesos());
   }
   return _json({ ok: false, error: "Acción no reconocida" });
 }
@@ -337,7 +342,7 @@ function _json(obj) {
 // ════════════════════════════════════════════════════════════════
 function recibirErrorCliente(datos) {
   var e = datos.error || {};
-  var hoja = obtenerHoja("ERRORES_LOG", ["timestamp","ruc","distribuidor","mensaje","archivo","linea","stack"]);
+  var hoja = obtenerHoja("ERRORES_LOG", ["timestamp","ruc","distribuidor","mensaje","archivo","linea","columna","stack"]);
   hoja.appendRow([
     e.ts || new Date().toISOString(),
     e.ruc || "",
@@ -345,6 +350,7 @@ function recibirErrorCliente(datos) {
     e.msg || "",
     e.src || "",
     e.linea || "",
+    e.col || "",
     e.stack || ""
   ]);
 
@@ -368,6 +374,34 @@ function recibirErrorCliente(datos) {
 }
 
 // ════════════════════════════════════════════════════════════════
+// registrarAcceso — guarda un login en ACCESOS_LOG (para que el admin
+// vea, desde cualquier dispositivo, quién y cuándo inició sesión)
+// ════════════════════════════════════════════════════════════════
+function registrarAcceso(datos) {
+  var a = datos.acceso || {};
+  var hoja = obtenerHoja("ACCESOS_LOG", ["ruc","razon","fecha","hora","registrado"]);
+  hoja.appendRow([a.ruc || "", a.razon || "", a.fecha || "", a.hora || "", new Date()]);
+  // Mantener solo los últimos 1000 accesos
+  var ultima = hoja.getLastRow();
+  if (ultima > 1001) hoja.deleteRows(2, ultima - 1001);
+  return { ok: true };
+}
+
+// obtenerAccesos — devuelve los accesos registrados (más recientes primero)
+function obtenerAccesos() {
+  var ss = SpreadsheetApp.openById(SHEET_ID);
+  var hoja = ss.getSheetByName("ACCESOS_LOG");
+  if (!hoja || hoja.getLastRow() < 2) return { ok: true, accesos: [] };
+  var rows = hoja.getRange(2, 1, hoja.getLastRow() - 1, 4).getValues();
+  var accesos = rows.filter(function(r){ return r[0]; }).map(function(r){
+    return { ruc: r[0], razon: r[1], fecha: r[2], hora: r[3] };
+  });
+  accesos.reverse();
+  if (accesos.length > 300) accesos = accesos.slice(0, 300);
+  return { ok: true, accesos: accesos };
+}
+
+// ════════════════════════════════════════════════════════════════
 // LIMPIEZA ÚNICA — Ejecutar UNA VEZ desde el editor de Apps Script
 // para borrar todos los datos de prueba antes del lanzamiento.
 // Después de ejecutar, ELIMINAR o comentar esta función.
@@ -378,7 +412,9 @@ function LIMPIAR_DATOS_PRUEBA() {
     { nombre: HOJA_PEDIDOS,    encabezados: ENCABEZADOS_PEDIDOS },
     { nombre: HOJA_BACKUP,     encabezados: ["fecha","pedidos_json","stock_json","meta_json"] },
     { nombre: HOJA_STOCK,      encabezados: ["id_producto","stock","ago","fecha_actualizacion"] },
-    { nombre: HOJA_TUTORIALES, encabezados: ["ruc","tab","fecha"] }
+    { nombre: HOJA_TUTORIALES, encabezados: ["ruc","tab","fecha"] },
+    { nombre: "ERRORES_LOG",   encabezados: ["timestamp","ruc","distribuidor","mensaje","archivo","linea","columna","stack"] },
+    { nombre: "ACCESOS_LOG",   encabezados: ["ruc","razon","fecha","hora","registrado"] }
   ];
 
   hojas.forEach(function(h) {

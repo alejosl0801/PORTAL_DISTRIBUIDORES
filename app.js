@@ -230,9 +230,13 @@ function registrarLogPuntos(ruc,tipo,pts,detalle){
     var key="pyro_log_puntos_"+ruc;
     var log=[];try{log=JSON.parse(localStorage.getItem(key)||"[]");}catch(e){}
     var now=new Date(),p2=function(n){return n<10?"0"+n:String(n);};
-    log.unshift({tipo:tipo,pts:pts,detalle:detalle,fecha:now.getFullYear()+"-"+p2(now.getMonth()+1)+"-"+p2(now.getDate()),hora:p2(now.getHours())+":"+p2(now.getMinutes())});
+    var entrada={tipo:tipo,pts:pts,detalle:detalle,desc:detalle,ts:now.toISOString(),fecha:now.getFullYear()+"-"+p2(now.getMonth()+1)+"-"+p2(now.getDate()),hora:p2(now.getHours())+":"+p2(now.getMinutes())};
+    log.unshift(entrada);
     if(log.length>100)log=log.slice(0,100);
     localStorage.setItem(key,JSON.stringify(log));
+    // Subir el movimiento a Supabase para que el historial no viva solo en
+    // este dispositivo (sbPushLogPuntos existia pero nunca se invocaba).
+    if(typeof sbPushLogPuntos==="function")sbPushLogPuntos(ruc,entrada);
   }catch(e){}
 }
 function saldoPuntos(){
@@ -325,9 +329,16 @@ function loginConCredenciales(ruc,pw){
     var logAccesos=[];
     try{logAccesos=JSON.parse(localStorage.getItem("pyro_log_accesos")||"[]");}catch(e){}
     var _now=new Date(),_p2=function(n){return n<10?"0"+n:String(n);};
-    logAccesos.unshift({ruc:d.ruc,razon:d.razon||d.empresa||d.ruc,fecha:_now.getFullYear()+"-"+_p2(_now.getMonth()+1)+"-"+_p2(_now.getDate()),hora:_p2(_now.getHours())+":"+_p2(_now.getMinutes())+":"+_p2(_now.getSeconds())});
+    var _acc={ruc:d.ruc,razon:d.razon||d.empresa||d.ruc,fecha:_now.getFullYear()+"-"+_p2(_now.getMonth()+1)+"-"+_p2(_now.getDate()),hora:_p2(_now.getHours())+":"+_p2(_now.getMinutes())+":"+_p2(_now.getSeconds())};
+    logAccesos.unshift(_acc);
     if(logAccesos.length>50)logAccesos=logAccesos.slice(0,50);
     localStorage.setItem("pyro_log_accesos",JSON.stringify(logAccesos));
+    // Enviar el acceso a la nube (Sheets) para que el admin vea, desde
+    // cualquier dispositivo, quien y cuando inicio sesion. Sin esto el
+    // registro solo mostraba los logins del propio equipo del admin.
+    if(GAS_URL&&!d.esAdmin){
+      try{fetch(GAS_URL,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({token:GAS_TOKEN,accion:"registrarAcceso",acceso:_acc})});}catch(e){}
+    }
   }catch(e){}
   setTimeout(reintentarSyncPendientes,2000);
   // Pull datos de Supabase en background después del login
@@ -2915,6 +2926,9 @@ function cargarCostos(){
 function guardarCostos(costos){
   _costosCache=null;
   try{localStorage.setItem("pyro_costos",JSON.stringify(costos));}catch(e){}
+  // Respaldar a la nube (Google Sheets meta). Sin esto, los costos editados
+  // solo viven en este dispositivo y los puntos/margenes divergen entre equipos.
+  if(typeof backupCambio==="function")backupCambio();
 }
 var _costosCache=null;
 function getCostoProducto(id){
@@ -3916,7 +3930,7 @@ function guardarNuevoDist(){
 
 // ════════════════════ ADMIN STOCK ════════════════════
 function cargarUmbrales(){try{return JSON.parse(localStorage.getItem("pyro_umbrales")||"{}");}catch(e){return{};}}
-function guardarUmbral(id,val){var u=cargarUmbrales();u[id]=val;try{localStorage.setItem("pyro_umbrales",JSON.stringify(u));}catch(e){}}
+function guardarUmbral(id,val){var u=cargarUmbrales();u[id]=val;try{localStorage.setItem("pyro_umbrales",JSON.stringify(u));}catch(e){}if(typeof backupCambio==="function")backupCambio();}
 
 function renderAdmStock(){
   if(USER&&USER.rol==="impresion")return;
@@ -5382,13 +5396,25 @@ function dibujarGraficasCanvas(){
   })();
 }
 
-function renderAdmLog(){
+function _renderAdmLogTabla(log){
   var cont=document.getElementById("adm-log");if(!cont)return;
-  var log=[];try{log=JSON.parse(localStorage.getItem("pyro_log_accesos")||"[]");}catch(e){}
   if(!log.length){cont.innerHTML='<div class="empty"><div class="ico">📋</div><p>No hay registros aún.</p></div>';return;}
   cont.innerHTML='<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;min-width:300px"><thead><tr style="border-bottom:2px solid var(--g2)"><th style="font-size:11px;text-align:left;color:var(--g3);padding:6px 8px">RUC</th><th style="font-size:11px;text-align:left;color:var(--g3);padding:6px 8px">Razón social</th><th style="font-size:11px;text-align:left;color:var(--g3);padding:6px 8px">Fecha</th><th style="font-size:11px;text-align:left;color:var(--g3);padding:6px 8px">Hora</th></tr></thead><tbody>'+
     log.map(function(e){return '<tr><td style="padding:6px 8px;font-size:12px;font-weight:700">'+escHtml(e.ruc)+'</td><td style="padding:6px 8px;font-size:12px">'+escHtml(e.razon)+'</td><td style="padding:6px 8px;font-size:12px;white-space:nowrap">'+escHtml(e.fecha)+'</td><td style="padding:6px 8px;font-size:12px;white-space:nowrap">'+escHtml(e.hora)+'</td></tr>';}).join("")+
   '</tbody></table></div>';
+}
+function renderAdmLog(){
+  var cont=document.getElementById("adm-log");if(!cont)return;
+  // Mostrar de inmediato lo local; luego traer los accesos globales de la nube.
+  var local=[];try{local=JSON.parse(localStorage.getItem("pyro_log_accesos")||"[]");}catch(e){}
+  _renderAdmLogTabla(local);
+  if(GAS_URL){
+    fetch(GAS_URL+"?accion=obtenerAccesos&token="+encodeURIComponent(GAS_TOKEN))
+      .then(function(r){return r.json();})
+      .then(function(data){
+        if(data&&data.ok&&Array.isArray(data.accesos)&&data.accesos.length)_renderAdmLogTabla(data.accesos);
+      }).catch(function(){});
+  }
 }
 
 /* ═══════════════════════════════════════════

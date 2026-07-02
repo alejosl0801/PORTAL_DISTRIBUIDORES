@@ -82,6 +82,15 @@ async function sbPushPedidos() {
     if (!raw) return;
     var pedidos = JSON.parse(raw);
     if (!Array.isArray(pedidos) || !pedidos.length) return;
+    // Un cliente solo debe subir SUS propios pedidos. Si subiera todo el array
+    // (que incluye pedidos de otros que trajo al login), pisaria con su copia
+    // vieja los cambios de estado que el admin hizo despues (last-writer-wins).
+    var u = window._USER;
+    var esGestor = u && (u.esAdmin || u.rol === "impresion");
+    if (u && !esGestor) {
+      pedidos = pedidos.filter(function(p) { return p.ruc === u.ruc; });
+    }
+    if (!pedidos.length) return;
     var rows = pedidos.map(function(p) {
       return { id: String(p.id), data: p, ruc: p.ruc || null, estado: p.estado || null };
     });
@@ -251,7 +260,7 @@ async function sbPullAll(esAdmin) {
       sbPullPedidos(),
       sbPullStock(),
       esAdmin ? sbPullDistribuidores() : Promise.resolve(null),
-      esAdmin ? sbPullRewards() : Promise.resolve(null)
+      sbPullRewards()   // TAMBIEN para clientes: deben ver el catalogo de premios actualizado
     ]);
 
     var changed = false;
@@ -273,6 +282,15 @@ async function sbPullAll(esAdmin) {
         });
         pedidosFinal = pendientesSync;
       }
+      // Respetar tumbas: no resucitar pedidos que se eliminaron localmente
+      // (p.ej. al editar). sincronizarDesdeNube ya lo hace para Sheets; aqui
+      // lo aplicamos tambien al pull de Supabase.
+      try {
+        var tumba = JSON.parse(localStorage.getItem("pyro_ped_eliminados") || "[]");
+        if (tumba.length) {
+          pedidosFinal = pedidosFinal.filter(function(p) { return tumba.indexOf(p.id) === -1; });
+        }
+      } catch (e) {}
       pedidosFinal.sort(function(a,b){var da=a.fechaISO||"",db=b.fechaISO||"";return da>db?1:da<db?-1:0;});
       localStorage.setItem("pyro_pedidos", JSON.stringify(pedidosFinal));
       changed = true;
@@ -294,7 +312,7 @@ async function sbPullAll(esAdmin) {
       changed = true;
     }
 
-    // Fusionar rewards (solo admin)
+    // Fusionar rewards (admin y clientes)
     if (rewCloud && Array.isArray(rewCloud)) {
       localStorage.setItem("pyro_rewards", JSON.stringify(rewCloud));
       changed = true;
