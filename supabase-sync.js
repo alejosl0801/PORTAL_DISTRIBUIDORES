@@ -299,6 +299,34 @@ async function sbPullAccesos() {
   }
 }
 
+// ════════════════════ LOG DE ERRORES ════════════════════
+// Guarda errores de clientes en app_config (key="errores_log") como array.
+// Asi el admin ve, desde cualquier dispositivo y sin redesplegar el Apps
+// Script, los errores que tuvieron sus distribuidores.
+async function sbPushError(entrada) {
+  if (!_sbReady || !entrada) return;
+  try {
+    var res = await _sb.from("app_config").select("value").eq("key", "errores_log").maybeSingle();
+    var arr = (res && res.data && Array.isArray(res.data.value)) ? res.data.value : [];
+    arr.unshift(entrada);
+    if (arr.length > 200) arr = arr.slice(0, 200);
+    await _sb.from("app_config").upsert({ key: "errores_log", value: arr }, { onConflict: "key" });
+  } catch (e) {
+    console.warn("[Supabase] pushError:", e);
+  }
+}
+async function sbPullErrores() {
+  if (!_sbReady) return null;
+  try {
+    var res = await _sb.from("app_config").select("value").eq("key", "errores_log").maybeSingle();
+    if (res.error || !res.data) return null;
+    return Array.isArray(res.data.value) ? res.data.value : [];
+  } catch (e) {
+    console.warn("[Supabase] pullErrores:", e);
+    return null;
+  }
+}
+
 // ════════════════════ PULL COMPLETO AL LOGIN ════════════════════
 // Se llama después del login exitoso: descarga datos de Supabase y
 // los funde con lo que ya está en localStorage (Supabase gana en conflicto).

@@ -677,6 +677,7 @@ function mostrarOverlayBienvenida(){
 function logout(){
   USER=null;window._USER=null;CARRITO=[];PEDIDOS=[];
   if(_notifInterval){clearInterval(_notifInterval);_notifInterval=null;}
+  if(_erroresInterval){clearInterval(_erroresInterval);_erroresInterval=null;}
   if(_autoguardadoInterval){clearInterval(_autoguardadoInterval);_autoguardadoInterval=null;}
   if(_nubeInterval){clearInterval(_nubeInterval);_nubeInterval=null;}
   if(typeof sbDesuscribir==="function")sbDesuscribir();
@@ -4396,10 +4397,46 @@ function eliminarRecompensa(idx){
 // ════════════════════ NOTIFICACIONES ADMIN ════════════════════
 var _notifInterval=null;
 var _storageListenerAdded=false;
+var _erroresInterval=null;
+// Detección automática de errores de clientes: baja el log de errores de
+// Supabase, actualiza el badge y avisa al admin cuando hay uno nuevo — sin
+// que tenga que ir a mirar. Corre al entrar y cada 2 minutos.
+function _sincErroresAdmin(){
+  if(!USER||!USER.esAdmin)return;
+  if(typeof sbPullErrores!=="function")return;
+  sbPullErrores().then(function(remotos){
+    if(!Array.isArray(remotos)||!remotos.length)return;
+    var local=[];try{local=JSON.parse(localStorage.getItem("pyro_errlog")||"[]");}catch(e){}
+    // Fusionar por clave (ts+msg), conservando el flag "visto" de lo local.
+    var mapa={};
+    local.forEach(function(e){mapa[(e.ts||"")+"|"+(e.msg||"")]=e;});
+    var nuevos=0;
+    remotos.forEach(function(e){
+      var k=(e.ts||"")+"|"+(e.msg||"");
+      if(!mapa[k]){mapa[k]=e;nuevos++;}
+    });
+    if(!nuevos)return;
+    var fusion=Object.keys(mapa).map(function(k){return mapa[k];});
+    fusion.sort(function(a,b){return (b.ts||"")>(a.ts||"")?1:-1;});
+    if(fusion.length>200)fusion=fusion.slice(0,200);
+    _errLog=fusion;
+    try{localStorage.setItem("pyro_errlog",JSON.stringify(fusion));}catch(e){}
+    _actualizarBadgeErrores();
+    // Aviso automático
+    var ult=remotos[0]||{};
+    toast("🔴 "+nuevos+" error(es) nuevo(s) reportado(s) — revisa el log");
+    if(typeof Notification!=="undefined"&&Notification.permission==="granted"){
+      new Notification("PyroShield — Error en un cliente",{body:(ult.razon||ult.ruc||"Cliente")+": "+(ult.msg||"error"),icon:"img/logo.jpg"});
+    }
+  }).catch(function(){});
+}
 function iniciarNotificacionesAdmin(){
   if(typeof Notification==="undefined")return;
   Notification.requestPermission();
   setTimeout(chequearPedidosNuevos,1200);
+  setTimeout(_sincErroresAdmin,2000);
+  if(_erroresInterval)clearInterval(_erroresInterval);
+  _erroresInterval=setInterval(_sincErroresAdmin,2*60*1000);
   if(_notifInterval)clearInterval(_notifInterval);
   _notifInterval=setInterval(function(){
     chequearPedidosNuevos();
@@ -4960,7 +4997,10 @@ function _capturarError(msg,src,linea,col,err){
     if(_errLog.length>50)_errLog=_errLog.slice(-50);
     try{localStorage.setItem("pyro_errlog",JSON.stringify(_errLog));}catch(e){}
     if(window._USER&&window._USER.esAdmin)_actualizarBadgeErrores();
-    // Reportar al servidor (GAS) para notificación por email
+    // Reportar a Supabase (visible en el panel admin desde cualquier
+    // dispositivo, sin redesplegar el Apps Script).
+    try{if(typeof sbPushError==="function")sbPushError(entrada);}catch(e3){}
+    // Reportar al servidor (GAS) para notificación por email (si está desplegado)
     try{
       if(GAS_URL){
         fetch(GAS_URL,{method:"POST",body:JSON.stringify({token:GAS_TOKEN,accion:"reportarError",error:entrada})});
