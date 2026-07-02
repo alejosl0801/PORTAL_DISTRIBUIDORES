@@ -153,6 +153,28 @@ async function sbPushStock() {
   }
 }
 
+// Sube SOLO los productos indicados (los de un pedido), no todo el mapa de
+// stock. Reduce la ventana de sobreescritura: un cliente jamas pisa el stock
+// de productos que no toco. (La atomicidad total ante dos pedidos del MISMO
+// producto a la vez requiere la funcion RPC del lado de Supabase.)
+async function sbPushStockParcial(ids) {
+  if (!_sbReady || _sbCircuitOpen || !ids || !ids.length) return;
+  try {
+    var raw = localStorage.getItem("pyro_stock");
+    if (!raw) return;
+    var st = JSON.parse(raw);
+    var rows = ids.filter(function(id){ return st[id] != null; }).map(function(id) {
+      return { id: id, stock: st[id].stock, ago: st[id].ago };
+    });
+    if (!rows.length) return;
+    await _sbUpsert("stock", rows, "id");
+    _sbOnSuccess();
+  } catch (e) {
+    console.warn("[Supabase] pushStockParcial:", e);
+    _sbOnFailure("pushStockParcial");
+  }
+}
+
 async function sbPullStock() {
   if (!_sbReady) return null;
   try {

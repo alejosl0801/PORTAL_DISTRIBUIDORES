@@ -2274,7 +2274,7 @@ function confirmarPedido(){
     toast("⚠️ Stock cambió mientras confirmabas: "+stockRaceError.join(", "));
     return;
   }
-  guardarStock();
+  guardarStock(items.map(function(it){return it.id;}));
   CARRITO=[];
   guardarCarrito();
   actualizarBadge();
@@ -2456,7 +2456,7 @@ function cancelarPedido(pid){
           var prod=PRODUCTOS.find(function(x){return x.id===it.id;});
           if(prod){if(prod.stock!=null)prod.stock+=it.cant;prod.ago=false;}
         });
-        guardarStock();
+        guardarStock(p.items.map(function(it){return it.id;}));
       }
       // Solo revertir puntos si ya estaban confirmados (entregado/finalizado)
       var eraConfirmado=estadoViejo==="entregado"||estadoViejo==="finalizado";
@@ -2486,7 +2486,7 @@ function editarPedido(pid){
       var prod=PRODUCTOS.find(function(x){return x.id===it.id;});
       if(prod){if(prod.stock!=null)prod.stock+=it.cant;prod.ago=false;}
     });
-    guardarStock();
+    guardarStock(p.items.map(function(it){return it.id;}));
     p.items.forEach(function(it){
       var prod=PRODUCTOS.find(function(x){return x.id===it.id;});
       if(!prod)return;
@@ -3218,7 +3218,7 @@ function guardarEstadoPed(pid){
       var prod=PRODUCTOS.find(function(x){return x.id===it.id;});
       if(prod){if(prod.stock!=null)prod.stock+=it.cant;prod.ago=false;}
     });
-    guardarStock();
+    guardarStock(p.items.map(function(it){return it.id;}));
   }
   // Registrar confirmación de puntos cuando el pedido pasa a entregado/finalizado
   var confirmaEstados=["entregado","finalizado"];
@@ -4586,7 +4586,11 @@ function guardarPedidos(){
   }
   if(typeof sbPushPedidos==="function")sbPushPedidos();
 }
-function guardarStock(){var st={};PRODUCTOS.forEach(function(p){st[p.id]={stock:p.stock,ago:p.ago};});try{localStorage.setItem("pyro_stock",JSON.stringify(st));backupCambio();}catch(e){avisarStorage();}if(typeof sbPushStock==="function")sbPushStock();}
+// idsAfectados (opcional): cuando un cliente confirma/cancela un pedido, solo
+// deben subirse a Supabase los productos de ESE pedido, no todo el mapa. Asi un
+// cliente nunca pisa el stock de productos que otro cliente o el admin ajustaron.
+// Sin idsAfectados (ajuste manual del admin) se sube el mapa completo.
+function guardarStock(idsAfectados){var st={};PRODUCTOS.forEach(function(p){st[p.id]={stock:p.stock,ago:p.ago};});try{localStorage.setItem("pyro_stock",JSON.stringify(st));backupCambio();}catch(e){avisarStorage();}if(idsAfectados&&idsAfectados.length){if(typeof sbPushStockParcial==="function")sbPushStockParcial(idsAfectados);}else if(typeof sbPushStock==="function")sbPushStock();}
 function cargarStock(){try{var st=JSON.parse(localStorage.getItem("pyro_stock")||"{}");PRODUCTOS.forEach(function(p){if(st[p.id]!=null){p.stock=st[p.id].stock;p.ago=st[p.id].ago;}});}catch(e){}}
 function guardarDistribuidores(){
   try{
