@@ -96,6 +96,24 @@ async function sbPushPedidos() {
   }
 }
 
+// Empuja UN solo pedido (upsert por id). Se usa cuando el pedido ya no está
+// en el array local — p.ej. al editar, para dejarlo "cancelado" en la nube y
+// que no reaparezca como fantasma en otro dispositivo.
+async function sbPushUnPedido(p) {
+  if (!_sbReady || _sbCircuitOpen || !p || !p.id) return;
+  try {
+    var row = { id: String(p.id), data: p, ruc: p.ruc || null, estado: p.estado || null };
+    _sbSetStatus("sync");
+    await _sbUpsert("pedidos", [row], "id");
+    _sbOnSuccess();
+    _sbSetStatus("ok");
+  } catch (e) {
+    console.warn("[Supabase] pushUnPedido:", e);
+    _sbSetStatus("err");
+    _sbOnFailure("pushUnPedido");
+  }
+}
+
 async function sbPullPedidos() {
   if (!_sbReady) return null;
   try {

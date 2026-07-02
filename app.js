@@ -2233,7 +2233,13 @@ function confirmarPedido(){
     sincronizarConSheets(ped, false);
   } else {
     var colaOff=cargarColaOffline();
-    if(!colaOff.some(function(x){return x===pid;}))colaOff.push(pid);
+    // Guardar el PEDIDO COMPLETO (no solo el id): si la nube sobrescribe el
+    // localStorage antes de reenviarlo, el pedido debe poder reconstruirse.
+    var idDe=function(x){return (x&&typeof x==="object")?x.id:x;};
+    if(!colaOff.some(function(x){return idDe(x)===pid;})){
+      var copiaOff=null;try{copiaOff=JSON.parse(JSON.stringify(ped));}catch(e){copiaOff=ped;}
+      colaOff.push(copiaOff);
+    }
     guardarColaOffline(colaOff);
   }
   registrarLogPuntos(USER.ruc,"pendiente",ptsTotal,"Pedido #"+pid);
@@ -2483,9 +2489,15 @@ function editarPedido(pid){
     var eraConfirmadoEdit=p.estado==="entregado"||p.estado==="finalizado";
     if((p.puntos||0)>0&&eraConfirmadoEdit)registrarLogPuntos(p.ruc,"revertido",p.puntos,"Pedido #"+pid+" devuelto al carrito para editar");
     marcarPedidoEliminado(pid);
-    // En la nube queda como cancelado (el pedido nuevo se creará con otro número)
+    // En la nube queda como cancelado (el pedido nuevo se creará con otro número).
+    // Debe ir a AMBAS nubes: Sheets Y Supabase. Si solo va a Sheets, Supabase
+    // conserva el pedido "pendiente" y reaparece como fantasma en otro dispositivo.
     var copia=null;try{copia=JSON.parse(JSON.stringify(p));}catch(e){}
-    if(copia){copia.estado="cancelado";sincronizarConSheets(copia,true);}
+    if(copia){
+      copia.estado="cancelado";
+      sincronizarConSheets(copia,true);
+      if(typeof sbPushUnPedido==="function")sbPushUnPedido(copia);
+    }
     irTab("carrito");
     toast("✏️ Pedido #"+pid+" devuelto al carrito.");
   });
@@ -2925,7 +2937,7 @@ function costoCanjesEntregados(lista){
 
 function renderAdmCanjes(){
   var panelPed=document.getElementById("adm-pedidos");if(panelPed)panelPed.classList.add("active");
-  var lista=PEDIDOS.filter(function(p){return p.esCanje&&!p.esBienvenida&&!p.esInstalacion;}).slice().reverse();
+  var lista=PEDIDOS.filter(function(p){return p.esCanje&&!p.esInstalacion;}).slice().reverse();
   var el=document.getElementById("adm-ped-lista");if(!el)return;
   var filtros=[
     {f:"todos",l:"Todos"},
@@ -2960,7 +2972,6 @@ function entregarCanje(pid){
   p.estado="finalizado";
   guardarPedidos();
   sincronizarConSheets(p,true);
-  if(typeof sbPushPedido==="function")sbPushPedido(p);
   toast("✅ Canje marcado como entregado");
   renderAdmCanjes();
   renderAdmDashboard();
@@ -2968,7 +2979,7 @@ function entregarCanje(pid){
 
 function renderAdmDashboard(){
   var ped=PEDIDOS.filter(function(p){return!p.esCanje;});
-  var canjes=PEDIDOS.filter(function(p){return p.esCanje;});
+  var canjes=PEDIDOS.filter(function(p){return p.esCanje&&!p.esInstalacion;});
   var nuevos=ped.filter(function(p){return p.estado==="pendiente";}).length;
   var totalVendido=ped.filter(function(p){return p.estado==="entregado"||p.estado==="facturado"||p.estado==="finalizado";})
     .reduce(function(s,p){return s+(p.subtotal||0);},0);
@@ -4746,13 +4757,27 @@ function procesarColaOffline(){
   var cola=cargarColaOffline();
   if(!cola.length)return;
   var enviados=0;
-  cola.forEach(function(pedId){
+  var cambioPedidos=false;
+  cola.forEach(function(item){
+    // Compatibilidad: la cola vieja guardaba solo el id (string); la nueva
+    // guarda el pedido completo (objeto). Manejar ambos.
+    var pedId=(item&&typeof item==="object")?item.id:item;
     var ped=PEDIDOS.find(function(p){return p.id===pedId;});
+    // Si el pedido ya no está en memoria (la nube sobrescribió el localStorage)
+    // pero la cola tiene el objeto completo, reconstruirlo para no perderlo.
+    if(!ped&&item&&typeof item==="object"){
+      ped=item;
+      PEDIDOS.push(ped);
+      cambioPedidos=true;
+    }
     if(!ped)return;
     // sincronizarConSheets ya incluye token, pedido_json y reintentos propios
     sincronizarConSheets(ped,true);
+    // Empujar también a Supabase (fuente de verdad que se lee al login)
+    if(typeof sbPushPedidos==="function")sbPushPedidos();
     enviados++;
   });
+  if(cambioPedidos)guardarPedidos();
   guardarColaOffline([]);
   if(enviados>0){
     toast("☁️ "+enviados+" pedido(s) enviado(s) a la nube");
