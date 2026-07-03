@@ -1,5 +1,25 @@
 # CLAUDE.md — Portal PyroShield
 
+## ⚠️ REGLAS DE TRABAJO CON EL DUEÑO (OBLIGATORIAS)
+
+1. **Si el dueño dice que NO va a hacer algo, OBEDECER.** No insistir, no repetir la
+   misma instrucción, no obligarlo a hacer algo manual que él ya rechazó. Dar una
+   **solución alternativa** o **hacerlo yo mismo**. Nunca empujarlo a acciones
+   destructivas o riesgosas (ej. borrar cosas en la consola/F12, limpiar storage)
+   si él pide otra vía.
+2. **Antes de dar "soluciones" repetitivas (limpiar caché, F12, etc.), AUDITAR y
+   encontrar la causa raíz real con datos.** No adivinar ni tratar al dueño como
+   si no supiera; él ya probó lo obvio.
+3. **DNS / dominio (pyroshield.online):** el dominio se administra en su registrador
+   (Namecheap). Debe apuntar a GitHub Pages con registros A `@` →
+   `185.199.108.153`, `185.199.109.153`, `185.199.110.153`, `185.199.111.153` y
+   `CNAME www → alejosl0801.github.io`. Ninguna acción del navegador (F12, caché,
+   service worker) puede cambiar el DNS: eso vive en Namecheap, no en el navegador.
+4. **Producción:** autorización permanente para fusionar a `main` y desplegar sin
+   pedir permiso. GitHub Pages sirve desde `main`.
+
+---
+
 ## Qué es este proyecto
 
 Portal web B2B para distribuidores de PyroShield (extintores, accesorios, gabinetes contra incendios). Es una SPA en **HTML/CSS/JS vanilla** sin frameworks ni paso de compilación. Los distribuidores hacen pedidos, acumulan puntos y canjean premios. El administrador gestiona pedidos, distribuidores y stock.
