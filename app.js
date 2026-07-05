@@ -2977,6 +2977,7 @@ function renderAdmCanjes(){
         '<span class="est-chip '+(entregado?"est-fin":"est-pend")+'">'+(entregado?"✔️ Entregado":"⏳ Pendiente")+'</span>'+
       '</div>'+
       (!entregado?'<button class="btn btn-p btn-full" style="margin-top:10px" onclick="entregarCanje(\''+p.id+'\')">✔️ Marcar como entregado</button>':'')+
+      '<button class="btn btn-s btn-full" style="margin-top:6px;color:var(--rojo);border:1.5px solid var(--rojo)" onclick="eliminarCanje(\''+p.id+'\')">🗑️ Eliminar (dato viejo)</button>'+
     '</div></div>';
   }).join(""):'<div class="empty"><div class="ico">🏆</div><p>No hay canjes en esta categoría.</p></div>');
 }
@@ -2990,6 +2991,23 @@ function entregarCanje(pid){
   toast("✅ Canje marcado como entregado");
   renderAdmCanjes();
   renderAdmDashboard();
+}
+
+// Elimina un canje de forma PERMANENTE: lo saca de localStorage, lo pone en la
+// tumba (para que no vuelva por el pull de Sheets) y lo BORRA de Supabase (para
+// que no resucite desde la nube). Para depurar registros viejos de prueba.
+function eliminarCanje(pid){
+  var p=PEDIDOS.find(function(x){return x.id===pid;});
+  if(!p)return;
+  confirmar("¿Eliminar este canje PERMANENTEMENTE?<br><small>"+escHtml(p.canjeNm||"")+" — "+escHtml(p.razon||"")+"</small><br>Úsalo para borrar registros viejos de prueba.",function(){
+    PEDIDOS=PEDIDOS.filter(function(x){return x.id!==pid;});
+    guardarPedidos();
+    if(typeof marcarPedidoEliminado==="function")marcarPedidoEliminado(pid);
+    if(typeof sbDeletePedido==="function")sbDeletePedido(pid);
+    toast("🗑️ Canje eliminado de la nube");
+    renderAdmCanjes();
+    renderAdmDashboard();
+  });
 }
 
 function renderAdmDashboard(){

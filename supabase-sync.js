@@ -123,6 +123,18 @@ async function sbPushUnPedido(p) {
   }
 }
 
+// Borra UN pedido/canje de la tabla pedidos de forma PERMANENTE (DELETE real,
+// no upsert). Se usa para depurar registros viejos de prueba que no deben
+// resucitar en ningún dispositivo.
+async function sbDeletePedido(id) {
+  if (!_sbReady || _sbCircuitOpen || !id) return;
+  try {
+    await _sb.from("pedidos").delete().eq("id", String(id));
+  } catch (e) {
+    console.warn("[Supabase] deletePedido:", e);
+  }
+}
+
 async function sbPullPedidos() {
   if (!_sbReady) return null;
   try {
