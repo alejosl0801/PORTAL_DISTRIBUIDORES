@@ -5194,7 +5194,7 @@ window.addEventListener("load",function(){
     // recién iniciando sesión, devolviéndolo al login sin aviso.
     var _yaControlada=!!navigator.serviceWorker.controller;
     var _recargando=false;
-    navigator.serviceWorker.register('./sw.js?v=13').then(function(reg){
+    navigator.serviceWorker.register('./sw.js?v=14').then(function(reg){
       // Chequeo inmediato de actualización
       try{reg.update();}catch(e){}
       // Si ya hay un SW nuevo esperando, activarlo
