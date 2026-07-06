@@ -5010,18 +5010,24 @@ document.addEventListener("click",function(e){if(e.target.classList.contains("ov
 var _errLog=[];
 function _capturarError(msg,src,linea,col,err){
   try{
-    var entrada={ts:new Date().toISOString(),msg:String(msg).substring(0,200),src:(src||"").replace(/.*\//,""),linea:linea,col:col,stack:err&&err.stack?String(err.stack).substring(0,400):"",ruc:(window._USER&&window._USER.ruc)||"desconocido",razon:(window._USER&&window._USER.razon)||"desconocido"};
+    var msgStr=String(msg).substring(0,200);
+    var entrada={ts:new Date().toISOString(),msg:msgStr,src:(src||"").replace(/.*\//,""),linea:linea,col:col,stack:err&&err.stack?String(err.stack).substring(0,400):"",ruc:(window._USER&&window._USER.ruc)||"desconocido",razon:(window._USER&&window._USER.razon)||"desconocido"};
     _errLog.push(entrada);
     if(_errLog.length>50)_errLog=_errLog.slice(-50);
     try{localStorage.setItem("pyro_errlog",JSON.stringify(_errLog));}catch(e){}
     if(window._USER&&window._USER.esAdmin)_actualizarBadgeErrores();
-    // Reportar a Supabase (visible en el panel admin desde cualquier
-    // dispositivo, sin redesplegar el Apps Script).
-    try{if(typeof sbPushError==="function")sbPushError(entrada);}catch(e3){}
-    // Reportar al servidor (GAS) para notificación por email (si está desplegado)
+    // ⚠️ NO reportar a la nube los errores de red / del propio reporte: si el
+    // reporte falla ("Failed to fetch"), ese fallo NO se debe re-reportar, o se
+    // genera una cascada infinita. Este filtro rompe el bucle de raíz.
+    var esErrorDeRed=/Failed to fetch|UnhandledPromise|NetworkError|Load failed|ERR_/i.test(msgStr);
+    if(esErrorDeRed)return;
+    // Reportar a Supabase (async, con .catch propio para no crear rechazos).
+    try{if(typeof sbPushError==="function"){var _pr=sbPushError(entrada);if(_pr&&_pr.catch)_pr.catch(function(){});}}catch(e3){}
+    // Reportar a GAS (email). SIEMPRE con .catch: un fetch sin .catch que
+    // falla se vuelve un unhandledrejection que dispararía _capturarError otra vez.
     try{
       if(GAS_URL){
-        fetch(GAS_URL,{method:"POST",body:JSON.stringify({token:GAS_TOKEN,accion:"reportarError",error:entrada})});
+        fetch(GAS_URL,{method:"POST",body:JSON.stringify({token:GAS_TOKEN,accion:"reportarError",error:entrada})}).catch(function(){});
       }
     }catch(e2){}
   }catch(e){}
