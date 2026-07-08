@@ -1,6 +1,7 @@
 node_modules/
 .claude/
 CREDENCIALES.txt
+CREDENCIALES_PRIVADO.md
 FichaTecnica_ClaseK_PyroShield.docx
 FichaTecnica_Extintores_Pyroshield_v2.docx
 ficha_tecnica_clase_k.html
