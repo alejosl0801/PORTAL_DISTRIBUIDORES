@@ -1,10 +1,34 @@
 # SISTEMA DE PUNTOS MANUAL — PyroShield
 ## Documento maestro para la sesión de "Facturas → Puntos → Regalos sorpresa"
 
-> **Lee esto ANTES de tocar cualquier factura.** Este documento contiene TODO lo
-> que necesitas: por qué existe este sistema, qué reemplaza, las fórmulas
-> exactas (copiadas 1:1 del código del portal), la lista de precios/costos de
-> los 34 productos, y el procedimiento diario paso a paso.
+> **Lee esto ANTES de tocar cualquier factura.** Este documento contiene TODO
+> lo que necesitas: por qué existe este sistema y qué reemplaza (sección 1),
+> el negocio (sección 2), **el portal completo por dentro — arquitectura,
+> pantallas de cliente y admin, catálogo, sistema de precios en 3 capas,
+> catálogo real de premios, ciclo de vida de un pedido, documentos generados
+> (sección 3)**, las fórmulas exactas de puntos copiadas 1:1 del código
+> (sección 4), la tabla de los 34 productos con precio/costo/puntos ya
+> calculados (sección 5), el distribuidor con precio especial (sección 7), el
+> procedimiento diario paso a paso (sección 8), la integración con Azur
+> (sección 9), y el contexto de la sesión hermana de proformas (sección 10).
+> Índice completo abajo. Si algo no está claro después de leer todo, pregúntale
+> al dueño — no asumas ni inventes.
+
+**Índice:**
+1. Contexto — por qué existe este documento
+2. Qué es PyroShield (el negocio)
+3. El portal completo, por dentro (arquitectura, pantallas, catálogo, precios,
+   recompensas, logros, estados de pedido, entrega, Azur, documentos)
+4. Fórmulas exactas de puntos (constantes, fórmula, precio con volumen, IVA)
+5. Tabla de referencia — 34 productos con precio/costo/puntos calculados
+6. Fuente de verdad de la tabla (cómo regenerarla si cambian precios)
+7. Distribuidores con precio especial
+8. Procedimiento diario (qué hacer cada día, paso a paso)
+9. Integración Azur — datos técnicos
+10. La otra sesión (proformas y notas de entrega)
+11. Qué NO tocar / qué recordar
+12. Resumen ejecutivo
+Anexo A. Lista completa de distribuidores (en `CREDENCIALES_PRIVADO.md`)
 
 ---
 
@@ -40,7 +64,7 @@ de trabajo es:
 
 **Hay una SEGUNDA sesión separada** (no esta) encargada de: leer los pedidos
 que los clientes mandan por WhatsApp y generar la **proforma** y la
-**nota de entrega** en el mismo formato que generaba el portal (ver sección 9).
+**nota de entrega** en el mismo formato que generaba el portal (ver sección 10).
 Esta sesión (puntos) y esa sesión (proformas) son independientes pero
 comparten las mismas fórmulas de precios de este documento.
 
@@ -56,17 +80,268 @@ clientes finales.
 - **Razón social / RUC emisor:** PyroShield / PREVIFUEGO — RUC `0952773976001`
 - **Dirección:** Portete #3007 y Gallegos Lara, Guayaquil
 - **Teléfonos:** 04-2374822, 0983583325, 0978997247
-- **Facturación electrónica:** vía Azur (ver sección 8)
+- **Facturación electrónica:** vía Azur (ver sección 9)
 
 ---
 
-## 3. FÓRMULAS EXACTAS (copiadas del código fuente — no aproximar)
+## 3. EL PORTAL COMPLETO, POR DENTRO (arquitectura y cada sistema, a fondo)
+
+Esta sección documenta **absolutamente todo lo que existe en el portal**, no
+solo la parte de puntos. El objetivo es que entiendas el negocio completo tal
+como estaba modelado en software, para que el sistema manual que llevas ahora
+sea coherente con la lógica real que ya funcionaba.
+
+### 3.1 Arquitectura técnica (para contexto, no la vas a tocar)
+
+- **SPA vanilla** (HTML/CSS/JS puro, sin frameworks, sin build). Un solo
+  `index.html`, un solo `app.js` (~5700 líneas) con TODA la lógica, `datos.js`
+  con constantes y catálogo, `style.css`, `supabase-sync.js` para la nube.
+- **Sin backend propio.** Los datos viven en `localStorage` del navegador y se
+  replican a **dos nubes en paralelo**: Supabase (fuente de verdad para
+  pedidos/stock/rewards/config) y Google Sheets vía Apps Script (respaldo +
+  hoja de cálculo legible por humano).
+- **Multi-dispositivo:** cada distribuidor entra desde su propio celular/PC.
+  El admin (Alejandro) ve todo consolidado porque baja los datos de la nube
+  al iniciar sesión y cada ~2 minutos (sondeo periódico).
+- Desplegado en **GitHub Pages** (`pyroshield.online`), repositorio
+  `alejosl0801/portal_distribuidores`, rama `main`.
+
+### 3.2 Los DOS TIPOS DE USUARIO y sus pantallas
+
+**A) Distribuidor (cliente)** — pantalla `s-main`, con 4 pestañas inferiores:
+1. **Inicio** — saludo, puntos disponibles, estadísticas rápidas (entregados/
+   en proceso/en carrito), accesos rápidos, "Mis logros" (insignias
+   gamificadas, ver 3.6), últimos pedidos.
+2. **Catálogo** — grid de productos por categoría (ver 3.3), búsqueda,
+   favoritos, zoom de imagen, agregar al carrito con selector de cantidad.
+3. **Carrito** — resumen de items, subtotal, IVA 15%, total, selector de modo
+   de entrega (retiro en bodega / entrega a domicilio con dirección), forma de
+   pago, notas, confirmar pedido. También permite guardar hasta 3
+   **borradores** de carrito para retomar después.
+4. **Recompensas** — catálogo de premios canjeables por puntos (ver 3.5),
+   saldo de puntos, historial de movimientos de puntos.
+5. **Historial** (accesible desde Inicio) — todos sus pedidos pasados, con
+   estado, detalle, opción de repetir pedido, calificar, editar (solo si está
+   "pendiente"), cancelar.
+
+**B) Admin (Alejandro)** — pantalla `s-admin`, con 8 pestañas:
+1. **Pedidos** — lista de todos los pedidos de todos los distribuidores,
+   filtrable por estado, cambiar estado, ver detalle, emitir factura Azur,
+   generar nota de entrega / proforma, marcar como facturado.
+2. **Dashboard** — métricas: nuevos pedidos, total vendido, utilidad generada,
+   distribuidores activos, canjes pendientes/entregados, alertas (stock bajo,
+   productos agotados, distribuidores inactivos 30+ días), gráfico de ventas
+   últimos 6 meses, análisis ABC de productos.
+3. **Distribuidores** — CRUD de distribuidores, ver/editar precios especiales,
+   bloquear/desbloquear, ver mapa de ubicaciones.
+4. **Stock** — ajuste manual de inventario por producto, editar costos
+   (`pyro_costos`), editar umbrales de "stock bajo" por producto, editar
+   descuentos por volumen, exportar/importar Excel/CSV, historial de cambios
+   de precio.
+5. **Canjes** — lista de canjes de recompensas pendientes/entregados
+   (incluye el canje de bienvenida), botón para marcar entregado o eliminar
+   (purga de la nube).
+6. **Recompensas** — editar el catálogo de premios (`REWARDS`): agregar,
+   editar puntos requeridos, costo real, marcar agotado, eliminar.
+7. **Config** — ajustes generales del portal (token Azur, modo mantenimiento,
+   etc.)
+8. **Registro** — log de accesos (quién entró y cuándo) — el bug de esta
+   pestaña (que solo mostraba accesos del propio dispositivo) fue arreglado
+   en julio 2026 subiendo el registro a Supabase.
+9. **Mapa** — ubicación geográfica de los distribuidores con establecimiento
+   registrado (usa Leaflet).
+
+Existe también un **tercer rol, "impresión"** (usuario `FABIOLA`) que solo ve
+pedidos, sin acceso a precios/costos — para el personal que solo imprime y
+despacha.
+
+### 3.3 Catálogo de productos — categorías y estructura
+
+```
+CATS = {
+  extintores:    { nombre:"Extintores",    subs:["PQS","CO2","H2O"] },
+  accesorios:    { nombre:"Accesorios",    subs:["Cabezales","Manómetros","Mangueras","Soportes","Otros"] },
+  gabinetes:     { nombre:"Gabinetes",     subs:["Válvulas","Hidrantes","Otros"] },
+  mangueras_hid: { nombre:"Mangueras HID", subs:["Mangueras"] }
+}
+```
+
+Cada producto (34 en total, ver tabla sección 5) tiene: `id` (código único,
+coincide con `codigo_principal` en Azur), `nm` (nombre), `cat`/`sub`
+(categoría), `pv` (precio vitrina/público — se muestra tachado), `pb` (precio
+base de distribuidor — el que paga por defecto), `costo` (costo interno,
+nunca visible al distribuidor), `stock` (cantidad disponible o `null` si es
+ilimitado), `ago` (booleano, si está agotado), `descVol` (tabla de descuentos
+por volumen, ver 3.4), `codigoAzur` (código para facturación electrónica).
+
+### 3.4 Sistema de precios en 3 capas (MUY importante para calcular bien)
+
+1. **`pv`** (precio vitrina) — precio de lista/público, se muestra tachado
+   como referencia de "cuánto ahorra" el distribuidor.
+2. **`pb`** (precio base distribuidor) — lo que paga cualquier distribuidor
+   por defecto, sin descuentos adicionales.
+3. **`preciosEsp[id]`** (precio especial individual) — algunos distribuidores
+   tienen un precio aún más bajo que `pb`, negociado personalmente. **Solo
+   Sumiseg/Jorge (RUC 0906872742001) tiene esto activo hoy** (ver sección 7).
+4. **Descuento por volumen (`descVol`)** — cada producto tiene tiers tipo
+   `[[cantidad, %descuento], ...]`. Ej: `VENT10PQS` tiene
+   `[[10,1],[20,2],[30,3],[40,5],[60,7]]` — si compras 40+ unidades, +5% de
+   descuento adicional sobre el precio ya aplicado.
+
+**Fórmula completa de precio final** (función `precioConVolumen` en app.js):
+
+```
+precio_base_cliente = preciosEsp[id] si existe, si no pb
+descuento_base(%) = (pv − precio_base_cliente) / pv × 100
+descuento_volumen(%) = el mayor tier de descVol alcanzado según cantidad pedida
+descuento_total(%) = descuento_base + descuento_volumen
+precio_final = pv × (1 − descuento_total/100)
+
+REGLA DE PISO: si precio_final < costo del producto, se usa el costo como
+precio_final (nunca se vende bajo costo, ni con descuentos apilados).
+```
+
+**Este es el precio que efectivamente se factura**, y es el que hay que usar
+para calcular puntos (sección 4) — no asumas que siempre es `pb`, verifica
+contra el precio real de la factura.
+
+### 3.5 Sistema de recompensas / canjes (el catálogo REAL de premios)
+
+Este es el catálogo exacto que tenía el portal (variable `REWARDS` en
+`app.js`), y que ahora manejas tú manualmente:
+
+| Ícono | Premio | Puntos requeridos | Costo real (lo que le cuesta a PyroShield) |
+|---|---|---|---|
+| 🍗 | Combo KFC (3 presas + papas + cola) | **650 pts** | $6.50 |
+| 💳 | Tarjeta de consumo $15 (Coral / Ferrisariato) | **1,500 pts** | $15.00 |
+| 💳 | Tarjeta de consumo $30 | **3,000 pts** | $30.00 |
+| 💳 | Tarjeta de consumo $50 | **5,000 pts** | $50.00 |
+
+**Patrón claro:** el costo real en dólares del premio es ~1% de los puntos
+requeridos (650 pts → $6.50; 1500 pts → $15; etc.) — es decir, **100 puntos
+equivalen aproximadamente a $1 de premio para el cliente**. Esto es coherente
+con la constante `PUNTOS_X_DOLAR = 100` de la fórmula de generación de
+puntos (sección 4): el sistema está calibrado para que el costo del premio en
+puntos corresponda 1:1 con el valor en dólares de "ganancia convertida" que
+generó el distribuidor.
+
+**Úsalo así en el sistema manual:** cuando un distribuidor acumule 650+
+puntos, le corresponde un Combo KFC. Si acumula 1300 puntos sin haber
+canjeado nada, le corresponden 2 combos KFC (o 1 tarjeta de $15 si prefieres
+subir el premio). El dueño decide el premio; tú solo avisas cuándo cruza el
+umbral y llevas el descuento del saldo cuando se entrega.
+
+**Regalo de bienvenida** (aparte del catálogo, cuesta 0 puntos): al primer
+login de cada distribuidor, el portal le regalaba automáticamente **un Combo
+KFC gratis** como bienvenida, marcado internamente como pedido con
+`esBienvenida:true`, `estado:"pendiente"` hasta que el admin lo marcara como
+entregado. Esto ya NO aplica en el sistema manual (no hay logins), pero si el
+dueño quiere replicar el gesto con los primeros clientes del nuevo flujo,
+puede regalar un combo de bienvenida al primer pedido de cada distribuidor
+nuevo, sin costo en puntos.
+
+### 3.6 Sistema de "logros" / gamificación (NO aplica al sistema manual, pero documentado para contexto)
+
+El portal tenía un sistema de +40 insignias/logros (ej. "Primer pedido",
+"Madrugador" por entrar antes de las 8am, "Explorador de catálogo" por pedir
+3 productos distintos, etc.) que otorgaban **puntos bonus fijos** (1-3 pts
+cada uno) sumados directamente al saldo del distribuidor, independientes de
+las compras. Esto era posible porque el portal podía "ver" el comportamiento
+del usuario dentro de la app (login, clics, favoritos).
+
+**Esto NO se puede replicar en el sistema manual** porque no hay app que
+trackee comportamiento — solo tienes las facturas de Azur. Ignora esta
+sección para el cálculo de puntos; se documenta solo para que entiendas por
+qué, si alguna vez ves el código del portal, hay números de puntos que no
+cuadran exactamente con la fórmula de la sección 4 (esos extra vienen de
+logros, no de compras).
+
+### 3.7 Ciclo de vida de un pedido (estados)
+
+```
+pendiente → en_proceso → entregado → facturado → finalizado
+                                                        ↓
+                                                   (o cancelado, desde pendiente)
+```
+
+| Estado | Significado | Quién lo pone |
+|---|---|---|
+| `pendiente` | Recién creado, sin procesar | Sistema, al confirmar el pedido |
+| `en_proceso` | El admin ya lo está preparando | Admin |
+| `entregado` | Ya se entregó físicamente (aún sin factura) | Admin |
+| `facturado` | Ya se facturó (pendiente entrega, o ya entregado) | Admin (tras emitir en Azur) |
+| `finalizado` | Ciclo completo — entregado Y facturado | Admin |
+| `cancelado` | Anulado (solo desde "pendiente", por cliente o admin) | Cliente o Admin |
+
+**IMPORTANTE para el sistema manual:** en el portal, los **puntos solo se
+"confirmaban" y sumaban al saldo canjeable cuando el pedido llegaba a estado
+`entregado` o `finalizado`** (función `puntosConfirmados`). Un pedido
+`pendiente` generaba puntos "proyectados" pero no canjeables todavía. **Aplica
+la misma lógica ahora: solo cuenta como puntos ganados una factura ya
+EMITIDA Y PAGADA/entregada** — no proyectes puntos de un pedido que el
+distribuidor mencionó por WhatsApp pero que aún no se facturó.
+
+### 3.8 Modo de entrega y monto mínimo
+
+Cada distribuidor tiene configurado si puede pedir con **entrega a domicilio**
+(con un monto mínimo de pedido, normalmente $30, algunos $50) o solo
+**retiro en bodega**. Esto es logística pura, no afecta el cálculo de
+puntos, pero es útil para que entiendas el contexto de una factura si el
+dueño te pregunta por qué cierto pedido tuvo cargos de flete o no.
+
+### 3.9 Facturación electrónica — Azur (contexto de negocio)
+
+Cada pedido, al facturarse, genera una factura electrónica vía la API de
+Azur (proxy con Cloudflare Worker por temas de CORS). El comprador puede
+identificarse con RUC (13 dígitos, tipo `04`), cédula (10 dígitos, tipo `05`)
+o como consumidor final (tipo `07`, identificación `9999999999999` — estas
+NO son distribuidores del programa de puntos, ignóralas). El IVA aplicado es
+siempre 15% (`tipo_iva: 4` en la nomenclatura de Azur). Ver sección 9 para
+la integración técnica completa.
+
+### 3.10 Documentos generados: Proforma y Nota de Entrega
+
+El portal (y ahora la sesión hermana de proformas) genera dos documentos
+distintos para cada pedido:
+
+- **Proforma** — documento CON precios, se envía al cliente ANTES de
+  confirmar la compra, para que apruebe montos. Incluye: código, cantidad,
+  descripción, precio unitario, descuento, subtotal por línea, y totales
+  (Subtotal, IVA 15%, Total).
+- **Nota de entrega** — documento SIN precios, se entrega junto con la
+  mercadería físicamente. Incluye: número de pedido, fecha, cliente, RUC,
+  dirección de entrega, tabla de items (código, descripción, cantidad
+  — sin precios), y una sección de firma "RECIBÍ CONFORME" con
+  Firma/Nombre/Cédula/Fecha de recepción.
+
+Ambos llevan el mismo header: logo PyroShield, nombre en rojo, dirección
+(Portete #3007 y Gallegos Lara, Guayaquil), RUC emisor `0992220835001`
+(nota: este es el RUC operativo de facturación del portal, distinto al RUC
+`0952773976001` que aparece como emisor en las proformas de Azur/PREVIFUEGO
+— si hay dudas de cuál usar, pregúntale al dueño cuál es el vigente).
+
+### 3.11 Sistema de puntos (el corazón — detallado completo en la sección 4)
+
+Cubierto a fondo en la siguiente sección. Aquí solo el resumen de dónde
+vive cada pieza en el código, por si algún día necesitas verificar algo
+contra el portal real:
+
+- `calcPuntos(precioAplicado, costo)` en `app.js` — la fórmula.
+- `IVA`, `PUNTOS_MAX_UNIT`, `UMBRAL_MARGEN_ALTO`, `PCT_ALTO`, `PCT_NORMAL`,
+  `PUNTOS_X_DOLAR` en `datos.js` — las constantes.
+- `puntosConfirmados()`, `puntosPendientes()`, `puntosCanjeados()`,
+  `saldoPuntos()` en `app.js` — cómo se agrega el saldo por distribuidor.
+- `REWARDS` en `app.js` — el catálogo de premios (sección 3.5).
+
+---
+
+## 4. FÓRMULAS EXACTAS (copiadas del código fuente — no aproximar)
 
 Estas fórmulas viven en `app.js` (función `calcPuntos`) y `datos.js`
 (constantes). Son la fuente de verdad; si el dueño cambia una constante en el
 portal, avísale que debe decírtelo para actualizar este documento.
 
-### 3.1 Constantes (de `datos.js`)
+### 4.1 Constantes (de `datos.js`)
 
 ```
 IVA                 = 0.15   (15%)
@@ -77,7 +352,7 @@ PCT_NORMAL           = 0.08   (8% de la ganancia se convierte en puntos, si marg
 PUNTOS_X_DOLAR        = 100    (multiplicador: 1 punto = $0.01 de "ganancia convertida")
 ```
 
-### 3.2 Fórmula de puntos por línea de factura
+### 4.2 Fórmula de puntos por línea de factura
 
 Para CADA producto de una factura, se calcula:
 
@@ -107,10 +382,10 @@ puntos_de_la_linea = puntos_por_unidad × cantidad_comprada
 
 ⚠️ **Importante:** el precio que se usa es el que aparece EN LA FACTURA (lo
 que realmente pagó el distribuidor), no el precio de vitrina. Si el
-distribuidor tiene precio especial (ver sección 6) o descuento por volumen,
+distribuidor tiene precio especial (ver sección 7) o descuento por volumen,
 usa ese precio real facturado — no el `pb` de la tabla, salvo que coincidan.
 
-### 3.3 Fórmula de precio con descuento por volumen (por si hay que verificar
+### 4.3 Fórmula de precio con descuento por volumen (por si hay que verificar
    el precio facturado contra lo esperado)
 
 ```
@@ -127,7 +402,7 @@ REGLA DE PISO: el precio_final NUNCA puede ser menor al costo del producto.
 Si la fórmula da un precio menor al costo, se usa el costo como precio final.
 ```
 
-### 3.4 IVA
+### 4.4 IVA
 
 Todas las facturas de Azur llevan **15% de IVA** sobre el subtotal. El cálculo
 de puntos se hace SIEMPRE sobre precios **sin IVA** (el subtotal neto de cada
@@ -135,13 +410,13 @@ línea), nunca sobre el total con impuestos.
 
 ---
 
-## 4. TABLA DE REFERENCIA — 34 PRODUCTOS (precio, costo, puntos calculados)
+## 5. TABLA DE REFERENCIA — 34 PRODUCTOS (precio, costo, puntos calculados)
 
 Esta tabla usa el precio **PB** (precio base estándar de distribuidor, sin
 descuentos ni precio especial) como ejemplo de cálculo. **Si la factura real
 tiene un precio distinto** (por precio especial de ese distribuidor o
 descuento por volumen), recalcula con el precio REAL facturado usando la
-fórmula de la sección 3.2 — esta tabla es solo referencia rápida.
+fórmula de la sección 4.2 — esta tabla es solo referencia rápida.
 
 | Código | Producto | PV (vitrina) | PB (base dist.) | Costo | Ganancia (a PB) | Margen | % Puntos | Pts x unidad (a PB) |
 |---|---|---|---|---|---|---|---|---|
@@ -188,7 +463,7 @@ estos valores como definitivos.
 
 ---
 
-## 5. FUENTE DE VERDAD DE ESTA TABLA (para actualizarla si hace falta)
+## 6. FUENTE DE VERDAD DE ESTA TABLA (para actualizarla si hace falta)
 
 Esta tabla se generó extrayendo el array `PRODUCTOS` de `/home/user/PORTAL_DISTRIBUIDORES/app.js`
 (busca `var PRODUCTOS = [`). Cada producto tiene los campos `pv` (precio
@@ -197,7 +472,7 @@ regenerar esta tabla porque cambiaron precios, repite este proceso:
 
 1. Abre `app.js`, localiza `var PRODUCTOS = [...]`.
 2. Por cada producto, toma `pv`, `pb`, `costo`.
-3. Aplica la fórmula de la sección 3.2 usando `pb` como precio de referencia
+3. Aplica la fórmula de la sección 4.2 usando `pb` como precio de referencia
    (o el precio real facturado si es distinto).
 
 **Nota:** en el portal también existe `pyro_costos` en localStorage / Supabase
@@ -209,7 +484,7 @@ portal en vivo.
 
 ---
 
-## 6. DISTRIBUIDORES CON PRECIO ESPECIAL (afecta el cálculo)
+## 7. DISTRIBUIDORES CON PRECIO ESPECIAL (afecta el cálculo)
 
 **Solo 1 de los ~37 distribuidores tiene precios especiales** distintos al
 `pb` estándar: **Sumiseg (Jorge Avilés Briones, RUC 0906872742001)**.
@@ -229,7 +504,7 @@ SPANNER001: $5.98
 ```
 
 **Todos los demás distribuidores usan el precio `pb` estándar de la tabla**
-(sección 4), salvo que la factura muestre otro precio — en ese caso, usa
+(sección 5), salvo que la factura muestre otro precio — en ese caso, usa
 SIEMPRE el precio que aparece en la factura real, es la fuente de verdad.
 
 **Lista completa de distribuidores (razón social, encargado, RUC/cédula):**
@@ -242,10 +517,10 @@ distribuidor.
 
 ---
 
-## 7. PROCEDIMIENTO DIARIO (lo que esta sesión debe hacer cada día)
+## 8. PROCEDIMIENTO DIARIO (lo que esta sesión debe hacer cada día)
 
 ### Paso 1 — Descargar facturas nuevas de Azur
-Entra a Azur (o usa la API si tienes las credenciales — ver sección 8) y
+Entra a Azur (o usa la API si tienes las credenciales — ver sección 9) y
 descarga/lista las facturas **emitidas ese día** (o desde la última vez que
 se revisó) cuyo **comprador sea uno de los RUCs/cédulas de la lista de
 distribuidores** (`datos.js` → `DISTRIBUIDORES`). Ignora facturas a
@@ -255,11 +530,11 @@ distribuidores del programa de puntos.
 ### Paso 2 — Por cada factura, calcular los puntos
 Para cada línea de producto en la factura:
 1. Identifica el producto por su `codigo_principal` (coincide con el `id` de
-   la tabla de la sección 4, ej. `VENT20PQS`).
+   la tabla de la sección 5, ej. `VENT20PQS`).
 2. Toma el `precio_unitario` REAL de la factura (no el de la tabla, a menos
    que coincidan) y la `cantidad`.
-3. Busca el `costo` de ese producto en la tabla de la sección 4.
-4. Aplica la fórmula de la sección 3.2 → obtén puntos de esa línea.
+3. Busca el `costo` de ese producto en la tabla de la sección 5.
+4. Aplica la fórmula de la sección 4.2 → obtén puntos de esa línea.
 5. Suma los puntos de todas las líneas → puntos totales de la factura.
 
 ### Paso 3 — Actualizar el registro acumulado por distribuidor
@@ -291,7 +566,7 @@ cada uno, y si alguien cruzó el umbral de premio.
 
 ---
 
-## 8. INTEGRACIÓN AZUR — datos técnicos
+## 9. INTEGRACIÓN AZUR — datos técnicos
 
 ⚠️ **El token real (`AZUR_TOKEN`) y las credenciales NO están en este
 documento** porque este archivo se sube al repositorio público de GitHub
@@ -338,7 +613,7 @@ campos cuando la leas):**
   },
   "items": [
     {
-      "codigo_principal": "VENT20PQS (coincide con la tabla sección 4)",
+      "codigo_principal": "VENT20PQS (coincide con la tabla sección 5)",
       "descripcion": "...",
       "tipoproducto": 1,
       "tipo_iva": 4,
@@ -356,11 +631,11 @@ campos cuando la leas):**
 ```
 
 El campo clave para calcular puntos es `items[].precio_unitario` × `items[].cantidad`,
-comparado contra el `costo` de la tabla de la sección 4.
+comparado contra el `costo` de la tabla de la sección 5.
 
 ---
 
-## 9. LA OTRA SESIÓN (proformas y notas de entrega) — para contexto, no la manejas tú
+## 10. LA OTRA SESIÓN (proformas y notas de entrega) — para contexto, no la manejas tú
 
 Existe una segunda sesión, separada de esta, que:
 1. Lee los pedidos que los clientes mandan por WhatsApp (vía WhatsApp Web o
@@ -372,7 +647,7 @@ Existe una segunda sesión, separada de esta, que:
    proforma).
 3. Guarda esos documentos en una carpeta designada por el dueño.
 
-Esa sesión usa **las mismas fórmulas de precio** (sección 3.3) para calcular
+Esa sesión usa **las mismas fórmulas de precio** (sección 4.3) para calcular
 cuánto cobrar a cada distribuidor según su precio especial (si tiene) y
 descuento por volumen. Si en algún momento coordinas con esa sesión o el
 dueño te pide ayuda con una proforma, usa exactamente esas fórmulas.
@@ -387,7 +662,7 @@ dueño te pide ayuda con una proforma, usa exactamente esas fórmulas.
 
 ---
 
-## 10. QUÉ NO TOCAR / QUÉ RECORDAR
+## 11. QUÉ NO TOCAR / QUÉ RECORDAR
 
 1. **El portal sigue existiendo y funcionando** en `pyroshield.online`. No lo
    borres, no lo desactives. Simplemente ya no es el canal principal. El
@@ -403,7 +678,7 @@ dueño te pide ayuda con una proforma, usa exactamente esas fórmulas.
    **actualiza este mismo documento** para que la información no se pierda
    entre sesiones futuras.
 5. **No inventes puntos ni redondees "a ojo".** Usa siempre la fórmula exacta
-   de la sección 3.2 — el dueño construyó este sistema para que sea preciso
+   de la sección 4.2 — el dueño construyó este sistema para que sea preciso
    y auditable, aunque ahora sea manual.
 
 ---
@@ -422,19 +697,19 @@ probablemente es un cliente nuevo — avísale al dueño antes de asumir que es
 un distribuidor del programa.
 
 (Nota: Sumiseg/Jorge, RUC 0906872742001, es el único con precios especiales
-— ver sección 6 de este documento, que SÍ es información de negocio no
+— ver sección 7 de este documento, que SÍ es información de negocio no
 sensible y queda aquí.)
 
 ---
 
-## 11. RESUMEN EJECUTIVO (si solo lees un párrafo, lee este)
+## 12. RESUMEN EJECUTIVO (si solo lees un párrafo, lee este)
 
 El portal web no prendió con los clientes → el dueño vuelve a operar por
 WhatsApp/Azur como antes, pero **mantiene en secreto un sistema de puntos
 calculado desde las facturas reales de Azur**, usando las mismas fórmulas
 exactas que tenía el portal (ganancia × 8-10% según margen × 100, tope 450
 pts/unidad). Tu trabajo diario: bajar facturas nuevas de distribuidores,
-calcular sus puntos con la tabla de costos de la sección 4, llevar el
+calcular sus puntos con la tabla de costos de la sección 5, llevar el
 acumulado, y avisar al dueño cuándo alguien merece un regalo sorpresa (Combo
 KFC u otro) — para que él se lo entregue sin que el cliente sepa que hay un
 cálculo detrás.
