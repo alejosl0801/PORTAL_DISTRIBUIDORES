@@ -517,15 +517,31 @@ distribuidor.
 
 ---
 
-## 8. PROCEDIMIENTO DIARIO (lo que esta sesión debe hacer cada día)
+## 8. TAREA RECURRENTE DE ESTA SESIÓN — descargar facturas y actualizar puntos
+
+**⚠️ Esta es LA tarea central de esta sesión, y es continua/permanente — no
+es algo que se hace una sola vez.** Cada vez que esta sesión se reactive
+(el dueño la abrirá con la frecuencia que decida — puede ser diaria, cada 2-3
+días, o semanal, según cuánto le convenga operativamente), el trabajo es
+siempre el mismo ciclo de 5 pasos de abajo. No hay fecha de "fin de tarea":
+mientras el negocio siga facturando a distribuidores, esta sesión sigue
+recalculando puntos.
+
+**Frecuencia:** el dueño puede pedir que se revise **todos los días**, o
+**una vez por semana** (bajando de golpe todas las facturas acumuladas de
+esa semana) — funciona igual en ambos casos, solo cambia cuánto tiempo pasa
+entre una revisión y la siguiente. Lo importante es que **cada factura nueva
+se procese una sola vez** (no dupliques puntos si ya la contaste antes — lleva
+un registro de qué # de factura ya se procesó, ver Paso 3).
 
 ### Paso 1 — Descargar facturas nuevas de Azur
 Entra a Azur (o usa la API si tienes las credenciales — ver sección 9) y
-descarga/lista las facturas **emitidas ese día** (o desde la última vez que
-se revisó) cuyo **comprador sea uno de los RUCs/cédulas de la lista de
-distribuidores** (`datos.js` → `DISTRIBUIDORES`). Ignora facturas a
-consumidor final (identificación `9999999999999`) — esas no son de
-distribuidores del programa de puntos.
+descarga/lista las facturas **emitidas desde la última vez que se revisó**
+(ya sea el día anterior, o toda la semana acumulada, según la frecuencia que
+se esté usando) cuyo **comprador sea uno de los RUCs/cédulas de la lista de
+distribuidores** (`datos.js` → `DISTRIBUIDORES`, o `CREDENCIALES_PRIVADO.md`
+Anexo A). Ignora facturas a consumidor final (identificación
+`9999999999999`) — esas no son de distribuidores del programa de puntos.
 
 ### Paso 2 — Por cada factura, calcular los puntos
 Para cada línea de producto en la factura:
@@ -539,12 +555,19 @@ Para cada línea de producto en la factura:
 
 ### Paso 3 — Actualizar el registro acumulado por distribuidor
 Mantén un registro (hoja de cálculo, JSON, base de datos — lo que uses en
-esta sesión) con, por cada distribuidor:
+esta sesión, y que **persista entre una revisión y la siguiente**, sea diaria
+o semanal) con, por cada distribuidor:
 - RUC / razón social / encargado
 - Puntos acumulados totales (histórico)
 - Puntos ya "canjeados" (regalos ya entregados)
 - Saldo disponible = acumulados − canjeados
-- Historial: fecha, # factura, puntos ganados, detalle
+- Historial: fecha, **# de factura**, puntos ganados, detalle
+
+**Control de duplicados (crítico):** antes de sumar puntos de una factura,
+verifica que su número/clave de acceso **no esté ya** en el historial. Si la
+sesión se reactiva semanalmente, es fácil volver a descargar por error una
+factura que ya se procesó la semana pasada — sumarla dos veces infla los
+puntos del distribuidor de forma incorrecta.
 
 ### Paso 4 — Detectar quién llegó al umbral de un regalo
 Define con el dueño el umbral de puntos por regalo (ej. "Combo KFC = X
