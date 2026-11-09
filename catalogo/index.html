@@ -38,7 +38,8 @@
 <script>
 (function () {
   // El catálogo vive en este mismo sitio (se actualiza solo). Si por algún motivo no responde, se usa el respaldo en Dropbox.
-  var PDF_PROPIO = "CATALOGO_PYROSHIELD.pdf";
+  // el "?v=" cambia cada minuto: así el navegador y la red de GitHub siempre piden la última versión del PDF
+  var PDF_PROPIO = "CATALOGO_PYROSHIELD.pdf?v=" + Math.floor(Date.now() / 60000);
   var PDF_RESPALDO = "https://www.dropbox.com/scl/fi/qbebbw1r7gtl0alem8v8e/CATALOGO_PYROSHIELD.pdf?rlkey=tly6yx1bo86te1jetuuktj6gr&st=exk2svar&raw=1";
   var PDF_URL = PDF_RESPALDO;
   var listo = false;
