@@ -37,8 +37,14 @@
 </div>
 <script>
 (function () {
-  // A dónde va el catálogo al terminar la promo
-  var PDF_URL = "https://www.dropbox.com/scl/fi/qbebbw1r7gtl0alem8v8e/CATALOGO_PYROSHIELD.pdf?rlkey=tly6yx1bo86te1jetuuktj6gr&st=exk2svar&raw=1";
+  // El catálogo vive en este mismo sitio (se actualiza solo). Si por algún motivo no responde, se usa el respaldo en Dropbox.
+  var PDF_PROPIO = "CATALOGO_PYROSHIELD.pdf";
+  var PDF_RESPALDO = "https://www.dropbox.com/scl/fi/qbebbw1r7gtl0alem8v8e/CATALOGO_PYROSHIELD.pdf?rlkey=tly6yx1bo86te1jetuuktj6gr&st=exk2svar&raw=1";
+  var PDF_URL = PDF_RESPALDO;
+  var listo = false;
+  var verificacion = fetch(PDF_PROPIO, { method: "HEAD", cache: "no-store" }).then(function (r) {
+    if (r.ok && /pdf/i.test(r.headers.get("content-type") || "")) PDF_URL = PDF_PROPIO;
+  }).catch(function () {}).then(function () { listo = true; });
   var SEGUNDOS = 3;
 
   // Promociones vigentes (hora de Ecuador, UTC-5). Solo se muestra la que corresponde a hoy.
@@ -58,7 +64,14 @@
   var ahora = q.get("fecha") ? new Date(q.get("fecha")) : new Date();   // ?fecha=... solo para probar
   var pausa = q.get("pausa") === "1";                                   // ?pausa=1 no redirige (para probar)
 
-  function irAlCatalogo() { location.replace(PDF_URL); }
+  function irAlCatalogo() {
+    // espera (máx. 1.5 s) a saber si el PDF propio responde; si no, respaldo
+    var limite = Date.now() + 1500;
+    (function intentar() {
+      if (listo || Date.now() > limite) { location.replace(PDF_URL); return; }
+      setTimeout(intentar, 50);
+    })();
+  }
 
   var vigente = null;
   for (var i = OLAS.length - 1; i >= 0; i--) {
@@ -69,7 +82,7 @@
   var t0 = Date.now();
   var fin = new Date(vigente.fin).getTime();
   var desfase = ahora.getTime() - Date.now();
-  document.getElementById("ir").href = PDF_URL;
+  document.getElementById("ir").addEventListener("click", function (e) { e.preventDefault(); irAlCatalogo(); });
 
   function pad(n) { return (n < 10 ? "0" : "") + n; }
   function pintarCuenta() {
