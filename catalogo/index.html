@@ -11,20 +11,89 @@
 <meta property="og:description" content="Mira lo que tenemos disponible en stock, siempre actualizado.">
 <meta property="og:url" content="https://pyroshield.online/catalogo/">
 <meta property="og:image" content="https://pyroshield.online/img/logo.jpg">
-<meta http-equiv="refresh" content="0; url=https://www.dropbox.com/scl/fi/qbebbw1r7gtl0alem8v8e/CATALOGO_PYROSHIELD.pdf?rlkey=tly6yx1bo86te1jetuuktj6gr&amp;st=exk2svar&amp;raw=1">
 <style>
-  body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;background:#111;color:#fff;font-family:Arial,Helvetica,sans-serif;text-align:center}
-  a{display:inline-block;margin-top:16px;padding:12px 22px;background:#c1121f;color:#fff;border-radius:6px;text-decoration:none;font-weight:bold}
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;background:#0b0b0b;color:#fff;font-family:Arial,Helvetica,sans-serif}
+  #promo{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:#0b0b0b}
+  #promo img{max-width:100%;max-height:100%;object-fit:contain}
+  #barra{position:fixed;left:0;right:0;bottom:0;padding:14px 16px 18px;background:linear-gradient(transparent,rgba(0,0,0,.88) 45%);text-align:center}
+  #cuenta{font-size:15px;font-weight:bold;letter-spacing:.3px}
+  #cuenta span{color:#ffb703}
+  #ir{display:inline-block;margin-top:10px;padding:10px 22px;background:#c1121f;color:#fff;border-radius:6px;text-decoration:none;font-weight:bold;font-size:15px}
+  #progreso{position:fixed;left:0;bottom:0;height:4px;width:0;background:#c1121f}
+  #espera{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;font-size:18px}
 </style>
 </head>
 <body>
-<div>
-  <h1>PyroShield</h1>
-  <p>Abriendo el catálogo…</p>
-  <a href="https://www.dropbox.com/scl/fi/qbebbw1r7gtl0alem8v8e/CATALOGO_PYROSHIELD.pdf?rlkey=tly6yx1bo86te1jetuuktj6gr&amp;st=exk2svar&amp;raw=1">Ver catálogo</a>
+<div id="espera">Abriendo el catálogo…</div>
+<div id="promo">
+  <img id="foto" alt="Promoción vigente">
+  <div id="barra">
+    <div id="cuenta"></div>
+    <a id="ir" href="#">Ver catálogo →</a>
+  </div>
+  <div id="progreso"></div>
 </div>
 <script>
-  location.replace("https://www.dropbox.com/scl/fi/qbebbw1r7gtl0alem8v8e/CATALOGO_PYROSHIELD.pdf?rlkey=tly6yx1bo86te1jetuuktj6gr&st=exk2svar&raw=1");
+(function () {
+  // A dónde va el catálogo al terminar la promo
+  var PDF_URL = "https://www.dropbox.com/scl/fi/qbebbw1r7gtl0alem8v8e/CATALOGO_PYROSHIELD.pdf?rlkey=tly6yx1bo86te1jetuuktj6gr&st=exk2svar&raw=1";
+  var SEGUNDOS = 3;
+
+  // Promociones vigentes (hora de Ecuador, UTC-5). Solo se muestra la que corresponde a hoy.
+  var OLAS = [
+    { ini: "2026-11-07T00:00:00-05:00", fin: "2026-11-10T23:59:59-05:00", foto: "promos/ola2.jpg", texto: "Esta ola termina en" },
+    { ini: "2026-11-11T00:00:00-05:00", fin: "2026-11-13T23:59:59-05:00", foto: "promos/ola3.jpg", texto: "Esta ola termina en" },
+    { ini: "2026-11-14T00:00:00-05:00", fin: "2026-11-17T23:59:59-05:00", foto: "promos/ola4.jpg", texto: "Esta ola termina en" },
+    { ini: "2026-11-18T00:00:00-05:00", fin: "2026-11-20T23:59:59-05:00", foto: "promos/ola5.jpg", texto: "Esta ola termina en" },
+    { ini: "2026-11-21T00:00:00-05:00", fin: "2026-11-24T23:59:59-05:00", foto: "promos/ola6.jpg", texto: "Esta ola termina en" },
+    { ini: "2026-11-25T00:00:00-05:00", fin: "2026-11-27T23:59:59-05:00", foto: "promos/ola7.jpg", texto: "Esta ola termina en" },
+    { ini: "2026-11-28T00:00:00-05:00", fin: "2026-11-30T23:59:59-05:00", foto: "promos/final-sab28.jpg", texto: "El Gran Final termina en" },
+    { ini: "2026-11-29T00:00:00-05:00", fin: "2026-11-30T23:59:59-05:00", foto: "promos/final-dom29.jpg", texto: "El Gran Final termina en" },
+    { ini: "2026-11-30T00:00:00-05:00", fin: "2026-11-30T23:59:59-05:00", foto: "promos/final-lun30.jpg", texto: "El Gran Final termina en" }
+  ];
+
+  var q = new URLSearchParams(location.search);
+  var ahora = q.get("fecha") ? new Date(q.get("fecha")) : new Date();   // ?fecha=... solo para probar
+  var pausa = q.get("pausa") === "1";                                   // ?pausa=1 no redirige (para probar)
+
+  function irAlCatalogo() { location.replace(PDF_URL); }
+
+  var vigente = null;
+  for (var i = OLAS.length - 1; i >= 0; i--) {
+    if (ahora >= new Date(OLAS[i].ini) && ahora <= new Date(OLAS[i].fin)) { vigente = OLAS[i]; break; }
+  }
+  if (!vigente) { irAlCatalogo(); return; }        // sin promo vigente: directo al catálogo
+
+  var t0 = Date.now();
+  var fin = new Date(vigente.fin).getTime();
+  var desfase = ahora.getTime() - Date.now();
+  document.getElementById("ir").href = PDF_URL;
+
+  function pad(n) { return (n < 10 ? "0" : "") + n; }
+  function pintarCuenta() {
+    var ms = fin - (Date.now() + desfase);
+    if (ms < 0) ms = 0;
+    var s = Math.floor(ms / 1000), d = Math.floor(s / 86400), h = Math.floor(s % 86400 / 3600), m = Math.floor(s % 3600 / 60), seg = s % 60;
+    var partes = (d > 0 ? d + "d " : "") + pad(h) + "h " + pad(m) + "m " + pad(seg) + "s";
+    document.getElementById("cuenta").innerHTML = vigente.texto + " <span>" + partes + "</span>";
+  }
+
+  var foto = document.getElementById("foto");
+  foto.onerror = irAlCatalogo;                       // si la imagen falla, directo al catálogo
+  foto.onload = function () {
+    document.getElementById("espera").style.display = "none";
+    document.getElementById("promo").style.display = "flex";
+    pintarCuenta();
+    setInterval(pintarCuenta, 1000);
+    if (pausa) return;
+    var barra = document.getElementById("progreso");
+    barra.style.transition = "width " + SEGUNDOS + "s linear";
+    requestAnimationFrame(function () { requestAnimationFrame(function () { barra.style.width = "100%"; }); });
+    setTimeout(irAlCatalogo, SEGUNDOS * 1000);
+  };
+  foto.src = vigente.foto;
+})();
 </script>
 </body>
 </html>
