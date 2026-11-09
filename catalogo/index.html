@@ -45,7 +45,7 @@
   var verificacion = fetch(PDF_PROPIO, { method: "HEAD", cache: "no-store" }).then(function (r) {
     if (r.ok && /pdf/i.test(r.headers.get("content-type") || "")) PDF_URL = PDF_PROPIO;
   }).catch(function () {}).then(function () { listo = true; });
-  var SEGUNDOS = 3;
+  var SEGUNDOS = 4.25;
 
   // Promociones vigentes (hora de Ecuador, UTC-5). Solo se muestra la que corresponde a hoy.
   var OLAS = [
