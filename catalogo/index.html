@@ -14,12 +14,13 @@
 <style>
   *{box-sizing:border-box}
   html,body{margin:0;height:100%;background:#0b0b0b;color:#fff;font-family:Arial,Helvetica,sans-serif}
-  #promo{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:#0b0b0b}
-  #promo img{max-width:100%;max-height:100%;object-fit:contain}
-  #barra{position:fixed;left:0;right:0;bottom:0;padding:14px 16px 18px;background:linear-gradient(transparent,rgba(0,0,0,.88) 45%);text-align:center}
+  #promo{position:fixed;inset:0;display:none;flex-direction:column;background:#0b0b0b}
+  #marco{flex:1;min-height:0;display:flex;align-items:center;justify-content:center}
+  #marco img{max-width:100%;max-height:100%;object-fit:contain}
+  #barra{flex:none;padding:10px 16px 14px;background:#0b0b0b;text-align:center}
   #cuenta{font-size:15px;font-weight:bold;letter-spacing:.3px}
   #cuenta span{color:#ffb703}
-  #ir{display:inline-block;margin-top:10px;padding:10px 22px;background:#c1121f;color:#fff;border-radius:6px;text-decoration:none;font-weight:bold;font-size:15px}
+  #ir{display:inline-block;margin-top:8px;padding:9px 22px;background:#c1121f;color:#fff;border-radius:6px;text-decoration:none;font-weight:bold;font-size:15px}
   #progreso{position:fixed;left:0;bottom:0;height:4px;width:0;background:#c1121f}
   #espera{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;font-size:18px}
 </style>
@@ -27,7 +28,7 @@
 <body>
 <div id="espera">Abriendo el catálogo…</div>
 <div id="promo">
-  <img id="foto" alt="Promoción vigente">
+  <div id="marco"><img id="foto" alt="Promoción vigente"></div>
   <div id="barra">
     <div id="cuenta"></div>
     <a id="ir" href="#">Ver catálogo →</a>
